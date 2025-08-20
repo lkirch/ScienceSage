@@ -123,6 +123,7 @@ streamlit run app/app.py
 💡 Example Queries
 
 Here are some example questions to try for each topic:
+
 🧠 Neuroplasticity
 
 - Middle School: "What is neuroplasticity, like I’m 10 years old?"
@@ -156,7 +157,7 @@ Here are some example questions to try for each topic:
 ---
 
 
-📦 Docker (optional)
+🐳 Docker (optional)
 
 To build and run inside a container:
 ```bash
@@ -167,7 +168,7 @@ Then open: http://localhost:8501
 
 ---
 
-📈 Roadmap
+🗺️ Roadmap
 
 - [ ] Add reranking for more accurate retrieval.
 - [ ] Include images (NASA, Smithsonian) for multimodal answers.
