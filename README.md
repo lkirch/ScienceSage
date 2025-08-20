@@ -22,7 +22,7 @@ Powered by **GPT-4**, **Qdrant**, and **Streamlit**, and developed in **Codespac
 ---
 
 ## 📂 Project Structure
-
+```
 ScienceSage/
 │
 ├── app/ # Application (Streamlit + backend logic)
@@ -56,6 +56,7 @@ ScienceSage/
 ├── README.md # This file
 ├── .env.example # Example API keys (not committed)
 └── .gitignore
+```
 
 ---
 
@@ -168,9 +169,9 @@ Then open: http://localhost:8501
 
 📈 Roadmap
 
-- Add reranking for more accurate retrieval.
-- Include images (NASA, Smithsonian) for multimodal answers.
-- Deploy publicly on HuggingFace Spaces or Streamlit Cloud.
+- [ ] Add reranking for more accurate retrieval.
+- [ ] Include images (NASA, Smithsonian) for multimodal answers.
+- [ ] Deploy publicly on HuggingFace Spaces or Streamlit Cloud.
 
 --- 
 
@@ -183,7 +184,7 @@ Code is MIT licensed.
 
 🙌 Acknowledgements
 
-- DataTalksClub LLM Zoomcamp [https://github.com/DataTalksClub/llm-zoomcamp]
-- Qdrant [https://qdrant.tech/]
-- Streamlit [https://streamlit.io/]
-- OpenAI [https://openai.com/]
+- [DataTalksClub LLM Zoomcamp] (https://github.com/DataTalksClub/llm-zoomcamp)
+- [Qdrant] (https://qdrant.tech/)
+- [Streamlit] (https://streamlit.io/)
+- [OpenAI] (https://openai.com/)
