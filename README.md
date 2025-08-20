@@ -176,7 +176,7 @@ Then open: http://localhost:8501
 
 --- 
 
-📜 License
+🪪 License
 
 This project uses public domain or CC-BY-SA data sources.
 Code is MIT licensed.
