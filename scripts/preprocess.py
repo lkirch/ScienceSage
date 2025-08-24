@@ -3,6 +3,8 @@
 import os
 import json
 import hashlib
+import uuid
+import datetime
 
 from pathlib import Path
 from typing import List, Dict
@@ -59,18 +61,23 @@ def process_file(filepath: Path) -> List[Dict]:
     text = read_text_file(filepath)
     filename = filepath.stem
     topic = get_topic_from_filename(filename)
+    # Use timezone-aware UTC datetime
+    loadtime = datetime.datetime.now(datetime.UTC).isoformat()
 
     chunks = chunk_text(text)
     results = []
 
     for i, chunk in enumerate(chunks):
         chunk_id = generate_id(chunk, filename)
+        chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk_id))
         results.append({
             "id": chunk_id,
+            "uuid": chunk_uuid,
             "topic": topic,
             "source": filename,
             "chunk_index": i,
-            "text": chunk
+            "text": chunk,
+            "loadtime": loadtime
         })
     return results
 
