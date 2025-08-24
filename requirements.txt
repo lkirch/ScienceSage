@@ -11,3 +11,4 @@ pytest
 notebook
 ipykernel
 tqdm
+pytest
