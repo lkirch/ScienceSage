@@ -1,5 +1,5 @@
 requests
-dotenv
+python-dotenv
 trafilatura
 lxml[html_clean]
 pdfplumber
@@ -10,3 +10,4 @@ python-dotenv
 pytest
 notebook
 ipykernel
+tqdm
