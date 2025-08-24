@@ -3,9 +3,10 @@ from retrieval_system import retrieve_answer
 from feedback_manager import save_feedback
 from config import LEVELS, TOPICS
 
-st.set_page_config(page_title="Scientific Concept Explainer", layout="wide")
+st.set_page_config(page_title="ScienceSage", layout="wide")
 
-st.title("🔬 Scientific Concept Explainer")
+st.title("🔬 ScienceSage")
+st.markdown('<span style="font-size:1.2em;color:gray;">"Smart Science, Made Simple."</span>', unsafe_allow_html=True)
 
 # Sidebar
 st.sidebar.header("Controls")
@@ -32,8 +33,13 @@ if st.button("Get Answer"):
         st.write(answer)
 
         with st.expander("Show retrieved context"):
-            for c in context:
-                st.markdown(f"- {c}")
+            if context:
+                if isinstance(context, (list, tuple)):
+                    st.markdown("\n\n".join(str(c) for c in context))
+                else:
+                    st.markdown(str(context))
+            else:
+                st.info("No context retrieved.")
 
         # Feedback
         col1, col2, col3 = st.columns(3)
