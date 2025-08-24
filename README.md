@@ -40,11 +40,13 @@ ScienceSage/
 │ ├── feedback_manager.py # Save thumbs up/down
 │ ├── analyze_feedback.py # Summarize user feedback
 │ └── config.py # API keys & settings
+│ └── prompts.py # Prompts
 │
 ├── data/ # Data sources & outputs
 │ ├── raw/ # Original files (html, pdf, etc.)
 │ ├── processed/ # Clean text files
 │ └── chunks/ # JSONL with chunked docs
+│ └── feedback/ # Feedback file for analysis
 │
 ├── notebooks/ # Jupyter exploration
 │ └── sanity_check.ipynb
