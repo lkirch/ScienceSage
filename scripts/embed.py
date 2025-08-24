@@ -4,10 +4,18 @@ import os
 import json
 from pathlib import Path
 from typing import List, Dict
+import uuid
+
+from dotenv import load_dotenv  # Add this import
 
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, VectorParams, Distance
+
+# -------------------------
+# Load environment variables
+# -------------------------
+load_dotenv()  # Load variables from .env if present
 
 # -------------------------
 # Config
@@ -78,14 +86,17 @@ def main():
     points = []
     for chunk in chunks:
         vector = get_embedding(chunk["text"])
+        # Use the 'uuid' field from preprocess.py as the point ID (string)
+        point_id = chunk.get("uuid", str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk["id"]))))
         point = PointStruct(
-            id=chunk["id"],
+            id=point_id,
             vector=vector,
             payload={
                 "topic": chunk["topic"],
                 "source": chunk["source"],
                 "chunk_index": chunk["chunk_index"],
-                "text": chunk["text"]
+                "text": chunk["text"],
+                "loadtime": chunk.get("loadtime")  # include loadtime if present
             }
         )
         points.append(point)
