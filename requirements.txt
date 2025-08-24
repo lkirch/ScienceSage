@@ -1,0 +1,10 @@
+requests
+trafilatura
+pdfplumber
+streamlit
+qdrant-client
+openai
+python-dotenv
+pytest
+notebook
+ipykernel
