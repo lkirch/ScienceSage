@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Dict
 import uuid
 
-from dotenv import load_dotenv  # Add this import
+from dotenv import load_dotenv 
 
 from openai import OpenAI
 from qdrant_client import QdrantClient
