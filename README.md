@@ -22,12 +22,11 @@ Powered by **GPT-4**, **Qdrant**, and **Streamlit**, and developed in **Codespac
 ---
 
 ## 🔹 Topics
-
--- **Neuroplasticity** (psych/neuro)
--- **AI Concepts** (transformers, RAG, embeddings, etc.)
--- **Renewable Energy & Climate Change**
--- **Animal Adaptation/Behavior**
--- **Ecosystem Interactions**
+- **Neuroplasticity** (psych/neuro)
+- **AI Concepts** (transformers, RAG, embeddings, etc.)
+- **Renewable Energy & Climate Change**
+- **Animal Adaptation/Behavior**
+- **Ecosystem Interactions**
 
 ---
 
