@@ -186,7 +186,7 @@ cython_debug/
 #  that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
 #  and can be added to the global gitignore or merged into this file. However, if you prefer, 
 #  you could uncomment the following to ignore the entire vscode folder
-# .vscode/
+.vscode/
 
 # Ruff stuff:
 .ruff_cache/
@@ -205,3 +205,63 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# other directories to ignore
+data/
+output/
+# Ignore specific files that are not part of the project
+*.log
+*.tmp
+*.bak
+*.swp
+*.DS_Store
+*.pdf
+
+# Qdrant
+# Ignore Qdrant configuration files
+qdrant_config.json  
+# Ignore Qdrant data files
+qdrant_data/
+# Ignore Qdrant index files
+qdrant_index/
+# Ignore Qdrant backup files
+qdrant_backup/
+# Ignore Qdrant temporary files
+qdrant_temp/
+# Ignore Qdrant logs
+qdrant_logs/
+# Ignore Qdrant cache files
+qdrant_cache/
+# Ignore Qdrant virtual environment
+qdrant_venv/
+# Ignore Qdrant storage files
+qdrant_storage/
+
+
+# Ignore FAISS index files
+faiss_index/
+
+# Data files
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/eval/*
+!data/eval/.gitkeep
+
+# Output / logs
+output/*
+!output/.gitkeep
+
+# VS Code / Codespaces
+.vscode/
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+tests/data
+tests/output
+
+logs
