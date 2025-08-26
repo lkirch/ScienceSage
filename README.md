@@ -194,3 +194,74 @@ pytest tests/test_pipeline.py
 
 Some integration tests require a running Qdrant instance and a valid OpenAI API key.  
 You can skip these by default, or set the required environment variables to enable
+
+---
+
+🖥️ Usage
+
+- Select a topic in the sidebar (AI, Neuroplasticity, Climate, etc.).
+- Ask a question (e.g., "Explain transformers like I’m 12").
+- Choose answer complexity (Middle School / College / Advanced).
+- Get a generated answer with citations to sources.
+- Provide feedback via 👍 / 👎.
+
+---
+
+💡 Example Queries
+
+Here are some example questions to try for each topic:
+
+
+🧠 Neuroplasticity
+
+- Middle School: "What is neuroplasticity, like I’m 10 years old?"
+- College: "How does neuroplasticity help stroke patients recover?"
+- Advanced: "Explain synaptic pruning and its role in neuroplasticity."
+
+🤖 AI Concepts
+
+- Middle School: "What is a transformer in AI, explained simply?"
+- College: "How do attention mechanisms work in transformers?"
+- Advanced: "Compare RAG with fine-tuning for knowledge integration."
+
+🌍 Climate Change & Renewable Energy
+
+- Middle School: "Why is Earth getting hotter?"
+- College: "What are the main human causes of climate change?"
+- Advanced: "Explain how feedback loops (like melting ice) accelerate climate change."
+
+🐦 Animal Behavior
+
+- Middle School: "Why do birds fly south for the winter?"
+- College: "How do animals use migration to adapt to seasonal changes?"
+- Advanced: "Discuss the role of circadian rhythms in animal migration."
+
+🌱 Ecosystem Interactions
+
+- Middle School: "What is a food chain?"
+- College: "How do predators and prey keep an ecosystem balanced?"
+- Advanced: "Explain trophic cascades with an example from Yellowstone."
+
+---
+
+🐳 Docker (optional)
+
+To build and run inside a container:
+
+```bash
+docker build -t ScienceSage .
+docker run -p 8501:8501 --env-file .env ScienceSage
+```
+
+Then open: http://localhost:8501
+
+---
+
+🗺️ Roadmap
+
+- [ ] Add reranking for more accurate retrieval.
+- [ ] Include images (NASA, Smithsonian) for multimodal answers.
+- [ ] Deploy publicly on HuggingFace Spaces or Streamlit Cloud.
+
+--- 
+
