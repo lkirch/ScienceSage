@@ -170,82 +170,27 @@ See the `Makefile` for more available targets and details.
 
 ---
 
-🖥️ Usage
+## 🧪 Running Tests
 
-- Select a topic in the sidebar (AI, Neuroplasticity, Climate, etc.).
-- Ask a question (e.g., "Explain transformers like I’m 12").
-- Choose answer complexity (Middle School / College / Advanced).
-- Get a generated answer with citations to sources.
-- Provide feedback via 👍 / 👎.
+Unit and integration tests are located in the `tests/` directory and use [pytest](https://docs.pytest.org/).
 
----
-
-💡 Example Queries
-
-Here are some example questions to try for each topic:
-
-🧠 Neuroplasticity
-
-- Middle School: "What is neuroplasticity, like I’m 10 years old?"
-- College: "How does neuroplasticity help stroke patients recover?"
-- Advanced: "Explain synaptic pruning and its role in neuroplasticity."
-
-🤖 AI Concepts
-
-- Middle School: "What is a transformer in AI, explained simply?"
-- College: "How do attention mechanisms work in transformers?"
-- Advanced: "Compare RAG with fine-tuning for knowledge integration."
-
-🌍 Climate Change & Renewable Energy
-
-- Middle School: "Why is Earth getting hotter?"
-- College: "What are the main human causes of climate change?"
-- Advanced: "Explain how feedback loops (like melting ice) accelerate climate change."
-
-🐦 Animal Behavior
-
-- Middle School: "Why do birds fly south for the winter?"
-- College: "How do animals use migration to adapt to seasonal changes?"
-- Advanced: "Discuss the role of circadian rhythms in animal migration."
-
-🌱 Ecosystem Interactions
-
-- Middle School: "What is a food chain?"
-- College: "How do predators and prey keep an ecosystem balanced?"
-- Advanced: "Explain trophic cascades with an example from Yellowstone."
-
----
-
-
-🐳 Docker (optional)
-
-To build and run inside a container:
+### Run all tests
 ```bash
-docker build -t ScienceSage .
-docker run -p 8501:8501 --env-file .env ScienceSage
+pytest
 ```
-Then open: http://localhost:8501
 
----
+### Run tests with verbose output
+```bash
+pytest -v
+```
 
-🗺️ Roadmap
+### Run a specific test file
+```bash
+pytest tests/test_pipeline.py
+```
 
-- [ ] Add reranking for more accurate retrieval.
-- [ ] Include images (NASA, Smithsonian) for multimodal answers.
-- [ ] Deploy publicly on HuggingFace Spaces or Streamlit Cloud.
+> **Tip:**  
+> Make sure your virtual environment is activated and all dependencies are installed before running tests.
 
---- 
-
-🪪 License
-
-This project uses public domain or CC-BY-SA data sources.
-Code is MIT licensed.
-
----
-
-🙌 Acknowledgements
-
-- [DataTalksClub LLM Zoomcamp] (https://github.com/DataTalksClub/llm-zoomcamp)
-- [Qdrant] (https://qdrant.tech/)
-- [Streamlit] (https://streamlit.io/)
-- [OpenAI] (https://openai.com/)
+Some integration tests require a running Qdrant instance and a valid OpenAI API key.  
+You can skip these by default, or set the required environment variables to enable
