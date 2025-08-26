@@ -197,7 +197,7 @@ You can skip these by default, or set the required environment variables to enab
 
 ---
 
-🖥️ Usage
+## 🖥️ Usage
 
 - Select a topic in the sidebar (AI, Neuroplasticity, Climate, etc.).
 - Ask a question (e.g., "Explain transformers like I’m 12").
@@ -207,7 +207,7 @@ You can skip these by default, or set the required environment variables to enab
 
 ---
 
-💡 Example Queries
+## 💡 Example Queries
 
 Here are some example questions to try for each topic:
 
@@ -244,7 +244,7 @@ Here are some example questions to try for each topic:
 
 ---
 
-🐳 Docker (optional)
+## 🐳 Docker (optional)
 
 To build and run inside a container:
 
@@ -257,7 +257,7 @@ Then open: http://localhost:8501
 
 ---
 
-🗺️ Roadmap
+## 🗺️ Roadmap
 
 - [ ] Add reranking for more accurate retrieval.
 - [ ] Include images (NASA, Smithsonian) for multimodal answers.
