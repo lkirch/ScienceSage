@@ -135,6 +135,41 @@ streamlit run app/app.py
 
 ---
 
+## 🛠️ Using the Makefile
+
+This project includes a `Makefile` to simplify common setup and run tasks.
+
+### List available commands
+```bash
+make help
+```
+
+### Typical usage
+
+- **Set up the environment and install dependencies:**
+  ```bash
+  make install
+  ```
+- **Prepare the data (download, preprocess, embed):**
+  ```bash
+  make data
+  ```
+- **Run the Streamlit app:**
+  ```bash
+  make run
+  ```
+- **Clean up generated files:**
+  ```bash
+  make clean
+  ```
+
+> **Note:**  
+> You still need to [start Qdrant](#4-start-qdrant) before running any commands that interact with the vector database.
+
+See the `Makefile` for more available targets and details.
+
+---
+
 🖥️ Usage
 
 - Select a topic in the sidebar (AI, Neuroplasticity, Climate, etc.).
