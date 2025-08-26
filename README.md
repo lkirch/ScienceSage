@@ -107,14 +107,28 @@ QDRANT_HOST=localhost
 QDRANT_PORT=6333
 ```
 
-### 4. Prepare the data
+### 4. Start Qdrant
+
+You need a running Qdrant vector database for embedding and retrieval.  
+You can start Qdrant using Docker:
+
+```bash
+docker run -p 6333:6333 -p 6334:6334 qdrant/qdrant
+```
+
+- This will start Qdrant on `localhost:6333` (REST API) and `localhost:6334` (gRPC).
+- Make sure Qdrant is running **before** running any scripts that load collections or query the database.
+
+Alternatively, see [Qdrant documentation](https://qdrant.tech/documentation/quick-start/) for other install options.
+
+### 5. Prepare the data
 ```bash
 python scripts/download_and_clean.py   # fetch & clean NASA/Wikipedia/PDF
 python scripts/preprocess.py           # chunk into JSONL
 python scripts/embed.py                # embed & store in Qdrant
 ```
 
-### 5. Run the Streamlit app
+### 6. Run the Streamlit app
 ```bash
 streamlit run app/app.py
 ```
