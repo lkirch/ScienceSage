@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import sys
 import os
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 from dotenv import load_dotenv
 
 # Load environment variables from .env
