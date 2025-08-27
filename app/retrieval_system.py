@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-from config import OPENAI_API_KEY, QDRANT_URL, QDRANT_COLLECTION
+import os
+from .config import OPENAI_API_KEY, QDRANT_URL, QDRANT_COLLECTION
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import Filter, FieldCondition, MatchValue
-from prompts import get_system_prompt, get_user_prompt
+from .prompts import get_system_prompt, get_user_prompt
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 qdrant = QdrantClient(url=QDRANT_URL)
