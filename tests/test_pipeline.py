@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
-
+import sys
 import os
-import tempfile
-import shutil
-import pytest
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
+
+# Construct QDRANT_URL from QDRANT_HOST and QDRANT_PORT
+qdrant_host = os.getenv("QDRANT_HOST", "localhost")
+qdrant_port = os.getenv("QDRANT_PORT", "6333")
+os.environ["QDRANT_URL"] = f"http://{qdrant_host}:{qdrant_port}"
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app import feedback_manager, retrieval_system, prompts
 
 # --- Unit Tests ---
@@ -37,6 +45,8 @@ def test_save_feedback_creates_file_and_writes(tmp_path):
     # Restore
     feedback_manager.FEEDBACK_DIR = orig_dir
     feedback_manager.FEEDBACK_FILE = orig_file
+
+import pytest
 
 # --- Integration Test (requires Qdrant and OpenAI API) ---
 
