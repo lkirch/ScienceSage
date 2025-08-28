@@ -4,10 +4,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # API Keys
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "your-openai-key")
-QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    raise RuntimeError("OPENAI_API_KEY environment variable not set")
 
-# Qdrant collection name
+# Qdrant
+QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 QDRANT_COLLECTION = "scientific_concepts"
 
 # Topics & levels
