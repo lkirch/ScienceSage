@@ -25,3 +25,8 @@ TOPICS = [
 LEVELS = ["Middle School", "College", "Advanced"]
 
 logger.add("logs/sciencesage.log", rotation="10 MB", retention="10 days", level="INFO")
+logger.info("Configuration loaded.")
+
+if not os.getenv("QDRANT_URL"):
+    logger.warning("QDRANT_URL not set, using default http://localhost:6333")
+logger.info(f"Qdrant URL: {QDRANT_URL}, Collection: {QDRANT_COLLECTION}")

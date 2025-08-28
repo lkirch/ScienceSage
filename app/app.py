@@ -2,6 +2,7 @@ import streamlit as st
 from retrieval_system import retrieve_answer
 from feedback_manager import save_feedback
 from constants import LEVELS, TOPICS
+from loguru import logger
 
 st.set_page_config(page_title="ScienceSage", layout="wide")
 
@@ -27,8 +28,15 @@ query = st.text_input("Enter your question:", key="query")
 
 if st.button("Get Answer"):
     if query.strip():
+        logger.info(f"User submitted query: '{query[:50]}...', topic: '{topic}', level: '{level}'")
         with st.spinner("Retrieving answer..."):
-            answer, context = retrieve_answer(query, topic, level)
+            try:
+                answer, context = retrieve_answer(query, topic, level)
+                logger.info("Answer successfully retrieved")
+            except Exception as e:
+                logger.error(f"Error retrieving answer: {e}")
+                st.error("An error occurred while retrieving the answer.")
+                answer, context = None, None
         st.subheader("Answer")
         st.write(answer)
 
@@ -46,12 +54,15 @@ if st.button("Get Answer"):
         with col1:
             if st.button("👍", key="up"):
                 save_feedback(query, answer, topic, level, "up")
+                logger.info("User gave positive feedback")
         with col2:
             if st.button("👎", key="down"):
                 save_feedback(query, answer, topic, level, "down")
+                logger.info("User gave negative feedback")
         with col3:
             if st.button("🔄 Regenerate", key="regen"):
                 answer, context = retrieve_answer(query, topic, level)
+                logger.info("User requested answer regeneration")
                 st.write(answer)
     else:
         st.warning("Please enter a question.")
