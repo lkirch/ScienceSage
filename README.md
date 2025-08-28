@@ -265,3 +265,16 @@ Then open: http://localhost:8501
 
 --- 
 
+## 📜 License
+
+This project uses public domain or CC-BY-SA data sources.
+Code is MIT licensed.
+
+---
+
+## 🙌 Acknowledgements
+
+- DataTalksClub LLM Zoomcamp [https://github.com/DataTalksClub/llm-zoomcamp]
+- Qdrant [https://qdrant.tech/]
+- Streamlit [https://streamlit.io/]
+- OpenAI [https://openai.com/]
