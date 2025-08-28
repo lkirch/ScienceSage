@@ -274,7 +274,9 @@ Code is MIT licensed.
 
 ## 🙌 Acknowledgements
 
-- [DataTalksClub LLM Zoomcamp] (https://github.com/DataTalksClub/llm-zoomcamp)
-- [Qdrant] (https://qdrant.tech/)
-- [Streamlit] (https://streamlit.io/)
-- [OpenAI] (https://openai.com/)
+- [DataTalksClub LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp)
+- [GitHub Codespaces](https://github.com/features/codespaces)
+- [Qdrant](https://qdrant.tech/)
+- [Streamlit](https://streamlit.io/)
+- [OpenAI](https://openai.com/)
+- [Claude](http://claude.ai) and [ChatGPT](http://chatgpt.com) for brainstorming, code debugging and improvements
