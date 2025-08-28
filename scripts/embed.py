@@ -12,6 +12,14 @@ from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, VectorParams, Distance
 
+from loguru import logger
+
+# -------------------------
+# Logging
+# -------------------------
+logger.add("logs/embed.log", rotation="5 MB", retention="7 days")
+logger.info("Started embed.py script.")
+
 # -------------------------
 # Load environment variables
 # -------------------------
@@ -38,72 +46,104 @@ qdrant = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
 # -------------------------
 def load_chunks(path: Path) -> List[Dict]:
     """Load chunks from jsonl file."""
-    with open(path, "r", encoding="utf-8") as f:
-        return [json.loads(line) for line in f]
+    logger.info(f"Loading chunks from {path}...")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            chunks = [json.loads(line) for line in f]
+        logger.info(f"Loaded {len(chunks)} chunks.")
+        return chunks
+    except Exception as e:
+        logger.error(f"Failed to load chunks: {e}")
+        return []
 
 
 def get_embedding(text: str) -> List[float]:
     """Fetch embedding from OpenAI."""
-    response = openai_client.embeddings.create(
-        model=EMBED_MODEL,
-        input=text
-    )
-    return response.data[0].embedding
+    logger.debug(f"Getting embedding for text (first 50 chars): {text[:50]}...")
+    try:
+        response = openai_client.embeddings.create(
+            model=EMBED_MODEL,
+            input=text
+        )
+        logger.debug("Embedding fetched successfully.")
+        return response.data[0].embedding
+    except Exception as e:
+        logger.error(f"Failed to get embedding: {e}")
+        raise
 
 
 def ensure_collection(vector_size: int):
     """Create collection in Qdrant if not exists."""
-    collections = qdrant.get_collections().collections
-    existing = [c.name for c in collections]
+    try:
+        collections = qdrant.get_collections().collections
+        existing = [c.name for c in collections]
 
-    if COLLECTION_NAME not in existing:
-        qdrant.create_collection(
-            collection_name=COLLECTION_NAME,
-            vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
-        )
-        print(f"✅ Created Qdrant collection '{COLLECTION_NAME}'")
-    else:
-        print(f"ℹ️ Using existing Qdrant collection '{COLLECTION_NAME}'")
+        if COLLECTION_NAME not in existing:
+            qdrant.create_collection(
+                collection_name=COLLECTION_NAME,
+                vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
+            )
+            logger.info(f"Created Qdrant collection '{COLLECTION_NAME}'")
+        else:
+            logger.info(f"Using existing Qdrant collection '{COLLECTION_NAME}'")
+    except Exception as e:
+        logger.error(f"Failed to ensure Qdrant collection: {e}")
+        raise
 
 
 # -------------------------
 # Main
 # -------------------------
 def main():
-    print(f"Loading chunks from {CHUNKS_PATH}...")
     chunks = load_chunks(CHUNKS_PATH)
 
     if not chunks:
-        print("❌ No chunks found. Run preprocess.py first.")
+        logger.error("No chunks found. Run preprocess.py first.")
         return
 
     # Quick embedding to check vector size
-    sample_vector = get_embedding("test")
-    vector_size = len(sample_vector)
-    ensure_collection(vector_size)
+    try:
+        sample_vector = get_embedding("test")
+        vector_size = len(sample_vector)
+        logger.debug(f"Sample embedding vector size: {vector_size}")
+    except Exception as e:
+        logger.error(f"Failed to get sample embedding: {e}")
+        return
+
+    try:
+        ensure_collection(vector_size)
+    except Exception as e:
+        logger.error(f"Failed to ensure collection: {e}")
+        return
 
     # Upload chunks
     points = []
     for chunk in chunks:
-        vector = get_embedding(chunk["text"])
-        # Use the 'uuid' field from preprocess.py as the point ID (string)
-        point_id = chunk.get("uuid", str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk["id"]))))
-        point = PointStruct(
-            id=point_id,
-            vector=vector,
-            payload={
-                "topic": chunk["topic"],
-                "source": chunk["source"],
-                "chunk_index": chunk["chunk_index"],
-                "text": chunk["text"],
-                "loadtime": chunk.get("loadtime")  # include loadtime if present
-            }
-        )
-        points.append(point)
+        try:
+            vector = get_embedding(chunk["text"])
+            # Use the 'uuid' field from preprocess.py as the point ID (string)
+            point_id = chunk.get("uuid", str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk["id"]))))
+            point = PointStruct(
+                id=point_id,
+                vector=vector,
+                payload={
+                    "topic": chunk["topic"],
+                    "source": chunk["source"],
+                    "chunk_index": chunk["chunk_index"],
+                    "text": chunk["text"],
+                    "loadtime": chunk.get("loadtime")  # include loadtime if present
+                }
+            )
+            points.append(point)
+            logger.debug(f"Prepared point for chunk id: {point_id}")
+        except Exception as e:
+            logger.error(f"Failed to process chunk: {e}")
 
-    qdrant.upsert(collection_name=COLLECTION_NAME, points=points)
-    print(f"✅ Uploaded {len(points)} chunks to Qdrant collection '{COLLECTION_NAME}'")
-
+    try:
+        qdrant.upsert(collection_name=COLLECTION_NAME, points=points)
+        logger.info(f"Uploaded {len(points)} chunks to Qdrant collection '{COLLECTION_NAME}'")
+    except Exception as e:
+        logger.error(f"Failed to upload points to Qdrant: {e}")
 
 if __name__ == "__main__":
     main()

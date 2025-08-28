@@ -6,6 +6,9 @@ import trafilatura
 import pdfplumber
 import re
 import html
+from loguru import logger
+
+logger.add("logs/download_and_clean.log", rotation="5 MB", retention="7 days")
 
 RAW_DIR = "data/raw"
 PROCESSED_DIR = "data/processed"
@@ -47,46 +50,53 @@ def clean_html_to_text(html_content: str) -> str:
 
 def download_webpage(url: str, name: str):
     """Download a webpage and save clean text."""
-    print(f"Downloading {url}")
-    r = requests.get(url, timeout=20)
-    if r.status_code != 200:
-        print(f"⚠️ Failed to fetch {url} (status {r.status_code})")
-        return
+    logger.info(f"Downloading {url}")
+    try:
+        r = requests.get(url, timeout=20)
+        if r.status_code != 200:
+            logger.warning(f"Failed to fetch {url} (status {r.status_code})")
+            return
 
-    raw_path = os.path.join(RAW_DIR, f"{name}.html")
-    save_file(raw_path, r.text)
+        raw_path = os.path.join(RAW_DIR, f"{name}.html")
+        save_file(raw_path, r.text)
+        logger.debug(f"Saved raw HTML to {raw_path}")
 
-    clean_text = clean_html_to_text(r.text)
-    if clean_text:
-        processed_path = os.path.join(PROCESSED_DIR, f"{name}.txt")
-        save_file(processed_path, clean_text)
-        print(f"✅ Saved cleaned text to {processed_path}")
-    else:
-        print(f"⚠️ No text extracted from {url}")
+        clean_text = clean_html_to_text(r.text)
+        if clean_text:
+            processed_path = os.path.join(PROCESSED_DIR, f"{name}.txt")
+            save_file(processed_path, clean_text)
+            logger.info(f"Saved cleaned text to {processed_path}")
+        else:
+            logger.warning(f"No text extracted from {url}")
+    except Exception as e:
+        logger.error(f"Exception downloading {url}: {e}")
 
 
 # ----------- PDFs (Stanford, etc.) -----------
 
 def process_pdf(pdf_path: str, name: str):
     """Extract text from a PDF and save it."""
-    print(f"Processing PDF {pdf_path}")
-    all_text = ""
-    with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            text = page.extract_text()
-            if text:
-                all_text += text + "\n"
+    logger.info(f"Processing PDF {pdf_path}")
+    try:
+        all_text = ""
+        with pdfplumber.open(pdf_path) as pdf:
+            for page in pdf.pages:
+                text = page.extract_text()
+                if text:
+                    all_text += text + "\n"
 
-    raw_copy = os.path.join(RAW_DIR, os.path.basename(pdf_path))
-    if not os.path.exists(raw_copy):
-        os.makedirs(RAW_DIR, exist_ok=True)
-        # copy raw pdf into raw folder
-        with open(pdf_path, "rb") as f:
-            save_file(raw_copy, f.read(), binary=True)
+        raw_copy = os.path.join(RAW_DIR, os.path.basename(pdf_path))
+        if not os.path.exists(raw_copy):
+            os.makedirs(RAW_DIR, exist_ok=True)
+            with open(pdf_path, "rb") as f:
+                save_file(raw_copy, f.read(), binary=True)
+            logger.debug(f"Copied raw PDF to {raw_copy}")
 
-    processed_path = os.path.join(PROCESSED_DIR, f"{name}.txt")
-    save_file(processed_path, all_text)
-    print(f"✅ Saved PDF text to {processed_path}")
+        processed_path = os.path.join(PROCESSED_DIR, f"{name}.txt")
+        save_file(processed_path, all_text)
+        logger.info(f"Saved PDF text to {processed_path}")
+    except Exception as e:
+        logger.error(f"Exception processing PDF {pdf_path}: {e}")
 
 
 # ----------- Main Pipeline -----------
