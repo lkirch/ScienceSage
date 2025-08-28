@@ -2,6 +2,14 @@
 import sys
 import os
 from pathlib import Path
+from loguru import logger
+
+# -------------------------
+# Logging
+# -------------------------
+logger.add("logs/test_pipeline.log", rotation="5 MB", retention="7 days")
+logger.info("Started test_pipeline.py script.")
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from dotenv import load_dotenv
 
@@ -20,18 +28,23 @@ from app import feedback_manager, retrieval_system, prompts
 
 def test_get_system_prompt_levels():
     topic = "AI"
+    logger.info("Testing get_system_prompt for all levels.")
     assert "simple language" in prompts.get_system_prompt(topic, "Middle School")
     assert "undergraduates" in prompts.get_system_prompt(topic, "College")
     assert "graduate students" in prompts.get_system_prompt(topic, "Advanced")
+    logger.success("test_get_system_prompt_levels passed.")
 
 def test_get_user_prompt_includes_context():
     query = "What is AI?"
     context = "Artificial Intelligence is..."
+    logger.info("Testing get_user_prompt includes query and context.")
     prompt = prompts.get_user_prompt(query, context)
     assert query in prompt
     assert context in prompt
+    logger.success("test_get_user_prompt_includes_context passed.")
 
 def test_save_feedback_creates_file_and_writes(tmp_path):
+    logger.info("Testing save_feedback creates file and writes content.")
     # Patch feedback file location
     orig_dir = feedback_manager.FEEDBACK_DIR
     orig_file = feedback_manager.FEEDBACK_FILE
@@ -47,6 +60,7 @@ def test_save_feedback_creates_file_and_writes(tmp_path):
     # Restore
     feedback_manager.FEEDBACK_DIR = orig_dir
     feedback_manager.FEEDBACK_FILE = orig_file
+    logger.success("test_save_feedback_creates_file_and_writes passed.")
 
 import pytest
 
@@ -57,6 +71,7 @@ import pytest
     reason="Requires OpenAI API key and Qdrant running"
 )
 def test_retrieve_answer_returns_answer_and_context(monkeypatch):
+    logger.info("Testing retrieve_answer returns answer and context (integration test with monkeypatching).")
     # Monkeypatch embed_text to avoid real API call
     monkeypatch.setattr(retrieval_system, "embed_text", lambda text: [0.0]*1536)
     # Monkeypatch qdrant.query_points to return fake context
