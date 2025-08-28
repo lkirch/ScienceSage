@@ -1,7 +1,7 @@
 import streamlit as st
 from retrieval_system import retrieve_answer
 from feedback_manager import save_feedback
-from config import LEVELS, TOPICS
+from constants import LEVELS, TOPICS
 
 st.set_page_config(page_title="ScienceSage", layout="wide")
 
