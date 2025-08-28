@@ -1,5 +1,6 @@
 import os
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
+from loguru import logger
 
 load_dotenv()
 
@@ -22,3 +23,5 @@ TOPICS = [
 ]
 
 LEVELS = ["Middle School", "College", "Advanced"]
+
+logger.add("logs/sciencesage.log", rotation="10 MB", retention="10 days", level="INFO")
