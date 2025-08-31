@@ -1,10 +1,17 @@
+
 import os
+import sys
+from pathlib import Path
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 from qdrant_client.models import Filter, FieldCondition, MatchValue
 import numpy as np
 import inspect
 from loguru import logger
+
+# Ensure project root is in sys.path for config import
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from config.config import QDRANT_HOST, QDRANT_PORT, QDRANT_COLLECTION
 
 # -------------------------
 # Logging
@@ -14,10 +21,6 @@ logger.info("Started test_qdrant.py script.")
 
 # Load environment variables
 load_dotenv()
-
-QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
-QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
-COLLECTION_NAME = "scientific_concepts"
 
 def list_collections(client):
     logger.info("Available collections:")
@@ -106,14 +109,14 @@ def main():
     client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
     try:
         list_collections(client)
-        info, vector_size = show_collection_config(client, COLLECTION_NAME)
+        info, vector_size = show_collection_config(client, QDRANT_COLLECTION)
         show_total_points(info)
-        fetch_random_point(client, COLLECTION_NAME)
-        list_topics_and_counts(client, COLLECTION_NAME)
-        test_similarity_search(client, COLLECTION_NAME, vector_size)
+        fetch_random_point(client, QDRANT_COLLECTION)
+        list_topics_and_counts(client, QDRANT_COLLECTION)
+        test_similarity_search(client, QDRANT_COLLECTION, vector_size)
     except Exception as e:
         logger.error(f"Error: {e}")
-        logger.error(f"Collection '{COLLECTION_NAME}' not found or Qdrant is not running.")
+        logger.error(f"Collection '{QDRANT_COLLECTION}' not found or Qdrant is not running.")
 
 if __name__ == "__main__":
     main()

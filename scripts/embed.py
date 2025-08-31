@@ -1,16 +1,19 @@
+
 import os
-import json
+import sys
 from pathlib import Path
+import json
 from typing import List, Dict
 import uuid
-
-from dotenv import load_dotenv 
-
+from dotenv import load_dotenv
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, VectorParams, Distance
-
 from loguru import logger
+
+# Ensure project root is in sys.path for config import
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from config.config import CHUNKS_FILE, QDRANT_HOST, QDRANT_PORT, QDRANT_COLLECTION, EMBED_MODEL
 
 # -------------------------
 # Logging
@@ -18,19 +21,11 @@ from loguru import logger
 logger.add("logs/embed.log", rotation="5 MB", retention="7 days")
 logger.info("Started embed.py script.")
 
+
 # -------------------------
 # Load environment variables
 # -------------------------
 load_dotenv()  # Load variables from .env if present
-
-# -------------------------
-# Config
-# -------------------------
-CHUNKS_PATH = Path("data/chunks/chunks.jsonl")
-QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
-QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
-COLLECTION_NAME = "scientific_concepts"
-EMBED_MODEL = "text-embedding-3-small"   # or "text-embedding-3-large"
 
 # -------------------------
 # Clients
@@ -76,24 +71,25 @@ def ensure_collection(vector_size: int):
         collections = qdrant.get_collections().collections
         existing = [c.name for c in collections]
 
-        if COLLECTION_NAME not in existing:
+        if QDRANT_COLLECTION not in existing:
             qdrant.create_collection(
-                collection_name=COLLECTION_NAME,
+                collection_name=QDRANT_COLLECTION,
                 vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
             )
-            logger.info(f"Created Qdrant collection '{COLLECTION_NAME}'")
+            logger.info(f"Created Qdrant collection '{QDRANT_COLLECTION}'")
         else:
-            logger.info(f"Using existing Qdrant collection '{COLLECTION_NAME}'")
+            logger.info(f"Using existing Qdrant collection '{QDRANT_COLLECTION}'")
     except Exception as e:
         logger.error(f"Failed to ensure Qdrant collection: {e}")
         raise
+
 
 
 # -------------------------
 # Main
 # -------------------------
 def main():
-    chunks = load_chunks(CHUNKS_PATH)
+    chunks = load_chunks(Path(CHUNKS_FILE))
 
     if not chunks:
         logger.error("No chunks found. Run preprocess.py first.")
@@ -138,8 +134,8 @@ def main():
             logger.error(f"Failed to process chunk: {e}")
 
     try:
-        qdrant.upsert(collection_name=COLLECTION_NAME, points=points)
-        logger.info(f"Uploaded {len(points)} chunks to Qdrant collection '{COLLECTION_NAME}'")
+        qdrant.upsert(collection_name=QDRANT_COLLECTION, points=points)
+        logger.info(f"Uploaded {len(points)} chunks to QDRANT collection '{QDRANT_COLLECTION}'")
     except Exception as e:
         logger.error(f"Failed to upload points to Qdrant: {e}")
 

@@ -1,13 +1,17 @@
+
 import os
+import sys
+from pathlib import Path
 import json
 import hashlib
 import uuid
 import datetime
-
-from pathlib import Path
 from typing import List, Dict
-
 from loguru import logger
+
+# Ensure project root is in sys.path for config import
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from config.config import PROCESSED_DATA_DIR, CHUNKS_FILE, CHUNK_SIZE, CHUNK_OVERLAP
 
 # -------------------------
 # Logging
@@ -16,14 +20,11 @@ logger.add("logs/preprocess.log", rotation="5 MB", retention="7 days")
 logger.info("Started preprocess.py script.")
 
 # -------------------------
-# Config
+# Config (from config.py)
 # -------------------------
-PROCESSED_DIR = Path("data/processed")
-CHUNKS_DIR = Path("data/chunks")
-CHUNK_SIZE = 500  # approx. words per chunk
-OVERLAP = 50      # overlap between chunks for context
-
-CHUNKS_DIR.mkdir(parents=True, exist_ok=True)
+PROCESSED_DIR = Path(PROCESSED_DATA_DIR)
+CHUNKS_PATH = Path(CHUNKS_FILE)
+CHUNKS_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 
 # -------------------------
@@ -40,7 +41,7 @@ def read_text_file(filepath: Path) -> str:
         raise
 
 
-def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = OVERLAP) -> List[str]:
+def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> List[str]:
     """Split text into overlapping chunks (by words)."""
     words = text.split()
     chunks = []
@@ -111,16 +112,16 @@ def main():
         except Exception as e:
             logger.error(f"Failed to process {filepath}: {e}")
 
-    output_path = CHUNKS_DIR / "chunks.jsonl"
+
     try:
-        with open(output_path, "w", encoding="utf-8") as f:
+        with open(CHUNKS_PATH, "w", encoding="utf-8") as f:
             for entry in all_chunks:
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-        logger.success(f"Saved {len(all_chunks)} chunks to {output_path}")
+        logger.success(f"Saved {len(all_chunks)} chunks to {CHUNKS_PATH}")
     except Exception as e:
-        logger.error(f"Failed to save chunks to {output_path}: {e}")
+        logger.error(f"Failed to save chunks to {CHUNKS_PATH}: {e}")
 
-    print(f"✅ Saved {len(all_chunks)} chunks to {output_path}")
+    print(f"✅ Saved {len(all_chunks)} chunks to {CHUNKS_PATH}")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,6 @@
 import os
+import sys
+from pathlib import Path
 import requests
 import trafilatura
 import pdfplumber
@@ -6,12 +8,14 @@ import re
 import html
 from loguru import logger
 
+# Ensure project root is in sys.path for config import
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from config.config import RAW_DATA_DIR, PROCESSED_DATA_DIR
+
 logger.add("logs/download_and_clean.log", rotation="5 MB", retention="7 days")
 
-RAW_DIR = "data/raw"
-PROCESSED_DIR = "data/processed"
-os.makedirs(RAW_DIR, exist_ok=True)
-os.makedirs(PROCESSED_DIR, exist_ok=True)
+os.makedirs(RAW_DATA_DIR, exist_ok=True)
+os.makedirs(PROCESSED_DATA_DIR, exist_ok=True)
 
 
 # ----------- Helpers -----------
@@ -78,7 +82,7 @@ def download_wikipedia_article(title: str, name: str):
     """Download and save a Wikipedia article using the API."""
     text = fetch_wikipedia_article(title)
     if text:
-        processed_path = os.path.join(PROCESSED_DIR, f"{name}.txt")
+        processed_path = os.path.join(PROCESSED_DATA_DIR, f"{name}.txt")
         save_file(processed_path, text)
         logger.info(f"Saved Wikipedia article '{title}' to {processed_path}")
     else:
@@ -96,13 +100,13 @@ def download_webpage(url: str, name: str):
             logger.warning(f"Failed to fetch {url} (status {r.status_code})")
             return
 
-        raw_path = os.path.join(RAW_DIR, f"{name}.html")
+        raw_path = os.path.join(RAW_DATA_DIR, f"{name}.html")
         save_file(raw_path, r.text)
         logger.debug(f"Saved raw HTML to {raw_path}")
 
         clean_text = clean_html_to_text(r.text)
         if clean_text:
-            processed_path = os.path.join(PROCESSED_DIR, f"{name}.txt")
+            processed_path = os.path.join(PROCESSED_DATA_DIR, f"{name}.txt")
             save_file(processed_path, clean_text)
             logger.info(f"Saved cleaned text to {processed_path}")
         else:
@@ -124,14 +128,14 @@ def process_pdf(pdf_path: str, name: str):
                 if text:
                     all_text += text + "\n"
 
-        raw_copy = os.path.join(RAW_DIR, os.path.basename(pdf_path))
+        raw_copy = os.path.join(RAW_DATA_DIR, os.path.basename(pdf_path))
         if not os.path.exists(raw_copy):
-            os.makedirs(RAW_DIR, exist_ok=True)
+            os.makedirs(RAW_DATA_DIR, exist_ok=True)
             with open(pdf_path, "rb") as f:
                 save_file(raw_copy, f.read(), binary=True)
             logger.debug(f"Copied raw PDF to {raw_copy}")
 
-        processed_path = os.path.join(PROCESSED_DIR, f"{name}.txt")
+        processed_path = os.path.join(PROCESSED_DATA_DIR, f"{name}.txt")
         save_file(processed_path, all_text)
         logger.info(f"Saved PDF text to {processed_path}")
     except Exception as e:
