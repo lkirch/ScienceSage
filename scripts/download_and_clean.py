@@ -24,9 +24,7 @@ def save_file(path: str, content: str, mode="w", binary=False):
 
 
 def light_clean_text(text: str) -> str:
-    """Light cleaning: strip HTML tags, normalize whitespace, remove encoding artifacts."""
-    # Remove HTML tags (fallback if trafilatura misses any)
-    text = re.sub(r"<[^>]+>", " ", text)
+    """Light cleaning: normalize whitespace, remove encoding artifacts."""
     # Unescape HTML entities
     text = html.unescape(text)
     # Remove common encoding artifacts
@@ -44,7 +42,50 @@ def clean_html_to_text(html_content: str) -> str:
     return light_clean_text(extracted)
 
 
-# ----------- Wikipedia + NASA (HTML) -----------
+# ----------- Wikipedia API -----------
+
+def fetch_wikipedia_article(title: str) -> str:
+    """Fetch plain text of a Wikipedia article using the Wikipedia API."""
+    logger.info(f"Fetching Wikipedia article: {title}")
+    url = "https://en.wikipedia.org/w/api.php"
+    params = {
+        "action": "query",
+        "prop": "extracts",
+        "explaintext": True,
+        "titles": title,
+        "format": "json",
+        "redirects": 1,
+    }
+    headers = {
+        "User-Agent": "ScienceSageBot/1.0 (https://github.com/yourusername/ScienceSage; contact@example.com)"
+    }
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=20)
+        response.raise_for_status()
+        data = response.json()
+        pages = data.get("query", {}).get("pages", {})
+        page = next(iter(pages.values()))
+        text = page.get("extract", "")
+        if not text:
+            logger.warning(f"No extract found for Wikipedia article: {title}")
+        return light_clean_text(text)
+    except Exception as e:
+        logger.error(f"Exception fetching Wikipedia article '{title}': {e}")
+        return ""
+
+
+def download_wikipedia_article(title: str, name: str):
+    """Download and save a Wikipedia article using the API."""
+    text = fetch_wikipedia_article(title)
+    if text:
+        processed_path = os.path.join(PROCESSED_DIR, f"{name}.txt")
+        save_file(processed_path, text)
+        logger.info(f"Saved Wikipedia article '{title}' to {processed_path}")
+    else:
+        logger.warning(f"Failed to save Wikipedia article '{title}'")
+
+
+# ----------- NASA (HTML) -----------
 
 def download_webpage(url: str, name: str):
     """Download a webpage and save clean text."""
@@ -113,30 +154,29 @@ if __name__ == "__main__":
         "nasa_faq": "https://science.nasa.gov/climate-change/faq/",
         "nasa_adaptation_mitigation": "https://science.nasa.gov/climate-change/adaptation-mitigation/",
         "nasa_adaptation_mitigation_resources": "https://science.nasa.gov/climate-change/adaptation-mitigation/resources/",
-        
     }
 
-    # Wikipedia pages
-    wiki_urls = {
-        "neuroplasticity": "https://en.wikipedia.org/wiki/Neuroplasticity",
-        "transformer_ml": "https://en.wikipedia.org/wiki/Transformer_(machine_learning)",
-        "reinforcement_learning": "https://en.wikipedia.org/wiki/Reinforcement_learning",
-        "large_language_model": "https://en.wikipedia.org/wiki/Large_language_model",
-        "retrieval_augmented_generation": "https://en.wikipedia.org/wiki/Retrieval-augmented_generation",
-        "animal_migration": "https://en.wikipedia.org/wiki/Animal_migration",
-        "climate_change_adaptation": "https://en.wikipedia.org/wiki/Climate_change_adaptation",
-        "climate_change_and_fisheries": "https://en.wikipedia.org/wiki/Climate_change_and_fisheries",
-        "climate_change_and_birds": "https://en.wikipedia.org/wiki/Climate_change_and_birds",
-        "decline_in_wild_mammal_populations": "https://en.wikipedia.org/wiki/Decline_in_wild_mammal_populations",
+    # Wikipedia pages (mapping: name -> Wikipedia article title)
+    wiki_titles = {
+        "neuroplasticity": "Neuroplasticity",
+        "transformer_ml": "Transformer (machine learning)",
+        "reinforcement_learning": "Reinforcement learning",
+        "large_language_model": "Large language model",
+        "retrieval_augmented_generation": "Retrieval-augmented generation",
+        "animal_migration": "Animal migration",
+        "climate_change_adaptation": "Climate change adaptation",
+        "climate_change_and_fisheries": "Climate change and fisheries",
+        "climate_change_and_birds": "Climate change and birds",
+        "decline_in_wild_mammal_populations": "Decline in wild mammal populations",
     }
 
     # Download and clean NASA pages
     for name, url in nasa_urls.items():
         download_webpage(url, name)
 
-    # Download and clean Wikipedia pages
-    for name, url in wiki_urls.items():
-        download_webpage(url, name)
+    # Download and clean Wikipedia pages using the API
+    for name, title in wiki_titles.items():
+        download_wikipedia_article(title, name)
 
     # Process PDFs (e.g., Stanford LLM slides)
     # pdf_files = {
