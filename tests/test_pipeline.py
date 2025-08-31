@@ -2,6 +2,7 @@ import sys
 import os
 from pathlib import Path
 from loguru import logger
+from config.config import QDRANT_URL
 
 # -------------------------
 # Logging
@@ -9,18 +10,17 @@ from loguru import logger
 logger.add("logs/test_pipeline.log", rotation="5 MB", retention="7 days")
 logger.info("Started test_pipeline.py script.")
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+# Ensure project root is in sys.path for app imports
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dotenv import load_dotenv
 
 # Load environment variables from .env
 load_dotenv()
 
 # Construct QDRANT_URL from QDRANT_HOST and QDRANT_PORT
-qdrant_host = os.getenv("QDRANT_HOST", "localhost")
-qdrant_port = os.getenv("QDRANT_PORT", "6333")
-os.environ["QDRANT_URL"] = f"http://{qdrant_host}:{qdrant_port}"
+os.environ["QDRANT_URL"] = os.getenv("QDRANT_URL")
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app import feedback_manager, retrieval_system, prompts
 
 # --- Unit Tests ---
