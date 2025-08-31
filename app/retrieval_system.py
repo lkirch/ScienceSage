@@ -28,6 +28,7 @@ def retrieve_answer(query: str, topic: str, level: str):
     logger.info(f"Retrieving answer for query='{query[:50]}...', topic='{topic}', level='{level}'")
     try:
         vector = embed_text(query)
+        logger.debug(f"Query vector (len={len(vector)}): {vector}")  # Log the query vector
     except Exception as e:
         logger.error(f"Failed to embed query: {e}")
         raise
