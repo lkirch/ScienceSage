@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import os
 from config import OPENAI_API_KEY, QDRANT_URL, QDRANT_COLLECTION
 from openai import OpenAI
