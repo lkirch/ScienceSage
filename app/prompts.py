@@ -11,7 +11,10 @@ def get_system_prompt(topic: str, level: str) -> str:
         detail = "Provide in-depth, technical, and nuanced explanations suitable for graduate students or professionals."
     else:
         detail = ""
-    return f"You are a teacher explaining {topic} at a {level} level. {detail}"
+    return (
+        f"You are a teacher explaining {topic} at a {level} level. {detail} "
+        "Only answer using the provided context. If the answer is not in the context, say you don't know."
+    )
     
 def get_user_prompt(query: str, context_text: str) -> str:
     return f"""
