@@ -30,6 +30,7 @@ QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
 QDRANT_COLLECTION = "scientific_concepts"
 EMBED_MODEL = "text-embedding-3-small"  # or "text-embedding-3-large"
+QDRANT_URL = f"http://{QDRANT_HOST}:{QDRANT_PORT}"
 
 # --- Topics ---
 TOPICS = [
