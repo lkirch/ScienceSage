@@ -26,12 +26,21 @@ if st.sidebar.button("Try Example"):
 
 query = st.text_input("Enter your question:", key="query")
 
+def infer_topic_from_query(query):
+    for t in TOPICS:
+        if t.lower().split()[0] in query.lower():
+            return t
+    return TOPICS[0]  # fallback
+
 if st.button("Get Answer"):
-    if query.strip():
-        logger.info(f"User submitted query: '{query[:50]}...', topic: '{topic}', level: '{level}'")
+    used_topic = topic or infer_topic_from_query(query)
+    if not topic:
+        st.warning("Please select a topic from the sidebar.")
+    elif query.strip():
+        logger.info(f"User submitted query: '{query[:50]}...', topic: '{used_topic}', level: '{level}'")
         with st.spinner("Retrieving answer..."):
             try:
-                answer, context = retrieve_answer(query, topic, level)
+                answer, context = retrieve_answer(query, used_topic, level)
                 logger.info("Answer successfully retrieved")
             except Exception as e:
                 logger.error(f"Error retrieving answer: {e}")
