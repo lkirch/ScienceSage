@@ -1,18 +1,21 @@
 import os
+import sys
+from pathlib import Path
 import csv
 from datetime import datetime, timezone
 from loguru import logger
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FEEDBACK_DIR = os.path.join(BASE_DIR, "data", "feedback")
-FEEDBACK_FILE = os.path.join(FEEDBACK_DIR, "feedback.csv")
+# Ensure project root is in sys.path for config import
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from config.config import FEEDBACK_FILE
 
 def save_feedback(query, answer, topic, level, feedback_type):
     """Save feedback to CSV file."""
     logger.debug(f"save_feedback called with {query=}, {answer=}, {topic=}, {level=}, {feedback_type=}")
     logger.debug(f"FEEDBACK_FILE = {FEEDBACK_FILE}")
+    feedback_dir = os.path.dirname(FEEDBACK_FILE)
     try:
-        os.makedirs(FEEDBACK_DIR, exist_ok=True)
+        os.makedirs(feedback_dir, exist_ok=True)
         file_exists = os.path.isfile(FEEDBACK_FILE)
         with open(FEEDBACK_FILE, mode="a", newline="") as f:
             writer = csv.writer(f)
