@@ -1,7 +1,11 @@
 import streamlit as st
 from retrieval_system import retrieve_answer
 from feedback_manager import save_feedback
-from constants import LEVELS, TOPICS
+import sys
+from pathlib import Path
+# Ensure project root is in sys.path for config import
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from config.config import LEVELS, TOPICS
 from loguru import logger
 
 st.set_page_config(page_title="ScienceSage", layout="wide")
