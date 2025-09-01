@@ -12,4 +12,5 @@ notebook
 ipykernel
 tqdm
 pytest
+tiktoken
 loguru
