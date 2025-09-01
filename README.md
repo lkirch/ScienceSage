@@ -34,38 +34,38 @@ Powered by **GPT-4**, **Qdrant**, and **Streamlit**, and developed in **Codespac
 ```
 ScienceSage/
 │
-├── app/ # Application (Streamlit + backend logic)
-│ ├── app.py # Streamlit UI
-│ ├── retrieval_system.py # Query → retrieve → GPT pipeline
-│ ├── feedback_manager.py # Save thumbs up/down
-│ ├── analyze_feedback.py # Summarize user feedback
-│ ├── config.py # API keys & settings
-│ └── prompts.py # Prompts
+├── app/                    # Application (Streamlit + backend logic)
+│ ├── app.py                # Streamlit UI
+│ ├── retrieval_system.py   # Query → retrieve → GPT pipeline
+│ ├── feedback_manager.py   # Save thumbs up/down
+│ ├── analyze_feedback.py   # Summarize user feedback
+│ ├── config.py             # API keys & settings
+│ └── prompts.py            # Prompts
 │
-├── data/ # Data sources & outputs
-│ ├── raw/ # Original files (html, pdf, etc.)
-│ ├── processed/ # Clean text files
-│ ├── chunks/ # JSONL with chunked docs
-│ └── feedback/ # Feedback file for analysis
+├── data/                   # Data sources & outputs
+│ ├── raw/                  # Original files (html, pdf, etc.)
+│ ├── processed/            # Clean text files
+│ ├── chunks/               # JSONL with chunked docs
+│ └── feedback/             # Feedback file for analysis
 │
-├── notebooks/ # Jupyter exploration
+├── notebooks/              # Jupyter exploration
 │ └── sanity_check.ipynb
 │
 ├── scripts/ # Utilities
 │ ├── download_and_clean.py # Download NASA/Wikipedia/PDF → text
-│ ├── preprocess.py # Chunk text → JSONL
-│ ├── embed.py # Embed chunks → Qdrant
-│ └── test_qdrant.py # Sanity check retrieval
+│ ├── preprocess.py         # Chunk text → JSONL
+│ ├── embed.py              # Embed chunks → Qdrant
+│ └── test_qdrant.py        # Sanity check retrieval
 │
-├── docker/ # Docker setup
+├── docker/                 # Docker setup
 │ └── Dockerfile
 │
-├── tests/ # Unit/integration tests
+├── tests/                  # Unit/integration tests
 │ └── test_pipeline.py
 │
-├── requirements.txt # Python dependencies
-├── README.md # This file
-├── .env.example # Example API keys (not committed)
+├── requirements.txt        # Python dependencies
+├── README.md               # This file
+├── .env.example            # Example API keys (not committed)
 └── .gitignore
 ```
 
