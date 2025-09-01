@@ -1,4 +1,3 @@
-
 import os
 import sys
 from pathlib import Path
@@ -6,8 +5,10 @@ import json
 import hashlib
 import uuid
 import datetime
+import re
 from typing import List, Dict
 from loguru import logger
+import tiktoken 
 
 # Ensure project root is in sys.path for config import
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -20,11 +21,13 @@ logger.add("logs/preprocess.log", rotation="5 MB", retention="7 days")
 logger.info("Started preprocess.py script.")
 
 # -------------------------
-# Config (from config.py)
+# Config
 # -------------------------
 PROCESSED_DIR = Path(PROCESSED_DATA_DIR)
 CHUNKS_PATH = Path(CHUNKS_FILE)
 CHUNKS_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+MAX_TOKENS = 8192  # For OpenAI text-embedding-3-small
 
 
 # -------------------------
@@ -41,17 +44,44 @@ def read_text_file(filepath: Path) -> str:
         raise
 
 
-def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> List[str]:
-    """Split text into overlapping chunks (by words)."""
-    words = text.split()
+def extract_urls(text: str) -> List[str]:
+    """Extract reference URLs from text."""
+    url_pattern = r"https?://[^\s)]+"
+    return re.findall(url_pattern, text)
+
+
+def chunk_text_by_paragraphs(
+    text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP
+) -> List[str]:
+    """
+    Split text into overlapping chunks, keeping paragraphs together.
+    Paragraphs are joined until reaching chunk_size (word-based).
+    """
+    paragraphs = [p.strip() for p in text.split("\n") if p.strip()]
     chunks = []
-    start = 0
-    while start < len(words):
-        end = start + chunk_size
-        chunk = " ".join(words[start:end])
-        chunks.append(chunk)
-        start += chunk_size - overlap
-    logger.debug(f"Chunked text into {len(chunks)} chunks (chunk_size={chunk_size}, overlap={overlap})")
+    current_chunk = []
+
+    word_count = 0
+    for para in paragraphs:
+        para_words = para.split()
+        if word_count + len(para_words) > chunk_size and current_chunk:
+            # save chunk
+            chunks.append(" ".join(current_chunk))
+
+            # overlap: keep last `overlap` words from previous chunk
+            overlap_words = current_chunk[-overlap:] if overlap > 0 else []
+            current_chunk = overlap_words + para_words
+            word_count = len(current_chunk)
+        else:
+            current_chunk.extend(para_words)
+            word_count += len(para_words)
+
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+
+    logger.debug(
+        f"Chunked text into {len(chunks)} chunks (chunk_size={chunk_size}, overlap={overlap})"
+    )
     return chunks
 
 
@@ -68,6 +98,46 @@ def generate_id(text: str, prefix: str) -> str:
     return f"{prefix}_{hash_id}"
 
 
+def auto_tag_chunk(text: str) -> list:
+    """
+    Simple auto-tagging based on keyword matching.
+    Expand this function as needed for your domain.
+    """
+    tags = []
+    lower = text.lower()
+    if any(word in lower for word in ["neuron", "brain", "plasticity"]):
+        tags.append("neuroscience")
+    if any(word in lower for word in ["climate", "greenhouse", "carbon", "solar", "renewable"]):
+        tags.append("climate")
+    if any(word in lower for word in ["ai", "artificial intelligence", "machine learning", "neural network", "transformer"]):
+        tags.append("ai")
+    if any(word in lower for word in ["animal", "migration", "adaptation", "mimicry"]):
+        tags.append("animal_adaptation")
+    if any(word in lower for word in ["ecosystem", "biodiversity", "deforestation", "food chain"]):
+        tags.append("ecosystem")
+    return tags or ["other"]
+
+
+def num_tokens(text: str, model: str = "text-embedding-3-small") -> int:
+    """Estimate the number of tokens in a string for the given model."""
+    enc = tiktoken.encoding_for_model(model)
+    return len(enc.encode(text))
+
+
+def split_chunk_by_tokens(text: str, max_tokens: int = MAX_TOKENS, model: str = "text-embedding-3-small") -> list:
+    """Split a chunk into smaller chunks if it exceeds max_tokens."""
+    enc = tiktoken.encoding_for_model(model)
+    tokens = enc.encode(text)
+    if len(tokens) <= max_tokens:
+        return [text]
+    # Split tokens into segments
+    sub_chunks = []
+    for i in range(0, len(tokens), max_tokens):
+        sub = tokens[i:i+max_tokens]
+        sub_chunks.append(enc.decode(sub))
+    return sub_chunks
+
+
 # -------------------------
 # Main Processing
 # -------------------------
@@ -76,25 +146,31 @@ def process_file(filepath: Path) -> List[Dict]:
     logger.info(f"Processing file: {filepath}")
     text = read_text_file(filepath)
     filename = filepath.stem
-    topic = get_topic_from_filename(filename)
-    # Use timezone-aware UTC datetime
+    topics = auto_tag_chunk(text)
     loadtime = datetime.datetime.now(datetime.UTC).isoformat()
-
-    chunks = chunk_text(text)
+    reference_urls = extract_urls(text)
+    chunks = chunk_text_by_paragraphs(text)
     results = []
 
     for i, chunk in enumerate(chunks):
-        chunk_id = generate_id(chunk, filename)
-        chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk_id))
-        results.append({
-            "id": chunk_id,
-            "uuid": chunk_uuid,
-            "topic": topic,
-            "source": filename,
-            "chunk_index": i,
-            "text": chunk,
-            "loadtime": loadtime
-        })
+        # Split chunk if too large
+        sub_chunks = split_chunk_by_tokens(chunk, MAX_TOKENS)
+        for j, sub_chunk in enumerate(sub_chunks):
+            chunk_id = generate_id(sub_chunk, filename + f"_{i}_{j}")
+            chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk_id))
+            chunk_topics = auto_tag_chunk(sub_chunk)
+            results.append(
+                {
+                    "id": chunk_id,
+                    "uuid": chunk_uuid,
+                    "topics": chunk_topics,
+                    "source": filename,
+                    "chunk_index": f"{i}_{j}" if len(sub_chunks) > 1 else i,
+                    "text": sub_chunk,
+                    "reference_urls": reference_urls,
+                    "loadtime": loadtime,
+                }
+            )
     logger.info(f"Processed {len(results)} chunks from {filepath.name}")
     return results
 
@@ -111,7 +187,6 @@ def main():
             all_chunks.extend(file_chunks)
         except Exception as e:
             logger.error(f"Failed to process {filepath}: {e}")
-
 
     try:
         with open(CHUNKS_PATH, "w", encoding="utf-8") as f:
