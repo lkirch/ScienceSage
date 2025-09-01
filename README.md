@@ -92,7 +92,11 @@ ScienceSage/
   - [NASA - Mitigation Resources](https://science.nasa.gov/climate-change/adaptation-mitigation/resources/)
 - **Animal Behavior & Ecosystems**:  
   - [Wikipedia – Animal Migration](https://en.wikipedia.org/wiki/Animal_migration)  
-  -
+  - [Wikipedia - Climate Change Adaptation](https://en.wikipedia.org/wiki/Climate_change_adaptation)
+  - [Wikipedia - Climate Change and Fisheries](https://en.wikipedia.org/wiki/Climate_change_and_fisheries)
+  - [Wikipedia - Climate Change and Birds](https://en.wikipedia.org/wiki/Climate_change_and_birds)
+  - [Wikipedia - Decline in Wild Mammal Populations](https://en.wikipedia.org/wiki/Decline_in_wild_mammal_populations)
+
 ---
 
 ## ⚙️ Setup
@@ -287,6 +291,7 @@ Code is MIT licensed.
 
 - [DataTalksClub LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp)
 - [GitHub Codespaces](https://github.com/features/codespaces)
+- [Wikipedia API](https://pypi.org/project/Wikipedia-API/)
 - [Qdrant](https://qdrant.tech/)
 - [Streamlit](https://streamlit.io/)
 - [OpenAI](https://openai.com/)
