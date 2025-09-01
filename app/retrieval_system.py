@@ -38,7 +38,7 @@ def retrieve_answer(query: str, topic: str, level: str):
             query=vector,
             limit=3,
             query_filter=Filter(
-                must=[FieldCondition(key="topic", match=MatchValue(value=topic))]
+                must=[FieldCondition(key="topics", match=MatchValue(value=topic))]
             )
         )
         logger.debug(f"Qdrant returned {len(results.points)} points")
@@ -49,7 +49,7 @@ def retrieve_answer(query: str, topic: str, level: str):
     contexts = [p.payload.get("text") for p in results.points]
     if not contexts:
         logger.warning("No context found for query")
-    context_text = "\n\n".join(contexts) if contexts else "No additional context found."
+    context_text = "\n\n".join(contexts) if contexts else "No additional context found in the database."
 
     system_prompt = get_system_prompt(topic, level)
     user_prompt = get_user_prompt(query, context_text)
@@ -68,4 +68,4 @@ def retrieve_answer(query: str, topic: str, level: str):
         raise
 
     answer = completion.choices[0].message.content
-    return answer,
+    return answer, contexts
