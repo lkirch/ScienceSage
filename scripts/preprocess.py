@@ -12,23 +12,13 @@ import tiktoken
 
 # Ensure project root is in sys.path for config import
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config.config import PROCESSED_DATA_DIR, CHUNKS_FILE, CHUNK_SIZE, CHUNK_OVERLAP, TOPIC_KEYWORDS
+from config.config import PROCESSED_DATA_DIR, CHUNKS_FILE, CHUNK_SIZE, CHUNK_OVERLAP, TOPIC_KEYWORDS, MAX_TOKENS
 
 # -------------------------
 # Logging
 # -------------------------
 logger.add("logs/preprocess.log", rotation="5 MB", retention="7 days")
 logger.info("Started preprocess.py script.")
-
-# -------------------------
-# Config
-# -------------------------
-PROCESSED_DIR = Path(PROCESSED_DATA_DIR)
-CHUNKS_PATH = Path(CHUNKS_FILE)
-CHUNKS_PATH.parent.mkdir(parents=True, exist_ok=True)
-
-MAX_TOKENS = 8192  # For OpenAI text-embedding-3-small
-
 
 # -------------------------
 # Helpers
@@ -85,13 +75,6 @@ def chunk_text_by_paragraphs(
     return chunks
 
 
-def get_topic_from_filename(filename: str) -> str:
-    """Infer topic from filename (e.g., 'climate_nasa.txt' → 'climate')."""
-    topic = filename.split("_")[0] if "_" in filename else filename.replace(".txt", "")
-    logger.debug(f"Inferred topic '{topic}' from filename '{filename}'")
-    return topic
-
-
 def generate_id(text: str, prefix: str) -> str:
     """Generate a stable unique ID from hash of text."""
     hash_id = hashlib.md5(text.encode("utf-8")).hexdigest()[:12]
@@ -127,6 +110,18 @@ def split_chunk_by_tokens(text: str, max_tokens: int = MAX_TOKENS, model: str = 
     return sub_chunks
 
 
+def get_topic_from_keywords(text: str) -> str:
+    """
+    Infer the most relevant topic from the text using TOPIC_KEYWORDS.
+    Returns the first matching topic, or 'Other' if none found.
+    """
+    lower = text.lower()
+    for topic, keywords in TOPIC_KEYWORDS.items():
+        if any(kw in lower for kw in keywords):
+            return topic
+    return "Other"
+
+
 # -------------------------
 # Main Processing
 # -------------------------
@@ -135,7 +130,6 @@ def process_file(filepath: Path) -> List[Dict]:
     logger.info(f"Processing file: {filepath}")
     text = read_text_file(filepath)
     filename = filepath.stem
-    topics = auto_tag_chunk(text)
     loadtime = datetime.datetime.now(datetime.UTC).isoformat()
     reference_urls = extract_urls(text)
     chunks = chunk_text_by_paragraphs(text)
@@ -148,11 +142,14 @@ def process_file(filepath: Path) -> List[Dict]:
             chunk_id = generate_id(sub_chunk, filename + f"_{i}_{j}")
             chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk_id))
             chunk_topics = auto_tag_chunk(sub_chunk)
+            # Get the primary topic for this chunk using keywords
+            topic = get_topic_from_keywords(sub_chunk)
             results.append(
                 {
                     "id": chunk_id,
                     "uuid": chunk_uuid,
                     "topics": chunk_topics,
+                    "topic": topic,  # <-- primary topic inferred here
                     "source": filename,
                     "chunk_index": f"{i}_{j}" if len(sub_chunks) > 1 else i,
                     "text": sub_chunk,
@@ -166,9 +163,10 @@ def process_file(filepath: Path) -> List[Dict]:
 
 def main():
     all_chunks = []
-    files = list(PROCESSED_DIR.glob("*.txt"))
+    processed_dir = Path(PROCESSED_DATA_DIR)  # Convert to Path object
+    files = list(processed_dir.glob("*.txt"))
     if not files:
-        logger.warning(f"No .txt files found in {PROCESSED_DIR}")
+        logger.warning(f"No .txt files found in {processed_dir}")
     for filepath in files:
         logger.info(f"Processing {filepath.name}...")
         try:
@@ -178,14 +176,14 @@ def main():
             logger.error(f"Failed to process {filepath}: {e}")
 
     try:
-        with open(CHUNKS_PATH, "w", encoding="utf-8") as f:
+        with open(CHUNKS_FILE, "w", encoding="utf-8") as f:
             for entry in all_chunks:
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-        logger.success(f"Saved {len(all_chunks)} chunks to {CHUNKS_PATH}")
+        logger.success(f"Saved {len(all_chunks)} chunks to {CHUNKS_FILE}")
     except Exception as e:
-        logger.error(f"Failed to save chunks to {CHUNKS_PATH}: {e}")
+        logger.error(f"Failed to save chunks to {CHUNKS_FILE}: {e}")
 
-    print(f"✅ Saved {len(all_chunks)} chunks to {CHUNKS_PATH}")
+    print(f"✅ Saved {len(all_chunks)} chunks to {CHUNKS_FILE}")
 
 
 if __name__ == "__main__":
