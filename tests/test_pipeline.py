@@ -45,9 +45,7 @@ def test_get_user_prompt_includes_context():
 def test_save_feedback_creates_file_and_writes(tmp_path):
     logger.info("Testing save_feedback creates file and writes content.")
     # Patch feedback file location
-    orig_dir = feedback_manager.FEEDBACK_DIR
     orig_file = feedback_manager.FEEDBACK_FILE
-    feedback_manager.FEEDBACK_DIR = str(tmp_path)
     feedback_manager.FEEDBACK_FILE = os.path.join(str(tmp_path), "feedback.csv")
 
     feedback_manager.save_feedback("Q", "A", "AI", "College", "up")
@@ -57,7 +55,6 @@ def test_save_feedback_creates_file_and_writes(tmp_path):
     assert any("AI" in line for line in lines)
 
     # Restore
-    feedback_manager.FEEDBACK_DIR = orig_dir
     feedback_manager.FEEDBACK_FILE = orig_file
     logger.success("test_save_feedback_creates_file_and_writes passed.")
 
