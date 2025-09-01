@@ -10,7 +10,7 @@ from loguru import logger
 
 # Ensure project root is in sys.path for config import
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config.config import RAW_DATA_DIR, PROCESSED_DATA_DIR, NASA_URLS, WIKI_TITLES, PDF_FILES
+from config.config import RAW_DATA_DIR, PROCESSED_DATA_DIR, NASA_URLS, WIKI_TITLES #, PDF_TITLEs
 
 logger.add("logs/download_and_clean.log", rotation="5 MB", retention="7 days")
 
@@ -154,7 +154,7 @@ if __name__ == "__main__":
         download_wikipedia_article(title, name)
 
     # Process PDFs (e.g., Stanford LLM slides)
-    #for name, path in PDF_FILES.items():
+    #for name, path in PDF_TITLES.items():
     #    if os.path.exists(path):
     #        process_pdf(path, name)
     #    else:
