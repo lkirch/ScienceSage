@@ -76,12 +76,23 @@ ScienceSage/
 - **Neuroplasticity**: [Wikipedia](https://en.wikipedia.org/wiki/Neuroplasticity)  
 - **AI Concepts**:  
   - [Wikipedia – Transformer (ML)](https://en.wikipedia.org/wiki/Transformer_(machine_learning))  
-  - [Stanford CS324 LLM Lectures (CC BY-SA)](https://web.stanford.edu/class/cs324/)  
-- **Climate Change & Renewable Energy**: [NASA Climate Change](https://climate.nasa.gov/)  
+  - [Wikipedia - Reinforcement Learning](https://en.wikipedia.org/wiki/Reinforcement_learning)
+  - [Wikipedia - Large Language Model](https://en.wikipedia.org/wiki/Large_language_model)
+- **Climate Change & Renewable Energy**: 
+  - [NASA  - Climate Change](https://climate.nasa.gov/)  
+  - [NASA - What is climate change?](https://science.nasa.gov/climate-change/what-is-climate-change/)
+  - [NASA - Climate Change FAQ](https://science.nasa.gov/climate-change/faq/)
+  - [NASA - Evidence](https://climate.nasa.gov/evidence/)
+  - [NASA - Causes](https://climate.nasa.gov/causes/)
+  - [NASA - Effects](https://climate.nasa.gov/effects/)
+  - [NASA - Scientific Consensus](https://science.nasa.gov/climate-change/scientific-consensus/)
+  - [NASA - Extreme Weather](https://science.nasa.gov/climate-change/extreme-weather/)
+  - [NASA - Wildfires](https://science.nasa.gov/earth/explore/wildfires-and-climate-change/)
+  - [NASA - Adaptation](https://science.nasa.gov/climate-change/adaptation-mitigation/)
+  - [NASA - Mitigation Resources](https://science.nasa.gov/climate-change/adaptation-mitigation/resources/)
 - **Animal Behavior & Ecosystems**:  
-  - [Smithsonian Open Access](https://www.si.edu/openaccess)  
   - [Wikipedia – Animal Migration](https://en.wikipedia.org/wiki/Animal_migration)  
-
+  -
 ---
 
 ## ⚙️ Setup
