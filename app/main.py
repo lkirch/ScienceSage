@@ -9,7 +9,11 @@ load_dotenv()
 
 st.set_page_config(page_title="ScienceSage", layout="wide")
 
-st.title("🔬 ScienceSage")
+# Sage green hex: #9DC183
+st.markdown(
+    '<h1 style="color:#9DC183; font-size:2.5em; margin-bottom:0.2em;">🔬 ScienceSage</h1>',
+    unsafe_allow_html=True
+)
 st.markdown('<span style="font-size:1.2em;color:gray;">"Smart Science, Made Simple."</span>', unsafe_allow_html=True)
 
 # Sidebar
