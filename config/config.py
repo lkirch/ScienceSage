@@ -25,6 +25,9 @@ DISTANCE_METRIC = "Cosine"
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
 
+# --- Tokens ---
+MAX_TOKENS = 8192  # For OpenAI text-embedding-3-small
+
 # --- Qdrant ---
 QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
