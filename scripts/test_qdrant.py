@@ -1,4 +1,3 @@
-
 import os
 import sys
 from pathlib import Path
@@ -45,9 +44,15 @@ def list_topics_and_counts(client, collection_name):
                 with_vectors=False
             )
             for point in points:
-                topic = point.payload.get("topic")
-                if topic:
-                    topic_counts[topic] = topic_counts.get(topic, 0) + 1
+                # Check for both 'topic' (string) and 'topics' (list)
+                topics = []
+                if "topics" in point.payload and isinstance(point.payload["topics"], list):
+                    topics = point.payload["topics"]
+                elif "topic" in point.payload and isinstance(point.payload["topic"], str):
+                    topics = [point.payload["topic"]]
+                for topic in topics:
+                    if topic:
+                        topic_counts[topic] = topic_counts.get(topic, 0) + 1
             if not next_offset:
                 break
             offset = next_offset
