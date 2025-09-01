@@ -75,6 +75,19 @@ TOPICS = [
     "Ecosystem Interactions"
 ]
 
+# --- Topic Keywords ---
+TOPIC_KEYWORDS = {
+    "Neuroplasticity": ["neuroplasticity", "brain", "neurons", "synapse", "cortex", "plasticity"],
+    "AI": ["ai", "artificial intelligence", "machine learning", "neural network", "transformer", "deep learning", "reinforcement learning", "large language model"],
+    "Renewable Energy & Climate Change": [
+        "climate change", "renewable energy", "solar", "wind", "greenhouse", "carbon", "global warming", "mitigation", "adaptation", "fossil fuel", "emissions"
+    ],
+    "Animal Adaptation": ["animal adaptation", "migration", "mimicry", "camouflage", "hibernation", "adaptation", "evolution"],
+    "Ecosystem Interactions": [
+        "ecosystem", "biodiversity", "food chain", "predator", "prey", "symbiosis", "deforestation", "habitat", "species interaction"
+    ],
+}
+
 # --- Education levels ---
 LEVELS = [
     "Middle School",

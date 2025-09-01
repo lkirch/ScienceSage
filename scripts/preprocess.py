@@ -12,7 +12,7 @@ import tiktoken
 
 # Ensure project root is in sys.path for config import
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config.config import PROCESSED_DATA_DIR, CHUNKS_FILE, CHUNK_SIZE, CHUNK_OVERLAP
+from config.config import PROCESSED_DATA_DIR, CHUNKS_FILE, CHUNK_SIZE, CHUNK_OVERLAP, TOPIC_KEYWORDS
 
 # -------------------------
 # Logging
@@ -99,23 +99,12 @@ def generate_id(text: str, prefix: str) -> str:
 
 
 def auto_tag_chunk(text: str) -> list:
-    """
-    Simple auto-tagging based on keyword matching.
-    Expand this function as needed for your domain.
-    """
     tags = []
     lower = text.lower()
-    if any(word in lower for word in ["neuron", "brain", "plasticity"]):
-        tags.append("neuroscience")
-    if any(word in lower for word in ["climate", "greenhouse", "carbon", "solar", "renewable"]):
-        tags.append("climate")
-    if any(word in lower for word in ["ai", "artificial intelligence", "machine learning", "neural network", "transformer"]):
-        tags.append("ai")
-    if any(word in lower for word in ["animal", "migration", "adaptation", "mimicry"]):
-        tags.append("animal_adaptation")
-    if any(word in lower for word in ["ecosystem", "biodiversity", "deforestation", "food chain"]):
-        tags.append("ecosystem")
-    return tags or ["other"]
+    for topic, keywords in TOPIC_KEYWORDS.items():
+        if any(kw in lower for kw in keywords):
+            tags.append(topic)
+    return tags or ["Other"]
 
 
 def num_tokens(text: str, model: str = "text-embedding-3-small") -> int:
