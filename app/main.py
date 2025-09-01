@@ -49,6 +49,11 @@ if st.button("Get Answer"):
                 logger.error(f"Error retrieving answer: {e}")
                 st.error("An error occurred while retrieving the answer.")
                 answer, context = None, None
+        st.session_state.answer = answer
+        st.session_state.context = context
+        st.session_state.last_query = query
+        st.session_state.last_topic = topic
+        st.session_state.last_level = level
         st.subheader("Answer")
         st.write(answer)
 
@@ -61,20 +66,32 @@ if st.button("Get Answer"):
             else:
                 st.info("No context retrieved.")
 
-        # Feedback
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            if st.button("👍", key="up"):
-                save_feedback(query, answer, topic, level, "up")
-                logger.info("User gave positive feedback")
-        with col2:
-            if st.button("👎", key="down"):
-                save_feedback(query, answer, topic, level, "down")
-                logger.info("User gave negative feedback")
-        with col3:
-            if st.button("🔄 Regenerate", key="regen"):
-                answer, context = retrieve_answer(query, topic, level)
-                logger.info("User requested answer regeneration")
-                st.write(answer)
-    else:
-        st.warning("Please enter a question.")
+# Feedback
+col1, col2, col3 = st.columns(3)
+with col1:
+    if st.button("👍", key="up"):
+        save_feedback(
+            st.session_state.get("last_query", ""),
+            st.session_state.get("answer", ""),
+            st.session_state.get("last_topic", ""),
+            st.session_state.get("last_level", ""),
+            "up"
+        )
+        logger.info("User gave positive feedback")
+with col2:
+    if st.button("👎", key="down"):
+        save_feedback(
+            st.session_state.get("last_query", ""),
+            st.session_state.get("answer", ""),
+            st.session_state.get("last_topic", ""),
+            st.session_state.get("last_level", ""),
+            "down"
+        )
+        logger.info("User gave negative feedback")
+with col3:
+    if st.button("🔄 Regenerate", key="regen"):
+        answer, context = retrieve_answer(query, topic, level)
+        st.session_state.answer = answer
+        st.session_state.context = context
+        st.write(answer)
+        logger.info("User requested answer regeneration")
