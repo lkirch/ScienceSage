@@ -1,12 +1,7 @@
 import os
-import sys
-from pathlib import Path
 import csv
 from datetime import datetime, timezone
 from loguru import logger
-
-# Ensure project root is in sys.path for config import
-sys.path.append(str(Path(__file__).resolve().parent.parent))
 from config.config import FEEDBACK_FILE
 
 def save_feedback(query, answer, topic, level, feedback_type):
