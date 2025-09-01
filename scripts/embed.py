@@ -9,6 +9,7 @@ from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, VectorParams, Distance
 from loguru import logger
+import argparse
 
 # Ensure project root is in sys.path for config import
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -82,12 +83,33 @@ def ensure_collection(vector_size: int):
         logger.error(f"Failed to ensure Qdrant collection: {e}")
         raise
 
-
+def drop_collection():
+    """Delete the Qdrant collection if it exists."""
+    try:
+        collections = qdrant.get_collections().collections
+        existing = [c.name for c in collections]
+        if QDRANT_COLLECTION in existing:
+            qdrant.delete_collection(collection_name=QDRANT_COLLECTION)
+            logger.info(f"Dropped existing Qdrant collection '{QDRANT_COLLECTION}'")
+    except Exception as e:
+        logger.error(f"Failed to drop Qdrant collection: {e}")
+        raise
 
 # -------------------------
 # Main
 # -------------------------
 def main():
+    parser = argparse.ArgumentParser(description="Embed and upload chunks to Qdrant.")
+    parser.add_argument(
+        "--append",
+        action="store_true",
+        help="Append to existing collection instead of dropping and recreating."
+    )
+    args = parser.parse_args()
+
+    if not args.append:
+        drop_collection()
+
     chunks = load_chunks(Path(CHUNKS_FILE))
 
     if not chunks:
@@ -114,7 +136,6 @@ def main():
     for chunk in chunks:
         try:
             vector = get_embedding(chunk["text"])
-            # Use the 'uuid' field from preprocess.py as the point ID (string)
             point_id = chunk.get("uuid", str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk["id"]))))
             point = PointStruct(
                 id=point_id,
@@ -122,7 +143,7 @@ def main():
                 payload={
                     "id": chunk.get("id"),
                     "uuid": chunk.get("uuid"),
-                    "topics": chunk.get("topics", []),  # list of inferred topics
+                    "topics": chunk.get("topics", []),
                     "source": chunk.get("source"),
                     "chunk_index": chunk.get("chunk_index"),
                     "text": chunk.get("text"),
