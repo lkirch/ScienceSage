@@ -10,7 +10,7 @@ from loguru import logger
 
 # Ensure project root is in sys.path for config import
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config.config import RAW_DATA_DIR, PROCESSED_DATA_DIR
+from config.config import RAW_DATA_DIR, PROCESSED_DATA_DIR, NASA_URLS, WIKI_TITLES, PDF_FILES
 
 logger.add("logs/download_and_clean.log", rotation="5 MB", retention="7 days")
 
@@ -145,51 +145,17 @@ def process_pdf(pdf_path: str, name: str):
 # ----------- Main Pipeline -----------
 
 if __name__ == "__main__":
-    # NASA Climate Change pages
-    nasa_urls = {
-        "nasa_overview": "https://climate.nasa.gov/",
-        "nasa_evidence": "https://climate.nasa.gov/evidence/",
-        "nasa_causes": "https://climate.nasa.gov/causes/",
-        "nasa_effects": "https://climate.nasa.gov/effects/",
-        "nasa_scientific_consensus": "https://science.nasa.gov/climate-change/scientific-consensus/",
-        "nasa_what_is_climate_change": "https://science.nasa.gov/climate-change/what-is-climate-change/",
-        "nasa_extreme_weather": "https://science.nasa.gov/climate-change/extreme-weather/",
-        "nasa_wildfires": "https://science.nasa.gov/earth/explore/wildfires-and-climate-change/",
-        "nasa_faq": "https://science.nasa.gov/climate-change/faq/",
-        "nasa_adaptation_mitigation": "https://science.nasa.gov/climate-change/adaptation-mitigation/",
-        "nasa_adaptation_mitigation_resources": "https://science.nasa.gov/climate-change/adaptation-mitigation/resources/",
-    }
-
-    # Wikipedia pages (mapping: name -> Wikipedia article title)
-    wiki_titles = {
-        "neuroplasticity": "Neuroplasticity",
-        "transformer_ml": "Transformer (machine learning)",
-        "reinforcement_learning": "Reinforcement learning",
-        "large_language_model": "Large language model",
-        "retrieval_augmented_generation": "Retrieval-augmented generation",
-        "animal_migration": "Animal migration",
-        "climate_change_adaptation": "Climate change adaptation",
-        "climate_change_and_fisheries": "Climate change and fisheries",
-        "climate_change_and_birds": "Climate change and birds",
-        "decline_in_wild_mammal_populations": "Decline in wild mammal populations",
-    }
-
     # Download and clean NASA pages
-    for name, url in nasa_urls.items():
+    for name, url in NASA_URLS.items():
         download_webpage(url, name)
 
     # Download and clean Wikipedia pages using the API
-    for name, title in wiki_titles.items():
+    for name, title in WIKI_TITLES.items():
         download_wikipedia_article(title, name)
 
     # Process PDFs (e.g., Stanford LLM slides)
-    # pdf_files = {
-    #     "stanford_llm_lecture1": "data/raw/stanford_llm_lecture1.pdf",
-    #     # Add more as needed
-    # }
-
-    # for name, path in pdf_files.items():
-    #     if os.path.exists(path):
-    #         process_pdf(path, name)
-    #     else:
-    #         print(f"⚠️ PDF {path} not found. Please add it first.")
+    #for name, path in PDF_FILES.items():
+    #    if os.path.exists(path):
+    #        process_pdf(path, name)
+    #    else:
+    #        print(f"⚠️ PDF {path} not found. Please add it first.")

@@ -32,6 +32,40 @@ QDRANT_COLLECTION = "scientific_concepts"
 EMBED_MODEL = "text-embedding-3-small"  # or "text-embedding-3-large"
 QDRANT_URL = f"http://{QDRANT_HOST}:{QDRANT_PORT}"
 
+# --- NASA URLs ---
+NASA_URLS = {
+    "nasa_overview": "https://climate.nasa.gov/",
+    "nasa_evidence": "https://climate.nasa.gov/evidence/",
+    "nasa_causes": "https://climate.nasa.gov/causes/",
+    "nasa_effects": "https://climate.nasa.gov/effects/",
+    "nasa_scientific_consensus": "https://science.nasa.gov/climate-change/scientific-consensus/",
+    "nasa_what_is_climate_change": "https://science.nasa.gov/climate-change/what-is-climate-change/",
+    "nasa_extreme_weather": "https://science.nasa.gov/climate-change/extreme-weather/",
+    "nasa_wildfires": "https://science.nasa.gov/earth/explore/wildfires-and-climate-change/",
+    "nasa_faq": "https://science.nasa.gov/climate-change/faq/",
+    "nasa_adaptation_mitigation": "https://science.nasa.gov/climate-change/adaptation-mitigation/",
+    "nasa_adaptation_mitigation_resources": "https://science.nasa.gov/climate-change/adaptation-mitigation/resources/",
+}
+
+# --- Wikipedia Titles ---
+WIKI_TITLES = {
+    "neuroplasticity": "Neuroplasticity",
+    "transformer_ml": "Transformer (machine learning)",
+    "reinforcement_learning": "Reinforcement learning",
+    "large_language_model": "Large language model",
+    "retrieval_augmented_generation": "Retrieval-augmented generation",
+    "animal_migration": "Animal migration",
+    "climate_change_adaptation": "Climate change adaptation",
+    "climate_change_and_fisheries": "Climate change and fisheries",
+    "climate_change_and_birds": "Climate change and birds",
+    "decline_in_wild_mammal_populations": "Decline in wild mammal populations",
+}
+
+# --- PDF Titles ---
+PDF_TITLES = {
+    "stanford_llm_lecture1": "Stanford LLM Lecture 1",
+}
+
 # --- Topics ---
 TOPICS = [
     "Neuroplasticity",
