@@ -1,4 +1,3 @@
-
 import os
 import sys
 from pathlib import Path
@@ -121,11 +120,14 @@ def main():
                 id=point_id,
                 vector=vector,
                 payload={
-                    "topic": chunk["topic"],
-                    "source": chunk["source"],
-                    "chunk_index": chunk["chunk_index"],
-                    "text": chunk["text"],
-                    "loadtime": chunk.get("loadtime")  # include loadtime if present
+                    "id": chunk.get("id"),
+                    "uuid": chunk.get("uuid"),
+                    "topics": chunk.get("topics", []),  # list of inferred topics
+                    "source": chunk.get("source"),
+                    "chunk_index": chunk.get("chunk_index"),
+                    "text": chunk.get("text"),
+                    "reference_urls": chunk.get("reference_urls", []),
+                    "loadtime": chunk.get("loadtime"),
                 }
             )
             points.append(point)
