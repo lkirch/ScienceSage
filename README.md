@@ -298,4 +298,4 @@ Code is MIT licensed.
 - [Streamlit](https://streamlit.io/)
 - [OpenAI](https://openai.com/)
 - [Claude](http://claude.ai) and [ChatGPT](http://chatgpt.com) for brainstorming, code debugging and improvements
-- [Google's Nano Banana](https://aistudio.google.com/prompts/new_chat?model=gemini-2.5-flash-image-preview)
+- [Google's Nano Banana](https://aistudio.google.com/prompts/new_chat?model=gemini-2.5-flash-image-preview) for designing the logo
