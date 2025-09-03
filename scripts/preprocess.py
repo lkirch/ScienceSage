@@ -1,5 +1,4 @@
 import os
-import sys
 from pathlib import Path
 import json
 import hashlib
@@ -10,9 +9,14 @@ from typing import List, Dict
 from loguru import logger
 import tiktoken 
 
-# Ensure project root is in sys.path for config import
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config.config import PROCESSED_DATA_DIR, CHUNKS_FILE, CHUNK_SIZE, CHUNK_OVERLAP, TOPIC_KEYWORDS, MAX_TOKENS
+from sciencesage.config import (
+    PROCESSED_DATA_DIR, 
+    CHUNKS_FILE, 
+    CHUNK_SIZE, 
+    CHUNK_OVERLAP, 
+    TOPIC_KEYWORDS, 
+    MAX_TOKENS
+)
 
 # -------------------------
 # Logging

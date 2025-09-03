@@ -1,17 +1,22 @@
 import os
-import sys
-from pathlib import Path
+import re
+import html
 import requests
 import trafilatura
 import pdfplumber
-import re
-import html
+from pathlib import Path
 from loguru import logger
 
-# Ensure project root is in sys.path for config import
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config.config import RAW_DATA_DIR, PROCESSED_DATA_DIR, NASA_URLS, WIKI_TITLES #, PDF_TITLEs
+# Internal imports
+from sciencesage.config import (
+    RAW_DATA_DIR,
+    PROCESSED_DATA_DIR,
+    NASA_URLS,
+    WIKI_TITLES,
+    # PDF_TITLES,
+)
 
+# Logging setup
 logger.add("logs/download_and_clean.log", rotation="5 MB", retention="7 days")
 
 os.makedirs(RAW_DATA_DIR, exist_ok=True)
@@ -29,20 +34,21 @@ def save_file(path: str, content: str, mode="w", binary=False):
 
 def light_clean_text(text: str) -> str:
     """Light cleaning: normalize whitespace, remove encoding artifacts."""
-    # Unescape HTML entities
     text = html.unescape(text)
-    # Remove common encoding artifacts
     text = text.replace("\u200b", "")  # zero-width space
     text = text.replace("\ufeff", "")  # BOM
     text = text.replace("\xa0", " ")   # non-breaking space
-    # Normalize whitespace
     text = re.sub(r"\s+", " ", text)
     return text.strip()
 
 
 def clean_html_to_text(html_content: str) -> str:
     """Convert HTML to clean text using trafilatura, then light clean."""
-    extracted = trafilatura.extract(html_content, include_links=False, include_images=False) or ""
+    extracted = trafilatura.extract(
+        html_content,
+        include_links=False,
+        include_images=False
+    ) or ""
     return light_clean_text(extracted)
 
 
@@ -61,7 +67,10 @@ def fetch_wikipedia_article(title: str) -> str:
         "redirects": 1,
     }
     headers = {
-        "User-Agent": "ScienceSageBot/1.0 (https://github.com/yourusername/ScienceSage; contact@example.com)"
+        "User-Agent": (
+            "ScienceSageBot/1.0 "
+            "(https://github.com/yourusername/ScienceSage; contact@example.com)"
+        )
     }
     try:
         response = requests.get(url, params=params, headers=headers, timeout=20)
@@ -145,17 +154,15 @@ def process_pdf(pdf_path: str, name: str):
 # ----------- Main Pipeline -----------
 
 if __name__ == "__main__":
-    # Download and clean NASA pages
     for name, url in NASA_URLS.items():
         download_webpage(url, name)
 
-    # Download and clean Wikipedia pages using the API
     for name, title in WIKI_TITLES.items():
         download_wikipedia_article(title, name)
 
-    # Process PDFs (e.g., Stanford LLM slides)
-    #for name, path in PDF_TITLES.items():
-    #    if os.path.exists(path):
-    #        process_pdf(path, name)
-    #    else:
-    #        print(f"⚠️ PDF {path} not found. Please add it first.")
+    # for name, path in PDF_TITLES.items():
+    #     if os.path.exists(path):
+    #         process_pdf(path, name)
+    #     else:
+    #         logger.warning(f"⚠️ PDF {path} not found. Please add it first.")
+    #         print(f"⚠️ PDF {path} not found. Please add it first.")

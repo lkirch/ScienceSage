@@ -1,5 +1,4 @@
 import os
-import sys
 from pathlib import Path
 import json
 from typing import List, Dict
@@ -11,9 +10,13 @@ from qdrant_client.models import PointStruct, VectorParams, Distance
 from loguru import logger
 import argparse
 
-# Ensure project root is in sys.path for config import
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config.config import CHUNKS_FILE, QDRANT_HOST, QDRANT_PORT, QDRANT_COLLECTION, EMBED_MODEL
+from sciencesage.config import (
+    CHUNKS_FILE, 
+    QDRANT_HOST, 
+    QDRANT_PORT, 
+    QDRANT_COLLECTION, 
+    EMBED_MODEL
+)
 
 # -------------------------
 # Logging

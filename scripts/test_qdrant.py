@@ -1,5 +1,4 @@
 import os
-import sys
 from pathlib import Path
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
@@ -8,9 +7,11 @@ import numpy as np
 import inspect
 from loguru import logger
 
-# Ensure project root is in sys.path for config import
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config.config import QDRANT_HOST, QDRANT_PORT, QDRANT_COLLECTION
+from sciencesage.config import (
+    QDRANT_HOST, 
+    QDRANT_PORT, 
+    QDRANT_COLLECTION
+)
 
 # -------------------------
 # Logging
