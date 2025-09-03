@@ -2,7 +2,7 @@ from config.config import OPENAI_API_KEY, QDRANT_URL, QDRANT_COLLECTION
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import Filter, FieldCondition, MatchValue
-from app.prompts import get_system_prompt, get_user_prompt
+from sciencesage.prompts import get_system_prompt, get_user_prompt
 from loguru import logger
 
 client = OpenAI(api_key=OPENAI_API_KEY)
