@@ -1,15 +1,26 @@
+# Core
 requests
 python-dotenv
 trafilatura
 lxml[html_clean]
 pdfplumber
+
+# App/UI
 streamlit
-qdrant-client
+
+# AI/Embeddings
 openai
+tiktoken
+
+# Database/Vector Search
+qdrant-client
+
+# Logging & Utils
+loguru
+tqdm
+pandas
+
+# Dev & Testing
 pytest
 notebook
 ipykernel
-tqdm
-tiktoken
-loguru
-pandas
