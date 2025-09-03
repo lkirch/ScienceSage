@@ -1,3 +1,5 @@
+![ScienceSage Logo](images/nano-banana-generated-logo.jpeg)
+
 #  🧠 ScienceSage
 Smart Science, Made Simple
 
@@ -51,7 +53,7 @@ ScienceSage/
 ├── notebooks/              # Jupyter exploration
 │ └── sanity_check.ipynb
 │
-├── scripts/ # Utilities
+├── scripts/                # Utilities
 │ ├── download_and_clean.py # Download NASA/Wikipedia/PDF → text
 │ ├── preprocess.py         # Chunk text → JSONL
 │ ├── embed.py              # Embed chunks → Qdrant
