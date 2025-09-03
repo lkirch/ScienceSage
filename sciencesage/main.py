@@ -36,12 +36,6 @@ if st.sidebar.button("Try Example"):
 
 query = st.text_input("Enter your question:", key="query")
 
-def infer_topic_from_query(query):
-    for t in TOPICS:
-        if t.lower().split()[0] in query.lower():
-            return t
-    return TOPICS[0]  # fallback
-
 def run_retrieval(query: str, topic: str, level: str):
     """Shared helper for retrieving and displaying answers."""
     try:
@@ -88,14 +82,12 @@ def run_retrieval(query: str, topic: str, level: str):
 
 # --- Buttons ---
 if st.button("Get Answer"):
-    used_topic = topic or infer_topic_from_query(query)
-    if not topic:
-        st.warning("Please select a topic from the sidebar.")
-    elif query.strip():
-        logger.info(f"User submitted query: '{query[:50]}...', topic: '{used_topic}', level: '{level}'")
+    if query.strip():
+        logger.info(f"User submitted query: '{query[:50]}...', topic: '{topic}', level: '{level}'")
         with st.spinner("Retrieving answer..."):
-            run_retrieval(query, used_topic, level)
-   
+            run_retrieval(query, topic, level)
+    else:
+        st.warning("Please enter a question.")
 
 # Feedback
 col1, col2, col3 = st.columns(3)
