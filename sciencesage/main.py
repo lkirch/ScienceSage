@@ -1,11 +1,13 @@
 import streamlit as st
 from sciencesage.retrieval_system import retrieve_answer
 from sciencesage.feedback_manager import save_feedback
-from config.config import LEVELS, TOPICS
+from sciencesage.config import LEVELS, TOPICS
 from loguru import logger
 from dotenv import load_dotenv
 
 load_dotenv()
+
+st.image("../images/nano-banana-generated-logo.jpeg", width=120)
 
 st.set_page_config(page_title="ScienceSage", layout="wide")
 
