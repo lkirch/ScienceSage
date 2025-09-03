@@ -19,7 +19,7 @@ st.markdown(
 )
 st.markdown('<span style="font-size:1.2em;color:gray;">"Smart Science, Made Simple."</span>', unsafe_allow_html=True)
 
-# Sidebar
+# --- Sidebar ---
 st.sidebar.header("Controls")
 topic = st.sidebar.selectbox("Choose a topic", TOPICS)
 level = st.sidebar.radio("Select explanation level", LEVELS)
@@ -31,10 +31,14 @@ example_queries = {
     "Ecosystem Interactions": ["What is a food chain?", "How does deforestation affect biodiversity?"]
 }
 
+# --- Query input with session state ---
+if "query" not in st.session_state:
+    st.session_state.query = ""
+
 if st.sidebar.button("Try Example"):
     st.session_state.query = example_queries[topic][0]
 
-query = st.text_input("Enter your question:", key="query")
+query = st.text_input("Enter your question:", value=st.session_state.query, key="query")
 
 def run_retrieval(query: str, topic: str, level: str):
     """Shared helper for retrieving and displaying answers."""
