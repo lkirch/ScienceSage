@@ -34,8 +34,8 @@ Powered by **GPT-4**, **Qdrant**, and **Streamlit**, and developed in **Codespac
 ```
 ScienceSage/
 │
-├── app/                    # Application (Streamlit + backend logic)
-│ ├── app.py                # Streamlit UI
+├── sciencesage/            # Application (Streamlit + backend logic)
+│ ├── main.py               # Streamlit UI
 │ ├── retrieval_system.py   # Query → retrieve → GPT pipeline
 │ ├── feedback_manager.py   # Save thumbs up/down
 │ ├── analyze_feedback.py   # Summarize user feedback
@@ -145,7 +145,7 @@ python scripts/embed.py                # embed & store in Qdrant
 
 ### 6. Run the Streamlit app
 ```bash
-streamlit run app/app.py
+streamlit run sciencesage/main.py
 ```
 
 ---
