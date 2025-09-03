@@ -1,7 +1,7 @@
 from sciencesage.config import OPENAI_API_KEY, QDRANT_URL, QDRANT_COLLECTION
 from openai import OpenAI
 from qdrant_client import QdrantClient
-from qdrant_client.models import Filter, FieldCondition, MatchValue
+from qdrant_client.models import Filter, FieldCondition, MatchAny
 from sciencesage.prompts import get_system_prompt, get_user_prompt
 from loguru import logger
 
@@ -23,7 +23,7 @@ def embed_text(text: str):
         raise
 
 def retrieve_answer(query: str, topic: str, level: str):
-    """Retrieve top context from Qdrant and generate GPT answer."""
+    """Retrieve top context from Qdrant and generate answer."""
     logger.info(f"Retrieving answer for query='{query[:50]}...', topic='{topic}', level='{level}'")
     try:
         vector = embed_text(query)
@@ -36,9 +36,9 @@ def retrieve_answer(query: str, topic: str, level: str):
         results = qdrant.query_points(
             collection_name=QDRANT_COLLECTION,
             query=vector,
-            limit=3,
+            limit=5,
             query_filter=Filter(
-                must=[FieldCondition(key="topics", match=MatchValue(value=topic))]
+                must=[FieldCondition(key="topics", match=MatchAny(value=topic))]
             )
         )
         logger.debug(f"Qdrant returned {len(results.points)} points")
@@ -46,9 +46,23 @@ def retrieve_answer(query: str, topic: str, level: str):
         logger.error(f"Qdrant query failed: {e}")
         raise
 
-    contexts = [p.payload.get("text") for p in results.points]
-    if not contexts:
-        logger.warning("No context found for query")
+    contexts = []
+    references = []
+
+    for p in results.points:
+        payload = p.payload
+        text = payload.get("text", "")
+        source = payload.get("source", "unknown")
+        chunk = payload.get("chunk_index", "?")
+        urls = payload.get("reference_urls", [])
+
+        # Store context with metadata for prompting
+        contexts.append(f"[{source}:{chunk}] {text}")
+
+        # Collect URLs for display at bottom
+        if urls:
+            references.extend(urls)
+    
     context_text = "\n\n".join(contexts) if contexts else "No additional context found in the database."
 
     system_prompt = get_system_prompt(topic, level)
@@ -68,4 +82,4 @@ def retrieve_answer(query: str, topic: str, level: str):
         raise
 
     answer = completion.choices[0].message.content
-    return answer, contexts
+    return answer, contexts, references
