@@ -2,6 +2,7 @@ import streamlit as st
 from sciencesage.retrieval_system import retrieve_answer
 from sciencesage.feedback_manager import save_feedback
 from sciencesage.config import LEVELS, TOPICS
+import re
 from loguru import logger
 from dotenv import load_dotenv
 
@@ -41,6 +42,51 @@ def infer_topic_from_query(query):
             return t
     return TOPICS[0]  # fallback
 
+def run_retrieval(query: str, topic: str, level: str):
+    """Shared helper for retrieving and displaying answers."""
+    try:
+        answer, context, references = retrieve_answer(query, topic, level)
+        st.session_state.answer = answer
+        st.session_state.context = context
+        st.session_state.references = references
+        st.session_state.last_query = query
+        st.session_state.last_topic = topic
+        st.session_state.last_level = level
+    except Exception as e:
+        logger.error(f"Error retrieving answer: {e}")
+        st.error("An error occurred while retrieving the answer.")
+        return
+    
+    if references:
+        def replace_citation(match):
+            idx = int(match.group(1)) - 1
+            if 0 <= idx < len(references):
+                url = references[idx]
+                return f"[{idx+1}]({url})"
+            return match.group(0)
+
+        answer_with_links = re.sub(r"\[(\d+)\]", replace_citation, answer)
+    else:
+        answer_with_links = answer
+
+    st.subheader("Answer")
+    st.markdown(answer_with_links, unsafe_allow_html=True)
+
+    with st.expander("Show retrieved context"):
+        if st.session_state.context:
+            if isinstance(st.session_state.context, (list, tuple)):
+                st.markdown("\n\n".join(str(c) for c in st.session_state.context))
+            else:
+                st.markdown(str(st.session_state.context))
+        else:
+            st.info("No context retrieved.")
+
+    if references:
+        st.markdown("### 🔗 References")
+        for idx, url in enumerate(references, start=1):
+            st.markdown(f"- [{idx}]({url})")
+
+# --- Buttons ---
 if st.button("Get Answer"):
     used_topic = topic or infer_topic_from_query(query)
     if not topic:
@@ -48,29 +94,8 @@ if st.button("Get Answer"):
     elif query.strip():
         logger.info(f"User submitted query: '{query[:50]}...', topic: '{used_topic}', level: '{level}'")
         with st.spinner("Retrieving answer..."):
-            try:
-                answer, context = retrieve_answer(query, used_topic, level)
-                logger.info("Answer successfully retrieved")
-            except Exception as e:
-                logger.error(f"Error retrieving answer: {e}")
-                st.error("An error occurred while retrieving the answer.")
-                answer, context = None, None
-        st.session_state.answer = answer
-        st.session_state.context = context
-        st.session_state.last_query = query
-        st.session_state.last_topic = topic
-        st.session_state.last_level = level
-        st.subheader("Answer")
-        st.write(answer)
-
-        with st.expander("Show retrieved context"):
-            if context:
-                if isinstance(context, (list, tuple)):
-                    st.markdown("\n\n".join(str(c) for c in context))
-                else:
-                    st.markdown(str(context))
-            else:
-                st.info("No context retrieved.")
+            run_retrieval(query, used_topic, level)
+   
 
 # Feedback
 col1, col2, col3 = st.columns(3)
@@ -96,8 +121,9 @@ with col2:
         logger.info("User gave negative feedback")
 with col3:
     if st.button("🔄 Regenerate", key="regen"):
-        answer, context = retrieve_answer(query, topic, level)
-        st.session_state.answer = answer
-        st.session_state.context = context
-        st.write(answer)
-        logger.info("User requested answer regeneration")
+        if "last_query" in st.session_state:
+            run_retrieval(st.session_state.last_query, st.session_state.last_topic, st.session_state.last_level)
+            logger.info("User requested answer regeneration")
+        else:
+            st.warning("No previous query to regenerate.")
+            logger.info("User requested answer regeneration without a previous query")
