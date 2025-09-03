@@ -1,4 +1,4 @@
-from config.config import OPENAI_API_KEY, QDRANT_URL, QDRANT_COLLECTION
+from sciencesage.config import OPENAI_API_KEY, QDRANT_URL, QDRANT_COLLECTION
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import Filter, FieldCondition, MatchValue

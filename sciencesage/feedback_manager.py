@@ -2,7 +2,7 @@ import os
 import csv
 from datetime import datetime, timezone
 from loguru import logger
-from config.config import FEEDBACK_FILE
+from sciencesage.config import FEEDBACK_FILE
 
 def save_feedback(query, answer, topic, level, feedback_type):
     """Save feedback to CSV file."""

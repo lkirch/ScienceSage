@@ -1,8 +1,7 @@
-import sys
 import os
 from pathlib import Path
 from loguru import logger
-from config.config import QDRANT_URL
+from sciencesage.config import QDRANT_URL
 
 # -------------------------
 # Logging
@@ -10,9 +9,6 @@ from config.config import QDRANT_URL
 logger.add("logs/test_pipeline.log", rotation="5 MB", retention="7 days")
 logger.info("Started test_pipeline.py script.")
 
-
-# Ensure project root is in sys.path for app imports
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dotenv import load_dotenv
 
 # Load environment variables from .env
@@ -21,7 +17,7 @@ load_dotenv()
 # Construct QDRANT_URL from QDRANT_HOST and QDRANT_PORT
 os.environ["QDRANT_URL"] = os.getenv("QDRANT_URL")
 
-from app import feedback_manager, retrieval_system, prompts
+from sciencesage import feedback_manager, retrieval_system, prompts
 
 # --- Unit Tests ---
 
