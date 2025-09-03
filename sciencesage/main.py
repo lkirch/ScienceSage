@@ -1,6 +1,6 @@
 import streamlit as st
-from app.retrieval_system import retrieve_answer
-from app.feedback_manager import save_feedback
+from sciencesage.retrieval_system import retrieve_answer
+from sciencesage.feedback_manager import save_feedback
 from config.config import LEVELS, TOPICS
 from loguru import logger
 from dotenv import load_dotenv
