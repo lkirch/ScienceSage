@@ -93,7 +93,7 @@ def fetch_random_point(client, collection_name):
     except Exception as e:
         logger.error(f"Failed to fetch random point: {e}")
 
-def test_similarity_search(client, collection_name, vector_size):
+def similarity_search(client, collection_name, vector_size):
     logger.info(f"Testing similarity search in '{collection_name}':")
     try:
         test_vector = np.random.rand(vector_size).tolist()
@@ -119,7 +119,7 @@ def main():
         show_total_points(info)
         fetch_random_point(client, QDRANT_COLLECTION)
         list_topics_and_counts(client, QDRANT_COLLECTION)
-        test_similarity_search(client, QDRANT_COLLECTION, vector_size)
+        similarity_search(client, QDRANT_COLLECTION, vector_size)
     except Exception as e:
         logger.error(f"Error: {e}")
         logger.error(f"Collection '{QDRANT_COLLECTION}' not found or Qdrant is not running.")
