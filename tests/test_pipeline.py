@@ -80,10 +80,11 @@ def test_retrieve_answer_returns_answer_and_context(monkeypatch):
         choices = [DummyChoice()]
     monkeypatch.setattr(retrieval_system.client.chat.completions, "create", lambda **kwargs: DummyCompletion())
 
-    answer, contexts = retrieval_system.retrieve_answer("What is AI?", "AI", "College")
+    answer, contexts, references = retrieval_system.retrieve_answer("What is AI?", "AI", "College")
     assert "answer" in answer
     assert isinstance(contexts, list)
     assert len(contexts) > 0
     assert "context1" in contexts[0]
     assert "context2" in contexts[1]
-
+    assert isinstance(references, list)
+    logger.success("test_retrieve_answer_returns_answer_and_context passed.")
