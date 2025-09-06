@@ -49,21 +49,32 @@ ScienceSage/
 │ ├── processed/            # Clean text files
 │ ├── chunks/               # JSONL with chunked docs
 │ └── feedback/             # Feedback file for analysis
-│
+|
+├── images/                 # Images
+|
 ├── notebooks/              # Jupyter exploration
 │ └── sanity_check.ipynb
 │
 ├── scripts/                # Utilities
 │ ├── download_and_clean.py # Download NASA/Wikipedia/PDF → text
 │ ├── preprocess.py         # Chunk text → JSONL
-│ ├── embed.py              # Embed chunks → Qdrant
-│ └── test_qdrant.py        # Sanity check retrieval
+│ └── embed.py              # Embed chunks → Qdrant
 │
 ├── docker/                 # Docker setup
 │ └── Dockerfile
 │
 ├── tests/                  # Unit/integration tests
-│ └── test_pipeline.py
+│ ├── conftest.py           # Setup/teardown for the test suite
+│ ├── test_app_pipeline.py. # Tests the end-to-end application pipeline
+│ ├── test_embed.py.        # Tests the embedding process
+│ ├── test_integration.py.  # Tests across the retrieval system, LLM, and database
+│ ├── test_missing.py.      # Testing missing/invalid data 
+│ ├── test_pipeline.py.     # Tests RAG pipeline logic
+│ ├── test_prompts.py.      # Test prompt generation logic
+│ ├── test_qdrant.py        # Tests interactions with Qdrant
+│ ├── test_retrieval_system.py # Tests the retrieval system
+│ ├── test_session_state.py # Tests Streamlit session state logic
+│ └── test_ui.py            # Tests Streamlit UI components
 │
 ├── requirements.txt        # Python dependencies
 ├── README.md               # This file
