@@ -1,4 +1,5 @@
 import streamlit as st
+from pathlib import Path
 from sciencesage.retrieval_system import retrieve_answer
 from sciencesage.feedback_manager import save_feedback
 from sciencesage.config import LEVELS, TOPICS
@@ -8,17 +9,43 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-st.image("../images/nano-banana-generated-logo.jpeg", width=120)
-
 st.set_page_config(page_title="ScienceSage", layout="wide")
 
-# Sage green hex: #9DC183
+# --- wider Sidebar ---
 st.markdown(
-    '<h1 style="color:#9DC183; font-size:2.5em; margin-bottom:0.2em;">🔬 ScienceSage</h1>',
+    """
+    <style>
+    /* Make sidebar wider */
+    [data-testid="stSidebar"] {
+        min-width: 350px;
+        max-width: 350px;
+    }
+    </style>
+    """,
     unsafe_allow_html=True
 )
-st.markdown('<span style="font-size:1.2em;color:gray;">"Smart Science, Made Simple."</span>', unsafe_allow_html=True)
 
+logo_path = Path(__file__).parent.parent / "images" / "nano-banana-generated-logo.jpeg"
+
+# Sage green hex: #9DC183
+col_logo, col_title = st.columns([1, 8])
+with col_logo:
+    if logo_path.exists():
+        st.image(str(logo_path), width=80)
+    else:
+        st.markdown("<div style='font-size:50px;'>🔬</div>", unsafe_allow_html=True)
+
+with col_title:
+    st.markdown(
+        """
+        <h1 style="color:#9DC183; font-size:2.3em; margin-top:10px;">
+            ScienceSage: <span style="color:gray; font-weight:normal;">Smart Science, Made Simple.</span>
+        </h1>
+        """,
+        unsafe_allow_html=True,
+    )
+st.markdown("Ask me anything about science! Powered by LLMs and Vector Databases.")
+ 
 # --- Sidebar ---
 st.sidebar.header("Controls")
 topic = st.sidebar.selectbox("Choose a topic", TOPICS)
@@ -38,7 +65,18 @@ if "query" not in st.session_state:
 if st.sidebar.button("Try Example"):
     st.session_state.query = example_queries[topic][0]
 
-query = st.text_input("Enter your question:", value=st.session_state.query, key="query")
+arrow_prompt = """
+<span style="color:#9DC183; font-size:1.5em;">&#11013;</span>
+<span style="font-size:1.1em;"> Please select a topic and an explanation level on the left, then enter your question below: </span>
+<span style="color:#9DC183; font-size:1.5em;">&#11015;</span>
+"""
+
+st.markdown(arrow_prompt, unsafe_allow_html=True)
+query = st.text_input(
+    "",
+    key="query",
+    label_visibility="collapsed"
+)
 
 def run_retrieval(query: str, topic: str, level: str):
     """Shared helper for retrieving and displaying answers."""
