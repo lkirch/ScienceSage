@@ -102,7 +102,7 @@ LEVELS = [
 CHAT_MODEL = "gpt-4o-mini"
 
 # --- Retrieval settings ---
-TOP_K = 3   # number of chunks to retrieve
+TOP_K = 5   # number of chunks to retrieve
 
 logger.add("logs/sciencesage.log", rotation="10 MB", retention="10 days", level="INFO")
 logger.info("Configuration loaded.")
