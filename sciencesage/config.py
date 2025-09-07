@@ -22,8 +22,8 @@ EMBEDDING_DIM = 1536
 DISTANCE_METRIC = "Cosine"
 
 # --- Chunking ---
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 50
+CHUNK_SIZE = 1000
+CHUNK_OVERLAP = 100
 
 # --- Tokens ---
 MAX_TOKENS = 8192  # For OpenAI text-embedding-3-small
