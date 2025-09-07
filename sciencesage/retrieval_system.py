@@ -1,4 +1,4 @@
-from sciencesage.config import OPENAI_API_KEY, QDRANT_URL, QDRANT_COLLECTION, TOPICS, EMBED_MODEL
+from sciencesage.config import OPENAI_API_KEY, QDRANT_URL, QDRANT_COLLECTION, TOPICS, EMBED_MODEL, CHAT_MODEL
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from typing import Union, List
@@ -137,7 +137,7 @@ def retrieve_answer(query: str, topic: Union[str, List[str]], level: str):
 
     try:
         completion = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=CHAT_MODEL,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
