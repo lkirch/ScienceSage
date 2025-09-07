@@ -136,17 +136,23 @@ def main():
 
     # Upload chunks
     points = []
+    failed_chunks = []
     for chunk in chunks:
         try:
             vector = get_embedding(chunk["text"])
             point_id = chunk.get("uuid", str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk["id"]))))
+            topics = chunk.get("topics")
+            if isinstance(topics, str):
+                topics = [topics]
+            elif topics is None:
+                topics = []
             point = PointStruct(
                 id=point_id,
                 vector=vector,
                 payload={
                     "id": chunk.get("id"),
                     "uuid": chunk.get("uuid"),
-                    "topics": chunk.get("topics", []),
+                    "topics": topics,
                     "source": chunk.get("source"),
                     "chunk_index": chunk.get("chunk_index"),
                     "text": chunk.get("text"),
@@ -157,13 +163,19 @@ def main():
             points.append(point)
             logger.debug(f"Prepared point for chunk id: {point_id}")
         except Exception as e:
-            logger.error(f"Failed to process chunk: {e}")
+            chunk_id = chunk.get("id", "unknown")
+            logger.error(f"Failed to process chunk id {chunk_id}: {e}")
+            failed_chunks.append(chunk_id)
 
     try:
         qdrant.upsert(collection_name=QDRANT_COLLECTION, points=points)
         logger.info(f"Uploaded {len(points)} chunks to QDRANT collection '{QDRANT_COLLECTION}'")
     except Exception as e:
         logger.error(f"Failed to upload points to Qdrant: {e}")
+        # If upload fails, consider all as failed
+        failed_chunks.extend([p.payload.get("id", "unknown") for p in points])
 
-if __name__ == "__main__":
-    main()
+    if failed_chunks:
+        logger.warning(f"Failed to embed/upload {len(failed_chunks)} chunks. IDs: {failed_chunks}")
+    else:
+        logger.info("All chunks embedded and uploaded successfully.")
