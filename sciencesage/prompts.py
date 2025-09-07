@@ -1,5 +1,5 @@
 """
-Prompt templates for the Scientific Concept Explainer.
+Prompt templates for the ScienceSage
 """
 
 def get_system_prompt(topic: str, level: str) -> str:
