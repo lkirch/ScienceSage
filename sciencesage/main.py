@@ -19,6 +19,7 @@ st.markdown(
     [data-testid="stSidebar"] {
         min-width: 350px;
         max-width: 350px;
+        background-color: #D4E7C5;
     }
     </style>
     """,
