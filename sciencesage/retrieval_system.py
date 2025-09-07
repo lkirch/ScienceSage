@@ -1,75 +1,132 @@
-from sciencesage.config import OPENAI_API_KEY, QDRANT_URL, QDRANT_COLLECTION, CHAT_MODEL
+from sciencesage.config import OPENAI_API_KEY, QDRANT_URL, QDRANT_COLLECTION, TOPICS, EMBED_MODEL
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from typing import Union, List
 from qdrant_client.models import Filter, FieldCondition, MatchAny
 from sciencesage.prompts import get_system_prompt, get_user_prompt
 from loguru import logger
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
+# -------------------------
+# Clients
+# -------------------------
 client = OpenAI(api_key=OPENAI_API_KEY)
 qdrant = QdrantClient(url=QDRANT_URL)
 
+# -------------------------
+# Precompute Topic Embeddings (once per process)
+# -------------------------
+def embed_once(text: str):
+    try:
+        response = client.embeddings.create(model=EMBED_MODEL, input=text)
+        return response.data[0].embedding
+    except Exception as e:
+        logger.error(f"Failed to embed text: {text}, error: {e}")
+        raise
+
+logger.info("Precomputing topic embeddings...")
+TOPIC_EMBEDDINGS = {topic: embed_once(topic) for topic in TOPICS}
+
+
+# -------------------------
+# Embedding Function
+# -------------------------
 def embed_text(text: str):
     """Embed text with OpenAI."""
     logger.debug(f"Embedding text: {text[:50]}...")  # Log first 50 chars
     try:
-        response = client.embeddings.create(
-            model="text-embedding-3-small",
-            input=text
-        )
+        response = client.embeddings.create(model=EMBED_MODEL, input=text)
         logger.debug("Embedding successful")
         return response.data[0].embedding
     except Exception as e:
         logger.error(f"Embedding failed: {e}")
         raise
 
+
+# -------------------------
+# Topic-Aware Re-Ranking
+# -------------------------
+def rerank_results(results, query_vector):
+    """Re-rank Qdrant results using topic similarity as secondary score."""
+    reranked = []
+
+    query_vec_np = np.array(query_vector).reshape(1, -1)
+
+    for r in results.points:
+        payload = r.payload
+        chunk_topics = payload.get("topics", [])
+        max_topic_score = 0
+
+        # Compute topic similarity for each topic in payload
+        for t in chunk_topics:
+            topic_vec = TOPIC_EMBEDDINGS.get(t)
+            if topic_vec is not None:
+                score = cosine_similarity(query_vec_np, np.array(topic_vec).reshape(1, -1))[0][0]
+                max_topic_score = max(max_topic_score, score)
+
+        combined_score = 0.8 * r.score + 0.2 * max_topic_score
+        reranked.append((combined_score, r, max_topic_score))
+
+    reranked.sort(key=lambda x: x[0], reverse=True)
+
+    # Log for debugging
+    for score, r, tscore in reranked:
+        logger.debug(
+            f"Re-ranked: id={r.id}, topics={r.payload.get('topics')}, "
+            f"vec_score={r.score:.3f}, topic_score={tscore:.3f}, combined={score:.3f}"
+        )
+
+    return [r for _, r, _ in reranked]
+
+
+# -------------------------
+# Main Retrieval Function
+# -------------------------
 def retrieve_answer(query: str, topic: Union[str, List[str]], level: str):
     """Retrieve top context from Qdrant and generate answer."""
     logger.info(f"Retrieving answer for query='{query[:50]}...', topic='{topic}', level='{level}'")
 
     try:
         vector = embed_text(query)
-        logger.debug(f"Query vector (len={len(vector)}): {vector}")  # Log the query vector
     except Exception as e:
         logger.error(f"Failed to embed query: {e}")
         raise
 
-    # Normalize topic into a list (MatchAny expects a list)
+    # Filter by selected topic(s) if provided
     if topic:
         selected_topics = topic if isinstance(topic, list) else [topic]
-        query_filter = Filter(
-            must=[FieldCondition(key="topics", match=MatchAny(any=selected_topics))]
-        )
+        query_filter = Filter(must=[FieldCondition(key="topics", match=MatchAny(any=selected_topics))])
     else:
-        # No topic selected, don't filter at all
         query_filter = None
 
     try:
         results = qdrant.query_points(
             collection_name=QDRANT_COLLECTION,
             query=vector,
-            limit=5,
+            limit=10,  # Get more results, we will rerank and trim
             query_filter=query_filter,
         )
-        logger.debug(f"Qdrant returned {len(results.points)} points")
+        logger.debug(f"Qdrant returned {len(results.points)} points before re-ranking")
     except Exception as e:
         logger.error(f"Qdrant query failed: {e}")
         raise
 
+    results.points = rerank_results(results, vector)
+
+    # Take top 5 after reranking
+    top_results = results.points[:5]
+
     contexts = []
     references = []
-
-    for p in results.points:
+    for p in top_results:
         payload = p.payload
         text = payload.get("text", "")
         source = payload.get("source", "unknown")
         chunk = payload.get("chunk_index", "?")
         urls = payload.get("reference_urls", [])
 
-        # Store context with metadata for prompting
         contexts.append(f"[{source}:{chunk}] {text}")
-
-        # Collect URLs for display at bottom
         if urls:
             references.extend(urls)
 
@@ -78,19 +135,15 @@ def retrieve_answer(query: str, topic: Union[str, List[str]], level: str):
     system_prompt = get_system_prompt(topic, level)
     user_prompt = get_user_prompt(query, context_text)
 
-    logger.debug(f"Context sent to GPT:\n{context_text}")
-    logger.debug(f"Full user prompt:\n{user_prompt}")
-
     try:
         completion = client.chat.completions.create(
-            model=CHAT_MODEL,
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.2,
+            ]
         )
-        logger.info(f"Answer generated using model={CHAT_MODEL}")
+        logger.info("Answer generated by OpenAI")
     except Exception as e:
         logger.error(f"OpenAI completion failed: {e}")
         raise
