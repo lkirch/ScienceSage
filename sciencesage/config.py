@@ -104,5 +104,7 @@ CHAT_MODEL = "gpt-4o-mini"
 # --- Retrieval settings ---
 TOP_K = 5   # number of chunks to retrieve
 
+MIN_SCORE_THRESHOLD = 0.3  # discard very low-similarity scores
+
 logger.add("logs/sciencesage.log", rotation="10 MB", retention="10 days", level="INFO")
 logger.info("Configuration loaded.")
