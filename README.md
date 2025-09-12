@@ -47,10 +47,13 @@ ScienceSage/
 ├── data/                   # Data sources & outputs
 │ ├── raw/                  # Original files (html, pdf, etc.)
 │ ├── processed/            # Clean text files
-│ ├── chunks/               # JSONL with chunked docs
+│ ├── chunks/               # JSONL with chunked docs (JSONL)
 │ └── feedback/             # Feedback file for analysis
+│ └── eval/                 # Golden dataset + evaluation outputs
 |
 ├── images/                 # Images
+|
+├── logs/                   # Logs
 |
 ├── notebooks/              # Jupyter exploration
 │ └── sanity_check.ipynb
@@ -77,9 +80,12 @@ ScienceSage/
 │ └── test_ui.py            # Tests Streamlit UI components
 │
 ├── requirements.txt        # Python dependencies
-├── README.md               # This file
+├── README.md               # Project description & usage (this file)
+├── Makefile                # Common workflows
+├── pyproject.toml          # Python packaging + deps
 ├── .env.example            # Example API keys (not committed)
 └── .gitignore
+
 ```
 
 ---
