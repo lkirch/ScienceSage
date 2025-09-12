@@ -69,6 +69,10 @@ PDF_TITLES = {
     "stanford_llm_lecture1": "Stanford LLM Lecture 1",
 }
 
+# --- Wikipedia Crawl Depth ---
+WIKI_CRAWL_DEPTH = 1  # Set to desired depth (1 = just topics, 2 = topics + linked pages, etc.)
+WIKI_MAX_PAGES = 50   # Limit the number of pages to crawl
+
 # --- Topics ---
 TOPICS = [
     "Neuroplasticity",
