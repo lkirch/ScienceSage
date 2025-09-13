@@ -75,23 +75,29 @@ WIKI_MAX_PAGES = 50   # Limit the number of pages to crawl
 
 # --- Topics ---
 TOPICS = [
-    "Neuroplasticity",
+    "Space",
     "AI",
-    "Renewable Energy & Climate Change",
-    "Animal Adaptation",
-    "Ecosystem Interactions"
+    "Climate"
 ]
 
 # --- Topic Keywords ---
 TOPIC_KEYWORDS = {
-    "Neuroplasticity": ["neuroplasticity", "brain", "neurons", "synapse", "cortex", "plasticity"],
-    "AI": ["ai", "artificial intelligence", "machine learning", "neural network", "transformer", "deep learning", "reinforcement learning", "large language model"],
-    "Renewable Energy & Climate Change": [
-        "climate change", "renewable energy", "solar", "wind", "greenhouse", "carbon", "global warming", "mitigation", "adaptation", "fossil fuel", "emissions"
+    "Space": [
+        "space", "astronomy", "cosmos", "universe", "galaxy", "star", "planet", "satellite",
+        "black hole", "nebula", "telescope", "astronaut", "spacecraft", "NASA", "cosmology",
+        "solar system", "exoplanet", "comet", "asteroid", "orbit", "rocket"
     ],
-    "Animal Adaptation": ["animal adaptation", "migration", "mimicry", "camouflage", "hibernation", "adaptation", "evolution"],
-    "Ecosystem Interactions": [
-        "ecosystem", "biodiversity", "food chain", "predator", "prey", "symbiosis", "deforestation", "habitat", "species interaction"
+    "AI": [
+        "ai", "artificial intelligence", "machine learning", "neural network", "deep learning",
+        "transformer", "reinforcement learning", "large language model", "natural language processing",
+        "computer vision", "robotics", "algorithm", "supervised learning", "unsupervised learning",
+        "generative ai", "chatbot", "automation", "data science", "pattern recognition"
+    ],
+    "Climate": [
+        "climate", "climate change", "global warming", "greenhouse gas", "carbon dioxide",
+        "emissions", "renewable energy", "solar power", "wind energy", "fossil fuel",
+        "mitigation", "adaptation", "sea level rise", "extreme weather", "carbon footprint",
+        "sustainability", "environment", "biodiversity", "ecosystem", "deforestation"
     ],
 }
 
