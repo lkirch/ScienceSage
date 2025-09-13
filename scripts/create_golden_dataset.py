@@ -3,7 +3,7 @@ import argparse
 from pathlib import Path
 from datetime import datetime
 
-# Expanded Golden Dataset with 3 levels per topic
+# Golden Dataset with 3 levels per topic
 GOLDEN_EXAMPLES = [
     # ---------- SPACE ----------
     {"query": "What is the James Webb Space Telescope used for?",
