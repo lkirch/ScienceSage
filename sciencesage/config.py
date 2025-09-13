@@ -16,6 +16,10 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
     raise RuntimeError("OPENAI_API_KEY environment variable not set")
 
+NASA_API_KEY = os.getenv("NASA_API_KEY")
+if not NASA_API_KEY:
+    raise RuntimeError("NASA_API_KEY environment variable not set")
+
 # --- Embeddings ---
 EMBEDDING_MODEL = "text-embedding-3-small"
 EMBEDDING_DIM = 1536
@@ -52,12 +56,10 @@ NASA_URLS = {
 
 # --- Wikipedia Titles ---
 WIKI_TITLES = {
-    "neuroplasticity": "Neuroplasticity",
     "transformer_ml": "Transformer (machine learning)",
     "reinforcement_learning": "Reinforcement learning",
     "large_language_model": "Large language model",
     "retrieval_augmented_generation": "Retrieval-augmented generation",
-    "animal_migration": "Animal migration",
     "climate_change_adaptation": "Climate change adaptation",
     "climate_change_and_fisheries": "Climate change and fisheries",
     "climate_change_and_birds": "Climate change and birds",
