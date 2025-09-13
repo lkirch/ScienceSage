@@ -2,6 +2,7 @@ import os
 import re
 import html
 import requests
+import wikipediaapi
 import trafilatura
 import pdfplumber
 from pathlib import Path
@@ -12,8 +13,9 @@ from sciencesage.config import (
     RAW_DATA_DIR,
     PROCESSED_DATA_DIR,
     NASA_URLS,
-    WIKI_TITLES,
-    # PDF_TITLES,
+    #WIKI_TITLES,
+    TOPICS, 
+    WIKI_CRAWL_DEPTH,
 )
 
 # Logging setup
@@ -98,6 +100,39 @@ def download_wikipedia_article(title: str, name: str):
         logger.warning(f"Failed to save Wikipedia article '{title}'")
 
 
+def fetch_and_save_wikipedia_page(page, name):
+    """Fetch and save a Wikipedia page using wikipediaapi."""
+    if not page.exists():
+        logger.warning(f"Wikipedia page does not exist: {page.title}")
+        return
+    text = page.summary + "\n\n" + page.text
+    if text.strip():
+        processed_path = os.path.join(PROCESSED_DATA_DIR, f"{name}.txt")
+        save_file(processed_path, light_clean_text(text))
+        logger.info(f"Saved Wikipedia page '{page.title}' to {processed_path}")
+    else:
+        logger.warning(f"No text found for Wikipedia page: {page.title}")
+
+
+def crawl_wikipedia_topics(topics, depth=1):
+    """Recursively crawl topics and their linked pages up to a given depth."""
+    wiki = wikipediaapi.Wikipedia('en')
+    seen = set()
+
+    def crawl(topic, current_depth):
+        if current_depth > depth or topic in seen:
+            return
+        seen.add(topic)
+        page = wiki.page(topic)
+        fetch_and_save_wikipedia_page(page, topic.replace(" ", "_"))
+        if current_depth < depth:
+            for linked_title in page.links:
+                crawl(linked_title, current_depth + 1)
+
+    for topic in topics:
+        crawl(topic, 1)
+
+
 # ----------- NASA (HTML) -----------
 
 def download_webpage(url: str, name: str):
@@ -157,8 +192,8 @@ if __name__ == "__main__":
     for name, url in NASA_URLS.items():
         download_webpage(url, name)
 
-    for name, title in WIKI_TITLES.items():
-        download_wikipedia_article(title, name)
+    # Crawl Wikipedia topics and related pages
+    crawl_wikipedia_topics(TOPICS, depth=WIKI_CRAWL_DEPTH)
 
     # for name, path in PDF_TITLES.items():
     #     if os.path.exists(path):
