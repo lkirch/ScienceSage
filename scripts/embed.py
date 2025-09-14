@@ -15,7 +15,8 @@ from sciencesage.config import (
     QDRANT_HOST, 
     QDRANT_PORT, 
     QDRANT_COLLECTION, 
-    EMBED_MODEL
+    EMBED_MODEL,
+    QDRANT_BATCH_SIZE, 
 )
 
 # -------------------------
@@ -23,7 +24,6 @@ from sciencesage.config import (
 # -------------------------
 logger.add("logs/embed.log", rotation="5 MB", retention="7 days")
 logger.info("Started embed.py script.")
-
 
 # -------------------------
 # Load environment variables
@@ -35,7 +35,6 @@ load_dotenv()  # Load variables from .env if present
 # -------------------------
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 qdrant = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
-
 
 # -------------------------
 # Helpers
@@ -52,7 +51,6 @@ def load_chunks(path: Path) -> List[Dict]:
         logger.error(f"Failed to load chunks: {e}")
         return []
 
-
 def get_embedding(text: str) -> List[float]:
     """Fetch embedding from OpenAI."""
     logger.debug(f"Getting embedding for text (first 50 chars): {text[:50]}...")
@@ -66,7 +64,6 @@ def get_embedding(text: str) -> List[float]:
     except Exception as e:
         logger.error(f"Failed to get embedding: {e}")
         raise
-
 
 def ensure_collection(vector_size: int):
     """Create collection in Qdrant if not exists."""
@@ -134,10 +131,10 @@ def main():
         logger.error(f"Failed to ensure collection: {e}")
         return
 
-    # Upload chunks
+    # Batch upload chunks
     points = []
     failed_chunks = []
-    for chunk in chunks:
+    for idx, chunk in enumerate(chunks):
         try:
             vector = get_embedding(chunk["text"])
             point_id = chunk.get("uuid", str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk["id"]))))
@@ -146,36 +143,64 @@ def main():
                 topics = [topics]
             elif topics is None:
                 topics = []
-            point = PointStruct(
-                id=point_id,
-                vector=vector,
-                payload={
-                    "id": chunk.get("id"),
-                    "uuid": chunk.get("uuid"),
-                    "topics": topics,
-                    "source": chunk.get("source"),
-                    "chunk_index": chunk.get("chunk_index"),
-                    "text": chunk.get("text"),
-                    "reference_urls": chunk.get("reference_urls", []),
-                    "loadtime": chunk.get("loadtime"),
-                }
+            payload = {
+                "id": chunk.get("id"),
+                "uuid": chunk.get("uuid"),
+                "topics": topics,
+                "topic": chunk.get("topic"),
+                "title": chunk.get("title"),
+                "url": chunk.get("url"),
+                "image_url": chunk.get("image_url"),
+                "images": chunk.get("images"),
+                "pdf_url": chunk.get("pdf_url"),
+                "authors": chunk.get("authors"),
+                "categories": chunk.get("categories"),
+                "matched_keywords": chunk.get("matched_keywords"),
+                "source": chunk.get("source"),
+                "chunk_index": chunk.get("chunk_index"),
+                "text": chunk.get("text"),
+                "reference_urls": chunk.get("reference_urls", []),
+                "loadtime": chunk.get("loadtime"),
+                "raw_type": chunk.get("raw_type"),
+                "submitted_date": chunk.get("submitted_date"),
+                "announced_date": chunk.get("announced_date"),
+            }
+            payload = {k: v for k, v in payload.items() if v is not None}
+            points.append(
+                PointStruct(
+                    id=point_id,
+                    vector=vector,
+                    payload=payload
+                )
             )
-            points.append(point)
-            logger.debug(f"Prepared point for chunk id: {point_id}")
+            # Upload in batches
+            if len(points) >= QDRANT_BATCH_SIZE:
+                try:
+                    qdrant.upsert(collection_name=QDRANT_COLLECTION, points=points)
+                    logger.info(f"Uploaded {len(points)} chunks to QDRANT collection '{QDRANT_COLLECTION}'")
+                    points = []
+                except Exception as e:
+                    logger.error(f"Failed to upload batch to Qdrant: {e}")
+                    failed_chunks.extend([p.payload.get("id", "unknown") for p in points])
+                    points = []
         except Exception as e:
             chunk_id = chunk.get("id", "unknown")
             logger.error(f"Failed to process chunk id {chunk_id}: {e}")
             failed_chunks.append(chunk_id)
 
-    try:
-        qdrant.upsert(collection_name=QDRANT_COLLECTION, points=points)
-        logger.info(f"Uploaded {len(points)} chunks to QDRANT collection '{QDRANT_COLLECTION}'")
-    except Exception as e:
-        logger.error(f"Failed to upload points to Qdrant: {e}")
-        # If upload fails, consider all as failed
-        failed_chunks.extend([p.payload.get("id", "unknown") for p in points])
+    # Upload any remaining points
+    if points:
+        try:
+            qdrant.upsert(collection_name=QDRANT_COLLECTION, points=points)
+            logger.info(f"Uploaded {len(points)} chunks to QDRANT collection '{QDRANT_COLLECTION}'")
+        except Exception as e:
+            logger.error(f"Failed to upload final batch to Qdrant: {e}")
+            failed_chunks.extend([p.payload.get("id", "unknown") for p in points])
 
     if failed_chunks:
         logger.warning(f"Failed to embed/upload {len(failed_chunks)} chunks. IDs: {failed_chunks}")
     else:
         logger.info("All chunks embedded and uploaded successfully.")
+
+if __name__ == "__main__":
+    main()
