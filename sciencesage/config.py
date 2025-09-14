@@ -6,6 +6,9 @@ load_dotenv()
 
 # --- File paths ---
 RAW_DATA_DIR = "data/raw"
+RAW_HTML_DIR = os.path.join(RAW_DATA_DIR, "html")
+RAW_IMAGES_DIR = os.path.join(RAW_DATA_DIR, "images")
+RAW_PDF_DIR = os.path.join(RAW_DATA_DIR, "pdf")
 PROCESSED_DATA_DIR = "data/processed"
 CHUNKS_FILE = "data/chunks/chunks.jsonl"
 EMBEDDINGS_FILE = "data/embeddings/embeddings.jsonl"
@@ -42,12 +45,13 @@ QDRANT_BATCH_SIZE = 64  # Number of vectors to upload in each batch
 
 # --- NASA APOD settings ---
 NASA_APOD_API_URL = "https://api.nasa.gov/planetary/apod"
-NASA_APOD_DAYS = 5  # Number of days of APOD to fetch
+NASA_APOD_DAYS = 30                      # Number of days of APOD to fetch
 NASA_APOD_START_DATE = None  # e.g., "2023-01-01", or None to fetch latest
 
-# --- Wikipedia Crawl Depth ---
-WIKI_CRAWL_DEPTH = 1  # Set to desired depth (1 = just topics, 2 = topics + linked pages, etc.)
-WIKI_MAX_PAGES = 50   # Limit the number of pages to crawl
+# --- Wikipedia settings ---
+WIKI_USER_AGENT = "ScienceSageBot/1.0 (contact: lkonthego@gmail.com)"
+WIKI_CRAWL_DEPTH = 1   # Set to desired depth (1 = just topics, 2 = topics + linked pages, etc.)
+WIKI_MAX_PAGES = 100    # Limit the number of pages to crawl
 
 # --- arXiv Categories ---
 ARXIV_CATEGORIES = [
@@ -76,13 +80,20 @@ TOPIC_KEYWORDS = {
     "Space": [
         "space", "astronomy", "cosmos", "universe", "galaxy", "star", "planet", "satellite",
         "black hole", "nebula", "telescope", "astronaut", "spacecraft", "NASA", "cosmology",
-        "solar system", "exoplanet", "comet", "asteroid", "orbit", "rocket", "super nova"
+        "solar system", "exoplanet", "comet", "asteroid", "orbit", "rocket", "super nova",
+        # Recent missions:
+        "Artemis", "Artemis I", "Artemis II", "Mars Sample Return", "JUICE", "Psyche",
+        "OSIRIS-REx", "Chandrayaan-3", "Tianwen-1", "Euclid", "XRISM", "SLIM", "Starship",
+        "Perseverance rover", "James Webb Space Telescope", "JWST", "DART mission", "Lucy mission",
+        "Hayabusa2", "BepiColombo", "Rosalind Franklin rover", "Lunar Gateway", "CLPS",
+        "Voyage 1", "Voyage 2", "Hubble Space Telescope", "Spitzer Space Telescope",
+        "Cassini-Huygens", "New Horizons", "InSight", "Curiosity rover"
     ],
     "AI": [
         "ai", "artificial intelligence", "machine learning", "neural network", "deep learning",
         "transformer", "reinforcement learning", "large language model", "natural language processing",
         "computer vision", "robotics", "algorithm", "supervised learning", "unsupervised learning",
-        "generative ai", "chatbot", "automation", "data science", "pattern recognition"
+        "generative ai", "chatbot", "data science", "pattern recognition"
     ],
     "Climate": [
         "climate", "climate change", "global warming", "greenhouse gas", "carbon dioxide",
