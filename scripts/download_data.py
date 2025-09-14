@@ -1,6 +1,4 @@
 import os
-import re
-import html
 import json
 import requests
 import wikipediaapi
@@ -35,14 +33,6 @@ def save_file(path: str, content, mode="w", binary=False):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "wb" if binary else "w", encoding=None if binary else "utf-8") as f:
         f.write(content)
-
-def light_clean_text(text: str) -> str:
-    text = html.unescape(text)
-    text = text.replace("\u200b", "")
-    text = text.replace("\ufeff", "")
-    text = text.replace("\xa0", " ")
-    text = re.sub(r"\s+", " ", text)
-    return text.strip()
 
 def save_standardized_json(data, filename):
     path = os.path.join(PROCESSED_DATA_DIR, filename)
@@ -112,7 +102,7 @@ def fetch_and_save_wikipedia_page(page, name, topic=None, matched_keywords=None)
         "topic": topic,
         "matched_keywords": matched_keywords or [],
         "title": page.title,
-        "text": light_clean_text(text),
+        "text": text,
         "date": None,
         "url": page.fullurl,
         "references": references,
