@@ -1,203 +1,246 @@
 import os
 import re
 import html
+import json
 import requests
 import wikipediaapi
-import trafilatura
-import pdfplumber
 from pathlib import Path
 from loguru import logger
+from datetime import datetime, timedelta
 
-# Internal imports
 from sciencesage.config import (
     RAW_DATA_DIR,
+    RAW_HTML_DIR,
+    RAW_IMAGES_DIR,
+    RAW_PDF_DIR,
     PROCESSED_DATA_DIR,
-    NASA_URLS,
-    #WIKI_TITLES,
-    TOPICS, 
+    NASA_API_KEY,
+    NASA_APOD_API_URL,
+    NASA_APOD_DAYS,
+    NASA_APOD_START_DATE,
     WIKI_CRAWL_DEPTH,
+    WIKI_MAX_PAGES,
+    WIKI_USER_AGENT,
+    ARXIV_CATEGORIES,
+    ARXIV_MAX_RESULTS,
+    TOPIC_KEYWORDS,
 )
 
-# Logging setup
 logger.add("logs/download_and_clean.log", rotation="5 MB", retention="7 days")
 
-os.makedirs(RAW_DATA_DIR, exist_ok=True)
-os.makedirs(PROCESSED_DATA_DIR, exist_ok=True)
+for d in [RAW_DATA_DIR, RAW_HTML_DIR, RAW_IMAGES_DIR, RAW_PDF_DIR, PROCESSED_DATA_DIR]:
+    os.makedirs(d, exist_ok=True)
 
-
-# ----------- Helpers -----------
-
-def save_file(path: str, content: str, mode="w", binary=False):
-    """Utility to save text or binary files."""
+def save_file(path: str, content, mode="w", binary=False):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "wb" if binary else "w", encoding=None if binary else "utf-8") as f:
         f.write(content)
 
-
 def light_clean_text(text: str) -> str:
-    """Light cleaning: normalize whitespace, remove encoding artifacts."""
     text = html.unescape(text)
-    text = text.replace("\u200b", "")  # zero-width space
-    text = text.replace("\ufeff", "")  # BOM
-    text = text.replace("\xa0", " ")   # non-breaking space
+    text = text.replace("\u200b", "")
+    text = text.replace("\ufeff", "")
+    text = text.replace("\xa0", " ")
     text = re.sub(r"\s+", " ", text)
     return text.strip()
 
+def save_standardized_json(data, filename):
+    path = os.path.join(PROCESSED_DATA_DIR, filename)
+    save_file(path, json.dumps(data, indent=2))
+    logger.info(f"Saved standardized data to {filename}")
 
-def clean_html_to_text(html_content: str) -> str:
-    """Convert HTML to clean text using trafilatura, then light clean."""
-    extracted = trafilatura.extract(
-        html_content,
-        include_links=False,
-        include_images=False
-    ) or ""
-    return light_clean_text(extracted)
+def find_matched_keywords(text, keywords):
+    text_lower = text.lower()
+    return [kw for kw in keywords if kw.lower() in text_lower]
 
+# ----------- NASA APOD API -----------
 
-# ----------- Wikipedia API -----------
-
-def fetch_wikipedia_article(title: str) -> str:
-    """Fetch plain text of a Wikipedia article using the Wikipedia API."""
-    logger.info(f"Fetching Wikipedia article: {title}")
-    url = "https://en.wikipedia.org/w/api.php"
-    params = {
-        "action": "query",
-        "prop": "extracts",
-        "explaintext": True,
-        "titles": title,
-        "format": "json",
-        "redirects": 1,
-    }
-    headers = {
-        "User-Agent": (
-            "ScienceSageBot/1.0 "
-            "(https://github.com/yourusername/ScienceSage; contact@example.com)"
-        )
-    }
-    try:
-        response = requests.get(url, params=params, headers=headers, timeout=20)
-        response.raise_for_status()
-        data = response.json()
-        pages = data.get("query", {}).get("pages", {})
-        page = next(iter(pages.values()))
-        text = page.get("extract", "")
-        if not text:
-            logger.warning(f"No extract found for Wikipedia article: {title}")
-        return light_clean_text(text)
-    except Exception as e:
-        logger.error(f"Exception fetching Wikipedia article '{title}': {e}")
-        return ""
-
-
-def download_wikipedia_article(title: str, name: str):
-    """Download and save a Wikipedia article using the API."""
-    text = fetch_wikipedia_article(title)
-    if text:
-        processed_path = os.path.join(PROCESSED_DATA_DIR, f"{name}.txt")
-        save_file(processed_path, text)
-        logger.info(f"Saved Wikipedia article '{title}' to {processed_path}")
+def fetch_nasa_apod(api_key: str, api_url: str, days: int = 1, start_date: str = None):
+    logger.info(f"Fetching NASA APOD for {days} day(s) starting from {start_date or 'latest'}")
+    if start_date:
+        try:
+            start = datetime.strptime(start_date, "%Y-%m-%d")
+        except Exception:
+            logger.error("Invalid NASA_APOD_START_DATE format. Use YYYY-MM-DD.")
+            start = datetime.today()
     else:
-        logger.warning(f"Failed to save Wikipedia article '{title}'")
+        start = datetime.today()
+    for i in range(days):
+        date = (start - timedelta(days=i)).strftime("%Y-%m-%d")
+        params = {"api_key": api_key, "date": date}
+        try:
+            resp = requests.get(api_url, params=params, timeout=20)
+            resp.raise_for_status()
+            data = resp.json()
+            combined_text = (data.get("title", "") + " " + data.get("explanation", ""))
+            matched_keywords = find_matched_keywords(combined_text, TOPIC_KEYWORDS["Space"])
+            std = {
+                "source": "nasa_apod",
+                "title": data.get("title"),
+                "text": data.get("explanation"),
+                "date": data.get("date"),
+                "url": data.get("url"),
+                "image_url": data.get("url") if data.get("media_type") == "image" else None,
+                "matched_keywords": matched_keywords,
+                "metadata": {k: v for k, v in data.items() if k not in ["title", "explanation", "date", "url", "media_type"]}
+            }
+            fname = f"nasa_apod_{std['date']}.json"
+            save_standardized_json(std, fname)
+            # Download image if relevant and save to images dir
+            if data.get("media_type") == "image" and data.get("url") and matched_keywords:
+                img_url = data["url"]
+                img_resp = requests.get(img_url, timeout=20)
+                if img_resp.status_code == 200:
+                    ext = img_url.split(".")[-1].split("?")[0]
+                    img_fname = f"nasa_apod_{data['date']}.{ext}"
+                    save_file(os.path.join(RAW_IMAGES_DIR, img_fname), img_resp.content, binary=True)
+                    logger.info(f"Downloaded NASA APOD image to {img_fname}")
+        except Exception as e:
+            logger.error(f"Exception fetching NASA APOD for {date}: {e}")
 
+# ----------- Wikipedia API (wikipedia-api) -----------
 
-def fetch_and_save_wikipedia_page(page, name):
-    """Fetch and save a Wikipedia page using wikipediaapi."""
+def fetch_and_save_wikipedia_page(page, name, topic=None, matched_keywords=None):
     if not page.exists():
         logger.warning(f"Wikipedia page does not exist: {page.title}")
         return
     text = page.summary + "\n\n" + page.text
-    if text.strip():
-        processed_path = os.path.join(PROCESSED_DATA_DIR, f"{name}.txt")
-        save_file(processed_path, light_clean_text(text))
-        logger.info(f"Saved Wikipedia page '{page.title}' to {processed_path}")
-    else:
-        logger.warning(f"No text found for Wikipedia page: {page.title}")
+    references = list(page.references.keys()) if hasattr(page, "references") else []
+    images = list(page.images.keys()) if hasattr(page, "images") else []
+    std = {
+        "source": "wikipedia",
+        "topic": topic,
+        "matched_keywords": matched_keywords or [],
+        "title": page.title,
+        "text": light_clean_text(text),
+        "date": None,
+        "url": page.fullurl,
+        "references": references,
+        "images": images,
+        "image_url": images[0] if images else None,
+        "metadata": {}
+    }
+    fname = f"wikipedia_{name}.json"
+    save_standardized_json(std, fname)
 
-
-def crawl_wikipedia_topics(topics, depth=1):
-    """Recursively crawl topics and their linked pages up to a given depth."""
-    wiki = wikipediaapi.Wikipedia('en')
-    seen = set()
-
-    def crawl(topic, current_depth):
-        if current_depth > depth or topic in seen:
-            return
-        seen.add(topic)
-        page = wiki.page(topic)
-        fetch_and_save_wikipedia_page(page, topic.replace(" ", "_"))
-        if current_depth < depth:
-            for linked_title in page.links:
-                crawl(linked_title, current_depth + 1)
-
-    for topic in topics:
-        crawl(topic, 1)
-
-
-# ----------- NASA (HTML) -----------
-
-def download_webpage(url: str, name: str):
-    """Download a webpage and save clean text."""
-    logger.info(f"Downloading {url}")
+    # Download and save the raw HTML of the Wikipedia page
     try:
-        r = requests.get(url, timeout=20)
-        if r.status_code != 200:
-            logger.warning(f"Failed to fetch {url} (status {r.status_code})")
-            return
-
-        raw_path = os.path.join(RAW_DATA_DIR, f"{name}.html")
-        save_file(raw_path, r.text)
-        logger.debug(f"Saved raw HTML to {raw_path}")
-
-        clean_text = clean_html_to_text(r.text)
-        if clean_text:
-            processed_path = os.path.join(PROCESSED_DATA_DIR, f"{name}.txt")
-            save_file(processed_path, clean_text)
-            logger.info(f"Saved cleaned text to {processed_path}")
+        html_url = f"https://en.wikipedia.org/api/rest_v1/page/html/{name}"
+        resp = requests.get(html_url, headers={"User-Agent": WIKI_USER_AGENT}, timeout=20)
+        if resp.status_code == 200:
+            html_fname = f"wikipedia_{name}.html"
+            save_file(os.path.join(RAW_HTML_DIR, html_fname), resp.text)
+            logger.info(f"Saved Wikipedia HTML to {html_fname}")
         else:
-            logger.warning(f"No text extracted from {url}")
+            logger.warning(f"Failed to fetch HTML for {name}: {resp.status_code}")
     except Exception as e:
-        logger.error(f"Exception downloading {url}: {e}")
+        logger.error(f"Exception fetching Wikipedia HTML for {name}: {e}")
 
+def crawl_wikipedia_keywords(topic_keywords, depth=1, max_pages=50, user_agent="ScienceSageBot/1.0"):
+    wiki = wikipediaapi.Wikipedia(language='en', user_agent=user_agent)
+    seen = set()
+    for topic, keywords in topic_keywords.items():
+        for keyword in keywords:
+            if len(seen) >= max_pages:
+                break
+            if keyword in seen:
+                continue
+            page = wiki.page(keyword)
+            page_text = (page.title or "") + " " + (page.summary or "") + " " + (page.text or "")
+            matched_keywords = [kw for kw in keywords if kw.lower() in page_text.lower()]
+            fetch_and_save_wikipedia_page(page, keyword.replace(" ", "_"), topic=topic, matched_keywords=matched_keywords)
+            seen.add(keyword)
+            # Optionally crawl links for each keyword up to depth
+            if depth > 1:
+                def crawl_links(page, current_depth):
+                    if current_depth > depth:
+                        return
+                    for linked_title in page.links:
+                        if len(seen) >= max_pages:
+                            break
+                        if linked_title in seen:
+                            continue
+                        linked_page = wiki.page(linked_title)
+                        linked_page_text = (linked_page.title or "") + " " + (linked_page.summary or "") + " " + (linked_page.text or "")
+                        matched_keywords_linked = [kw for kw in keywords if kw.lower() in linked_page_text.lower()]
+                        fetch_and_save_wikipedia_page(linked_page, linked_title.replace(" ", "_"), topic=topic, matched_keywords=matched_keywords_linked)
+                        seen.add(linked_title)
+                        crawl_links(linked_page, current_depth + 1)
+                crawl_links(page, 2)
 
-# ----------- PDFs (Stanford, etc.) -----------
+# ----------- arXiv API -----------
 
-def process_pdf(pdf_path: str, name: str):
-    """Extract text from a PDF and save it."""
-    logger.info(f"Processing PDF {pdf_path}")
-    try:
-        all_text = ""
-        with pdfplumber.open(pdf_path) as pdf:
-            for page in pdf.pages:
-                text = page.extract_text()
-                if text:
-                    all_text += text + "\n"
-
-        raw_copy = os.path.join(RAW_DATA_DIR, os.path.basename(pdf_path))
-        if not os.path.exists(raw_copy):
-            os.makedirs(RAW_DATA_DIR, exist_ok=True)
-            with open(pdf_path, "rb") as f:
-                save_file(raw_copy, f.read(), binary=True)
-            logger.debug(f"Copied raw PDF to {raw_copy}")
-
-        processed_path = os.path.join(PROCESSED_DATA_DIR, f"{name}.txt")
-        save_file(processed_path, all_text)
-        logger.info(f"Saved PDF text to {processed_path}")
-    except Exception as e:
-        logger.error(f"Exception processing PDF {pdf_path}: {e}")
-
+def fetch_arxiv_papers(categories, max_results=10):
+    base_url = "http://export.arxiv.org/api/query"
+    for cat in categories:
+        logger.info(f"Fetching arXiv papers for category: {cat}")
+        params = {
+            "search_query": f"cat:{cat}",
+            "start": 0,
+            "max_results": max_results,
+            "sortBy": "submittedDate",
+            "sortOrder": "descending"
+        }
+        try:
+            resp = requests.get(base_url, params=params, timeout=20)
+            resp.raise_for_status()
+            import xml.etree.ElementTree as ET
+            root = ET.fromstring(resp.text)
+            ns = {'atom': 'http://www.w3.org/2005/Atom'}
+            papers = []
+            for entry in root.findall('atom:entry', ns):
+                arxiv_id = entry.find('atom:id', ns).text.split('/abs/')[-1]
+                title = entry.find('atom:title', ns).text.strip()
+                abstract = entry.find('atom:summary', ns).text.strip()
+                submitted_date = entry.find('atom:published', ns).text
+                announced_date = entry.find('atom:updated', ns).text
+                authors = [a.find('atom:name', ns).text for a in entry.findall('atom:author', ns)]
+                categories = [c.attrib['term'] for c in entry.findall('atom:category', ns)]
+                pdf_url = f"https://arxiv.org/pdf/{arxiv_id}.pdf"
+                link = next((l.attrib['href'] for l in entry.findall('atom:link', ns) if l.attrib.get('type') == 'text/html'), None)
+                paper = {
+                    "source": "arxiv",
+                    "arxiv_id": arxiv_id,
+                    "title": title,
+                    "authors": authors,
+                    "abstract": abstract,
+                    "submitted_date": submitted_date,
+                    "announced_date": announced_date,
+                    "categories": categories,
+                    "pdf_url": pdf_url,
+                    "link": link,
+                    "metadata": {}
+                }
+                papers.append(paper)
+                # Download and save the PDF
+                try:
+                    pdf_resp = requests.get(pdf_url, timeout=30)
+                    if pdf_resp.status_code == 200:
+                        pdf_fname = f"arxiv_{arxiv_id}.pdf"
+                        save_file(os.path.join(RAW_PDF_DIR, pdf_fname), pdf_resp.content, binary=True)
+                        logger.info(f"Saved arXiv PDF to {pdf_fname}")
+                    else:
+                        logger.warning(f"Failed to fetch PDF for {arxiv_id}: {pdf_resp.status_code}")
+                except Exception as e:
+                    logger.error(f"Exception fetching arXiv PDF for {arxiv_id}: {e}")
+            json_fname = f"arxiv_{cat}.json"
+            save_standardized_json(papers, json_fname)
+        except Exception as e:
+            logger.error(f"Exception fetching arXiv for {cat}: {e}")
 
 # ----------- Main Pipeline -----------
 
 if __name__ == "__main__":
-    for name, url in NASA_URLS.items():
-        download_webpage(url, name)
-
-    # Crawl Wikipedia topics and related pages
-    crawl_wikipedia_topics(TOPICS, depth=WIKI_CRAWL_DEPTH)
-
-    # for name, path in PDF_TITLES.items():
-    #     if os.path.exists(path):
-    #         process_pdf(path, name)
-    #     else:
-    #         logger.warning(f"⚠️ PDF {path} not found. Please add it first.")
-    #         print(f"⚠️ PDF {path} not found. Please add it first.")
+    fetch_nasa_apod(
+        NASA_API_KEY,
+        NASA_APOD_API_URL,
+        days=NASA_APOD_DAYS,
+        start_date=NASA_APOD_START_DATE
+    )
+    crawl_wikipedia_keywords(
+        TOPIC_KEYWORDS,
+        depth=WIKI_CRAWL_DEPTH,
+        max_pages=WIKI_MAX_PAGES,
+        user_agent=WIKI_USER_AGENT
+    )
+    fetch_arxiv_papers(ARXIV_CATEGORIES, max_results=ARXIV_MAX_RESULTS)
