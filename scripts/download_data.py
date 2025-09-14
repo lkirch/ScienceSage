@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import os
 import requests
 import wikipediaapi
+import json  # Add this at the top
 
 from sciencesage.config import (
     RAW_DATA_DIR,
@@ -11,6 +12,7 @@ from sciencesage.config import (
     RAW_IMAGES_DIR,
     RAW_PDF_DIR,
     RAW_JSON_DIR,
+    RAW_XML_DIR,
     NASA_API_KEY,
     NASA_APOD_API_URL,
     NASA_APOD_DAYS,
@@ -23,9 +25,9 @@ from sciencesage.config import (
     TOPIC_KEYWORDS,
 )
 
-logger.add("logs/download_and_clean.log", rotation="5 MB", retention="7 days")
+logger.add("logs/download_data.log", rotation="5 MB", retention="7 days")
 
-for d in [RAW_DATA_DIR, RAW_HTML_DIR, RAW_IMAGES_DIR, RAW_PDF_DIR, RAW_JSON_DIR]:
+for d in [RAW_DATA_DIR, RAW_HTML_DIR, RAW_IMAGES_DIR, RAW_PDF_DIR, RAW_JSON_DIR, RAW_XML_DIR]:
     os.makedirs(d, exist_ok=True)
 
 def save_file(path: str, content, mode="w", binary=False):
@@ -56,7 +58,7 @@ def fetch_nasa_apod(api_key: str, api_url: str, days: int = 1, start_date: str =
             data = resp.json()
             # Save raw JSON
             fname = f"nasa_apod_{date}.json"
-            save_file(os.path.join(RAW_JSON_DIR, fname), requests.utils.json.dumps(data, indent=2))
+            save_file(os.path.join(RAW_JSON_DIR, fname), json.dumps(data, indent=2))
             # Download image if relevant and matches keywords
             combined_text = (data.get("title", "") + " " + data.get("explanation", ""))
             matched_keywords = find_matched_keywords(combined_text, TOPIC_KEYWORDS["Space"])
@@ -115,7 +117,7 @@ def fetch_arxiv_papers(categories, max_results=10):
             resp = requests.get(base_url, params=params, timeout=20)
             resp.raise_for_status()
             xml_fname = f"arxiv_{cat}.xml"
-            save_file(os.path.join(RAW_DATA_DIR, xml_fname), resp.text)
+            save_file(os.path.join(RAW_XML_DIR, xml_fname), resp.text)
             # Parse XML to get arXiv IDs and download PDFs
             import xml.etree.ElementTree as ET
             root = ET.fromstring(resp.text)
