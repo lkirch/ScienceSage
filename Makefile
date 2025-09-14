@@ -17,7 +17,7 @@ all: ingest run-app
 
 download:
 	@echo ">>> Downloading and cleaning data..."
-	python $(SCRIPTS_DIR)/download_and_clean.py
+	python $(SCRIPTS_DIR)/download_data.py
 
 preprocess:
 	@echo ">>> Preprocessing data into chunks..."
@@ -69,7 +69,7 @@ logs:
 help:
 	@echo ""
 	@echo "ScienceSage Makefile Commands:"
-	@echo "  make download       - Download and clean raw data"
+	@echo "  make download       - Download raw data"
 	@echo "  make preprocess     - Chunk processed text into JSONL for embeddings"
 	@echo "  make embed          - Embed chunks into Qdrant"
 	@echo "  make ingest         - Run full pipeline: download → preprocess → embed"
