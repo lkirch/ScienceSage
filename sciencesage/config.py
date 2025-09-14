@@ -9,6 +9,7 @@ RAW_DATA_DIR = "data/raw"
 RAW_HTML_DIR = os.path.join(RAW_DATA_DIR, "html")
 RAW_IMAGES_DIR = os.path.join(RAW_DATA_DIR, "images")
 RAW_PDF_DIR = os.path.join(RAW_DATA_DIR, "pdf")
+RAW_JSON_DIR = os.path.join(RAW_DATA_DIR, "json")
 PROCESSED_DATA_DIR = "data/processed"
 CHUNKS_FILE = "data/chunks/chunks.jsonl"
 EMBEDDINGS_FILE = "data/embeddings/embeddings.jsonl"
