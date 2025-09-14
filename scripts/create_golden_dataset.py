@@ -1,119 +1,104 @@
+import os
 import json
-import argparse
-from pathlib import Path
+import uuid
 from datetime import datetime
+from pathlib import Path
+from loguru import logger
 
-# Golden Dataset with 3 levels per topic
-GOLDEN_EXAMPLES = [
-    # ---------- SPACE ----------
-    {"query": "What is the James Webb Space Telescope used for?",
-     "expected_answer": {
-         "middle_school": "It looks at space in infrared to learn about stars, planets, and galaxies.",
-         "college": "JWST observes the universe in infrared to study early galaxies, star formation, and exoplanet atmospheres.",
-         "advanced": "JWST provides high-resolution infrared imaging and spectroscopy, enabling analysis of early galaxy formation, stellar evolution, and detailed exoplanet atmospheric composition."
-     },
-     "topic": "Space", "source_hint": "NASA Fact Sheets"},
-    
-    {"query": "What is a supernova?",
-     "expected_answer": {
-         "middle_school": "A supernova is a star exploding.",
-         "college": "A supernova is the explosive death of a star, releasing energy and creating heavy elements.",
-         "advanced": "A supernova results from the terminal stage of stellar evolution, either core-collapse of massive stars or thermonuclear runaway in white dwarfs, generating shockwaves and nucleosynthesis of elements beyond iron."
-     },
-     "topic": "Space", "source_hint": "NASA Supernova Basics"},
-    
-    # ---------- CLIMATE ----------
-    {"query": "What is global warming?",
-     "expected_answer": {
-         "middle_school": "The Earth is getting hotter because of gases in the air.",
-         "college": "Global warming is the long-term rise in Earth's average temperature caused by greenhouse gas emissions.",
-         "advanced": "Anthropogenic global warming arises from increased greenhouse gas concentrations, altering radiative forcing, energy balance, and climate feedback mechanisms, impacting global temperature trends and ecosystems."
-     },
-     "topic": "Climate", "source_hint": "IPCC AR6"},
-    
-    {"query": "What is the greenhouse effect?",
-     "expected_answer": {
-         "middle_school": "Some gases trap heat so Earth stays warm.",
-         "college": "The greenhouse effect traps infrared radiation using gases like CO₂ and CH₄, warming Earth's surface.",
-         "advanced": "The greenhouse effect involves selective absorption and re-emission of infrared radiation by greenhouse gases, modifying Earth's radiative energy balance and driving climate system dynamics."
-     },
-     "topic": "Climate", "source_hint": "NASA Climate Kids"},
-    
-    # ---------- AI CONCEPTS ----------
-    {"query": "What is reinforcement learning?",
-     "expected_answer": {
-         "middle_school": "A computer learns by trying things and seeing what works best.",
-         "college": "Reinforcement learning is a method where an agent learns to maximize reward by interacting with an environment.",
-         "advanced": "Reinforcement learning formalizes decision-making via Markov Decision Processes, with agents optimizing cumulative expected reward through exploration and exploitation policies."
-     },
-     "topic": "AI Concepts", "source_hint": "Sutton & Barto"},
+from sciencesage.config import TOPICS, TOPIC_KEYWORDS, LEVELS
 
-    {"query": "What is a neural network?",
-     "expected_answer": {
-         "middle_school": "A neural network is like a brain for a computer.",
-         "college": "A neural network is a set of interconnected nodes that transforms inputs to outputs.",
-         "advanced": "Neural networks are computational models with layered structures of nonlinear nodes, trained via backpropagation to approximate complex functions over high-dimensional data."
-     },
-     "topic": "AI Concepts", "source_hint": "Deep Learning Textbook"},
-]
+GOLDEN_DATA_FILE = Path("data/eval/golden_dataset.jsonl")
+GOLDEN_DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-def save_dataset(examples, output_dir):
-    output_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_path = output_dir / f"golden_dataset_{timestamp}.jsonl"
-    latest_path = output_dir / "golden_dataset.jsonl"
+logger.add("logs/create_golden_data.log", rotation="5 MB", retention="7 days", level="INFO")
 
-    with open(output_path, "w") as f_out:
-        for item in examples:
-            f_out.write(json.dumps(item) + "\n")
 
-    latest_path.write_text("\n".join(json.dumps(item) for item in examples))
-    print(f"✅ Golden dataset written to {output_path}")
-    print(f"🔗 Latest alias saved to {latest_path}")
+def load_existing_examples():
+    """Load existing golden examples into memory."""
+    if GOLDEN_DATA_FILE.exists():
+        with open(GOLDEN_DATA_FILE, "r") as f:
+            return [json.loads(line) for line in f]
+    return []
 
-def append_interactively(latest_path):
-    print("🔧 Enter new golden examples (Ctrl+C to stop):")
-    examples = []
+
+def save_example(example):
+    """Append a single example to the golden dataset file."""
+    with open(GOLDEN_DATA_FILE, "a") as f:
+        f.write(json.dumps(example) + "\n")
+    logger.info(f"Added new golden example: {example['id']}")
+
+
+def interactive_add_examples():
+    """Interactive CLI loop to add golden examples."""
+    print("\n=== ScienceSage Golden Dataset Creator ===")
+    print("Press Ctrl+C at any time to exit.\n")
+
+    existing = load_existing_examples()
+    print(f"Currently loaded {len(existing)} examples.")
+
     while True:
         try:
-            query = input("Query: ").strip()
-            if not query:
+            # Select topic
+            print("\nSelect a topic:")
+            for i, topic in enumerate(TOPICS, start=1):
+                print(f"  {i}. {topic}")
+            print(f"  {len(TOPICS)+1}. Add a NEW topic")
+
+            topic_choice = input(f"Enter choice [1-{len(TOPICS)+1}]: ").strip()
+            if not topic_choice.isdigit() or int(topic_choice) not in range(1, len(TOPICS)+2):
+                print("Invalid choice, try again.")
                 continue
-            expected_middle = input("Expected Answer (Middle School): ").strip()
-            expected_college = input("Expected Answer (College): ").strip()
-            expected_advanced = input("Expected Answer (Advanced): ").strip()
-            topic = input("Topic (Space, Climate, AI Concepts): ").strip() or "General"
-            source_hint = input("Source Hint: ").strip()
-            examples.append({
-                "query": query,
-                "expected_answer": {
-                    "middle_school": expected_middle,
-                    "college": expected_college,
-                    "advanced": expected_advanced
-                },
+
+            topic_choice = int(topic_choice)
+            if topic_choice == len(TOPICS)+1:
+                topic = input("Enter new topic name: ").strip()
+                logger.info(f"New topic created: {topic}")
+            else:
+                topic = TOPICS[topic_choice-1]
+
+            # Select level
+            print("\nSelect education level:")
+            for i, level in enumerate(LEVELS, start=1):
+                print(f"  {i}. {level}")
+            level_choice = input(f"Enter choice [1-{len(LEVELS)}]: ").strip()
+            if not level_choice.isdigit() or int(level_choice) not in range(1, len(LEVELS)+1):
+                print("Invalid choice, try again.")
+                continue
+            level = LEVELS[int(level_choice)-1]
+
+            # Enter Q&A
+            question = input("\nEnter question: ").strip()
+            expected_answer = input("Enter expected answer (short reference answer): ").strip()
+            reference_urls = input("Enter reference URLs (comma separated, optional): ").strip()
+            reference_urls = [u.strip() for u in reference_urls.split(",")] if reference_urls else []
+
+            # Build example
+            example = {
+                "id": str(uuid.uuid4()),
                 "topic": topic,
-                "source_hint": source_hint
-            })
+                "level": level,
+                "question": question,
+                "expected_answer": expected_answer,
+                "reference_urls": reference_urls,
+                "metadata": {
+                    "created_at": datetime.utcnow().isoformat(),
+                    "keywords": TOPIC_KEYWORDS.get(topic, []),
+                }
+            }
+
+            # Save example
+            save_example(example)
+            print(f"✅ Added example for topic '{topic}' [{level}]")
+
+            cont = input("\nAdd another? (y/n): ").strip().lower()
+            if cont != "y":
+                print("Exiting.")
+                break
+
         except KeyboardInterrupt:
-            print("\n🛑 Stopping input.")
+            print("\nExiting gracefully.")
             break
 
-    if examples:
-        with open(latest_path, "a") as f_out:
-            for item in examples:
-                f_out.write(json.dumps(item) + "\n")
-        print(f"✅ Appended {len(examples)} new examples to {latest_path}")
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description="Create or append to a golden dataset with 3 levels for retrieval evaluation.")
-    parser.add_argument("--append", action="store_true", help="Append interactively to existing dataset.")
-    args = parser.parse_args()
-
-    output_dir = Path("data/eval")
-    latest_path = output_dir / "golden_dataset.jsonl"
-
-    if args.append and latest_path.exists():
-        append_interactively(latest_path)
-    else:
-        save_dataset(GOLDEN_EXAMPLES, output_dir)
+    interactive_add_examples()
