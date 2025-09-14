@@ -11,7 +11,6 @@ RAW_IMAGES_DIR = os.path.join(RAW_DATA_DIR, "images")
 RAW_PDF_DIR = os.path.join(RAW_DATA_DIR, "pdf")
 RAW_JSON_DIR = os.path.join(RAW_DATA_DIR, "json")
 RAW_XML_DIR = os.path.join(RAW_DATA_DIR, "xml")
-PROCESSED_DATA_DIR = "data/processed"
 CHUNKS_FILE = "data/chunks/chunks.jsonl"
 EMBEDDINGS_FILE = "data/embeddings/embeddings.jsonl"
 FEEDBACK_FILE = "data/feedback/feedback.jsonl"
