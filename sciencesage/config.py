@@ -78,22 +78,21 @@ TOPICS = [
 # --- Topic Keywords ---
 TOPIC_KEYWORDS = {
     "Space": [
-        "space", "astronomy", "cosmos", "universe", "galaxy", "star", "planet", "satellite",
-        "black hole", "nebula", "telescope", "astronaut", "spacecraft", "NASA", "cosmology",
-        "solar system", "exoplanet", "comet", "asteroid", "orbit", "rocket", "super nova",
-        # Recent missions:
-        "Artemis", "Artemis I", "Artemis II", "Mars Sample Return", "JUICE", "Psyche",
-        "OSIRIS-REx", "Chandrayaan-3", "Tianwen-1", "Euclid", "XRISM", "SLIM", "Starship",
-        "Perseverance rover", "James Webb Space Telescope", "JWST", "DART mission", "Lucy mission",
-        "Hayabusa2", "BepiColombo", "Rosalind Franklin rover", "Lunar Gateway", "CLPS",
-        "Voyage 1", "Voyage 2", "Hubble Space Telescope", "Spitzer Space Telescope",
-        "Cassini-Huygens", "New Horizons", "InSight", "Curiosity rover"
+        "space", "astronomy", "cosmos", "universe", "galaxy", "star", "planet", 
+        "black hole", "nebula", "NASA", "cosmology", "super nova",
+        "solar system", "exoplanet",
+        "earth", "moon", "mars", "jupiter", "saturn", "venus", "mercury", "uranus", "neptune",
+        "international space station", "space debris", 
+        "Hubble", "space probe", "gravity", "dark matter", "dark energy", "astrobiology",
+        "Artemis", "Perseverance rover", "Curiosity rover",
+        "OSIRIS-REx", "James Webb Space Telescope", "Hubble Space Telescope",
+        "Voyager", "Cassini-Huygens", "New Horizons"
     ],
     "AI": [
         "ai", "artificial intelligence", "machine learning", "neural network", "deep learning",
         "transformer", "reinforcement learning", "large language model", "natural language processing",
         "computer vision", "robotics", "algorithm", "supervised learning", "unsupervised learning",
-        "generative ai", "chatbot", "data science", "pattern recognition"
+        "generative artificial intelligence", "chatbot", "data science", "pattern recognition"
     ],
     "Climate": [
         "climate", "climate change", "global warming", "greenhouse gas", "carbon dioxide",
