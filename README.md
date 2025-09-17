@@ -90,31 +90,9 @@ ScienceSage/
 
 ## 📊 Data Sources (Public Domain)
 
-- **Neuroplasticity**: [Wikipedia](https://en.wikipedia.org/wiki/Neuroplasticity)  
-- **AI Concepts**:  
-  - [Wikipedia – Transformer (ML)](https://en.wikipedia.org/wiki/Transformer_(machine_learning))  
-  - [Wikipedia - Reinforcement Learning](https://en.wikipedia.org/wiki/Reinforcement_learning)
-  - [Wikipedia - Large Language Model](https://en.wikipedia.org/wiki/Large_language_model)
-- **Climate Change & Renewable Energy**: 
-  - [NASA  - Climate Change](https://climate.nasa.gov/)  
-  - [NASA - What is climate change?](https://science.nasa.gov/climate-change/what-is-climate-change/)
-  - [NASA - Climate Change FAQ](https://science.nasa.gov/climate-change/faq/)
-  - [NASA - Evidence](https://climate.nasa.gov/evidence/)
-  - [NASA - Causes](https://climate.nasa.gov/causes/)
-  - [NASA - Effects](https://climate.nasa.gov/effects/)
-  - [NASA - Scientific Consensus](https://science.nasa.gov/climate-change/scientific-consensus/)
-  - [NASA - Extreme Weather](https://science.nasa.gov/climate-change/extreme-weather/)
-  - [NASA - Wildfires](https://science.nasa.gov/earth/explore/wildfires-and-climate-change/)
-  - [NASA - Adaptation](https://science.nasa.gov/climate-change/adaptation-mitigation/)
-  - [NASA - Mitigation Resources](https://science.nasa.gov/climate-change/adaptation-mitigation/resources/)
-- **Animal Behavior & Ecosystems**:  
-  - [Wikipedia – Animal Migration](https://en.wikipedia.org/wiki/Animal_migration)  
-  - [Wikipedia - Climate Change Adaptation](https://en.wikipedia.org/wiki/Climate_change_adaptation)
-  - [Wikipedia - Climate Change and Fisheries](https://en.wikipedia.org/wiki/Climate_change_and_fisheries)
-  - [Wikipedia - Climate Change and Birds](https://en.wikipedia.org/wiki/Climate_change_and_birds)
-  - [Wikipedia - Decline in Wild Mammal Populations](https://en.wikipedia.org/wiki/Decline_in_wild_mammal_populations)
-
----
+- [Wikipedia](https://www.wikipedia.org/)
+- [arXiv](https://arxiv.org/)
+- [NASA Astronomy Picture of the Day](https://apod.nasa.gov/apod/astropix.html) 
 
 ## ⚙️ Setup
 
@@ -309,6 +287,8 @@ Code is MIT licensed.
 - [DataTalksClub LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp)
 - [GitHub Codespaces](https://github.com/features/codespaces)
 - [Wikipedia API](https://pypi.org/project/Wikipedia-API/)
+- [arXiv API](https://info.arxiv.org/help/api/index.html)
+- [NASA APOD API](https://github.com/nasa/apod-api)
 - [Qdrant](https://qdrant.tech/)
 - [Streamlit](https://streamlit.io/)
 - [OpenAI](https://openai.com/)
