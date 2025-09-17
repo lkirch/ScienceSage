@@ -133,8 +133,8 @@ Alternatively, see [Qdrant documentation](https://qdrant.tech/documentation/quic
 
 ### 5. Prepare the data
 ```bash
-python scripts/download_and_clean.py   # fetch & clean NASA/Wikipedia/PDF
-python scripts/preprocess.py           # chunk into JSONL
+python scripts/download_data.py        # fetch NASA/Wikipedia/PDF
+python scripts/preprocess.py           # clean & chunk into JSONL
 python scripts/embed.py                # embed & store in Qdrant
 ```
 
