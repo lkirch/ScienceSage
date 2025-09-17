@@ -18,11 +18,13 @@ from sciencesage.config import (
     CHUNK_OVERLAP,
     TOPIC_KEYWORDS,
     MAX_TOKENS,
+    EMBEDDING_MODEL, 
 )
 
 import trafilatura
 import pdfplumber
 import xml.etree.ElementTree as ET
+from bs4 import BeautifulSoup
 
 logger.add("logs/preprocess.log", rotation="5 MB", retention="7 days")
 logger.info("Started preprocess.py script.")
@@ -30,6 +32,61 @@ logger.info("Started preprocess.py script.")
 def extract_urls(text: str) -> List[str]:
     url_pattern = r"https?://[^\s)]+"
     return re.findall(url_pattern, text)
+
+def extract_reference_urls_from_html(html: str) -> List[str]:
+    soup = BeautifulSoup(html, "html.parser")
+    refs = []
+    for a in soup.find_all("a", href=True):
+        href = a['href']
+        if href.startswith("http"):
+            refs.append(href)
+        elif href.startswith("/wiki/"):
+            refs.append("https://en.wikipedia.org" + href)
+    return list(set(refs))
+
+def extract_images_from_html(html: str) -> List[Dict]:
+    soup = BeautifulSoup(html, "html.parser")
+    imgs = []
+    for i, tag in enumerate(soup.find_all("img")):
+        src = tag.get("src") or tag.get("data-src")
+        if not src:
+            continue
+        if src.startswith("//"):
+            src = "https:" + src
+        elif src.startswith("/"):
+            src = "https://en.wikipedia.org" + src
+        caption = tag.get("alt") or ""
+        parent = tag.find_parent(["figure", "div"])
+        if parent:
+            cap = parent.find("figcaption")
+            if cap:
+                caption = cap.get_text(strip=True)
+        imgs.append({"src": src, "caption": caption})
+    return imgs
+
+def extract_tables_from_html(html: str) -> List[Dict]:
+    soup = BeautifulSoup(html, "html.parser")
+    tables = []
+    for i, tbl in enumerate(soup.find_all("table")):
+        rows = []
+        for tr in tbl.find_all("tr"):
+            cols = [c.get_text(strip=True) for c in tr.find_all(["th", "td"])]
+            if cols:
+                rows.append(cols)
+        caption = ""
+        cap_tag = tbl.find("caption")
+        if cap_tag:
+            caption = cap_tag.get_text(strip=True)
+        if rows:
+            tables.append({"rows": rows, "caption": caption})
+    return tables
+
+def insert_placeholders(text: str, images: List[Dict], tables: List[Dict]):
+    for i, img in enumerate(images):
+        text += f"\n[FIGURE_{i}: {img['caption']}]"
+    for i, tbl in enumerate(tables):
+        text += f"\n[TABLE_{i}: {tbl['caption']}]"
+    return text
 
 def chunk_text_by_paragraphs(
     text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP
@@ -67,11 +124,15 @@ def auto_tag_chunk(text: str) -> list:
             tags.append(topic)
     return tags or ["Other"]
 
-def num_tokens(text: str, model: str = "text-embedding-3-small") -> int:
+def num_tokens(text: str, model: str = None) -> int:
+    import tiktoken
+    model = model or EMBEDDING_MODEL
     enc = tiktoken.encoding_for_model(model)
     return len(enc.encode(text))
 
-def split_chunk_by_tokens(text: str, max_tokens: int = MAX_TOKENS, model: str = "text-embedding-3-small") -> list:
+def split_chunk_by_tokens(text: str, max_tokens: int = MAX_TOKENS, model: str = None) -> list:
+    import tiktoken
+    model = model or EMBEDDING_MODEL
     enc = tiktoken.encoding_for_model(model)
     tokens = enc.encode(text)
     if len(tokens) <= max_tokens:
@@ -102,38 +163,59 @@ def process_html_file(filepath: Path) -> List[Dict]:
         text = extracted_json.get("text", "")
         title = extracted_json.get("title") or filepath.stem
         url = extracted_json.get("url")
-        images = extracted_json.get("images", [])
-        image_url = images[0] if images else None
-        reference_urls = extracted_json.get("links", []) or extract_urls(text)
+        images = extract_images_from_html(html_content)
+        tables = extract_tables_from_html(html_content)
+        reference_urls = extracted_json.get("links", []) or extract_reference_urls_from_html(html_content)
         matched_keywords = [kw for kw in sum(TOPIC_KEYWORDS.values(), []) if kw.lower() in text.lower()]
         topic = get_topic_from_keywords(text)
         filename = filepath.stem
         loadtime = datetime.datetime.now(datetime.UTC).isoformat()
-        chunks = chunk_text_by_paragraphs(text)
+        text_with_placeholders = insert_placeholders(text, images, tables)
+        chunks = chunk_text_by_paragraphs(text_with_placeholders)
         results = []
+        char_offset = 0
+        section = None  # TODO: Improve this by extracting section headers if available
+        anchor = None   # TODO: Improve this by extracting HTML anchors if available
+        published = extracted_json.get("date")  # TODO: Try to get published date if available
+        authors = extracted_json.get("author", [])
+        latex = None  # TODO: Add LaTeX extraction if available
         for i, chunk in enumerate(chunks):
             sub_chunks = split_chunk_by_tokens(chunk, MAX_TOKENS)
             for j, sub_chunk in enumerate(sub_chunks):
                 chunk_id = generate_id(sub_chunk, filename + f"_{i}_{j}")
                 chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk_id))
                 chunk_topics = auto_tag_chunk(sub_chunk)
+                char_start = char_offset
+                char_end = char_offset + len(sub_chunk)
+                char_offset = char_end
                 results.append(
                     {
                         "id": chunk_id,
                         "uuid": chunk_uuid,
-                        "topics": chunk_topics,
-                        "topic": topic,
+                        "text": sub_chunk,
+                        "source": "wikipedia" if "wikipedia" in filename else "html",
                         "title": title,
                         "url": url,
-                        "image_url": image_url,
-                        "images": images,
+                        "doc_id": filename,
+                        "page": None,
+                        "section": section,
+                        "anchor": anchor,
+                        "chunk_index": i,
+                        "char_start": char_start,
+                        "char_end": char_end,
+                        "images": [img["src"] for img in images],
+                        "tables": [f"data/raw/tables/{filename}_table{i}.csv" for i in range(len(tables))],
+                        "latex": latex,
+                        "published": published,
+                        "authors": authors if isinstance(authors, list) else [authors],
+                        "embedding_cached": False,
+                        "topics": chunk_topics,
+                        "topic": topic,
                         "matched_keywords": matched_keywords,
-                        "source": filename,
-                        "chunk_index": f"{i}_{j}" if len(sub_chunks) > 1 else i,
-                        "text": sub_chunk,
                         "reference_urls": reference_urls,
                         "loadtime": loadtime,
-                        "raw_type": "html"
+                        "raw_type": "html",
+                        "level": "unknown",
                     }
                 )
         logger.info(f"Processed {len(results)} chunks from HTML {filepath.name}")
@@ -151,7 +233,6 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
             logger.warning(f"No text extracted from {filepath.name}")
             return []
         filename = filepath.stem
-        # Try to find matching arXiv XML for metadata
         xml_path = Path(RAW_DATA_DIR) / f"arxiv_{filename.split('_')[1]}.xml" if "arxiv_" in filename else None
         title = filename
         url = None
@@ -160,6 +241,8 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
         categories = []
         submitted_date = None
         announced_date = None
+        published = None
+        doc_id = filename
         if xml_path and xml_path.exists():
             try:
                 with open(xml_path, "r", encoding="utf-8") as xf:
@@ -176,6 +259,8 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
                         categories = [c.attrib['term'] for c in entry.findall('atom:category', ns)]
                         submitted_date = entry.find('atom:published', ns).text
                         announced_date = entry.find('atom:updated', ns).text
+                        published = submitted_date
+                        doc_id = arxiv_id
                         break
             except Exception as e:
                 logger.warning(f"Could not parse arXiv XML for {filename}: {e}")
@@ -183,36 +268,51 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
         matched_keywords = [kw for kw in sum(TOPIC_KEYWORDS.values(), []) if kw.lower() in text.lower()]
         topic = get_topic_from_keywords(text)
         loadtime = datetime.datetime.now(datetime.UTC).isoformat()
-        chunks = chunk_text_by_paragraphs(text)
         results = []
-        for i, chunk in enumerate(chunks):
-            sub_chunks = split_chunk_by_tokens(chunk, MAX_TOKENS)
-            for j, sub_chunk in enumerate(sub_chunks):
-                chunk_id = generate_id(sub_chunk, filename + f"_{i}_{j}")
-                chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk_id))
-                chunk_topics = auto_tag_chunk(sub_chunk)
-                results.append(
-                    {
-                        "id": chunk_id,
-                        "uuid": chunk_uuid,
-                        "topics": chunk_topics,
-                        "topic": topic,
-                        "title": title,
-                        "url": url,
-                        "pdf_url": pdf_url,
-                        "authors": authors,
-                        "categories": categories,
-                        "submitted_date": submitted_date,
-                        "announced_date": announced_date,
-                        "matched_keywords": matched_keywords,
-                        "source": filename,
-                        "chunk_index": f"{i}_{j}" if len(sub_chunks) > 1 else i,
-                        "text": sub_chunk,
-                        "reference_urls": reference_urls,
-                        "loadtime": loadtime,
-                        "raw_type": "pdf"
-                    }
-                )
+        char_offset = 0
+        latex = None  # Add LaTeX extraction if available
+        for page_num, page in enumerate(pdf.pages):
+            page_text = page.extract_text() or ""
+            chunks = chunk_text_by_paragraphs(page_text)
+            for i, chunk in enumerate(chunks):
+                sub_chunks = split_chunk_by_tokens(chunk, MAX_TOKENS)
+                for j, sub_chunk in enumerate(sub_chunks):
+                    chunk_id = generate_id(sub_chunk, filename + f"_{page_num}_{i}_{j}")
+                    chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk_id))
+                    chunk_topics = auto_tag_chunk(sub_chunk)
+                    char_start = char_offset
+                    char_end = char_offset + len(sub_chunk)
+                    char_offset = char_end
+                    results.append(
+                        {
+                            "id": chunk_id,
+                            "uuid": chunk_uuid,
+                            "text": sub_chunk,
+                            "source": "arxiv" if "arxiv" in filename else "pdf",
+                            "title": title,
+                            "url": url,
+                            "doc_id": doc_id,
+                            "page": page_num + 1,
+                            "section": None,
+                            "anchor": None,
+                            "chunk_index": i,
+                            "char_start": char_start,
+                            "char_end": char_end,
+                            "images": [],  # TODO: Add image extraction if available
+                            "tables": [],  # TODO: Add table extraction if available
+                            "latex": latex,
+                            "published": published,
+                            "authors": authors,
+                            "embedding_cached": False,
+                            "topics": chunk_topics,
+                            "topic": topic,
+                            "matched_keywords": matched_keywords,
+                            "reference_urls": reference_urls,
+                            "loadtime": loadtime,
+                            "raw_type": "pdf",
+                            "level": "unknown",
+                        }
+                    )
         logger.info(f"Processed {len(results)} chunks from PDF {filepath.name}")
         return results
     except Exception as e:
@@ -242,33 +342,50 @@ def process_json_file(filepath: Path) -> List[Dict]:
             categories = record.get("categories", [])
             matched_keywords = record.get("matched_keywords", [])
             topic = record.get("topic") if "topic" in record else get_topic_from_keywords(text)
+            published = record.get("published")
+            doc_id = record.get("doc_id", filename)
+            latex = record.get("latex")
+            section = record.get("section")
+            anchor = record.get("anchor")
             chunks = chunk_text_by_paragraphs(text)
+            char_offset = 0
             for i, chunk in enumerate(chunks):
                 sub_chunks = split_chunk_by_tokens(chunk, MAX_TOKENS)
                 for j, sub_chunk in enumerate(sub_chunks):
                     chunk_id = generate_id(sub_chunk, filename + f"_{i}_{j}")
                     chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk_id))
                     chunk_topics = auto_tag_chunk(sub_chunk)
+                    char_start = char_offset
+                    char_end = char_offset + len(sub_chunk)
+                    char_offset = char_end
                     results.append(
                         {
                             "id": chunk_id,
                             "uuid": chunk_uuid,
-                            "topics": chunk_topics,
-                            "topic": topic,
+                            "text": sub_chunk,
+                            "source": record.get("source", "json"),
                             "title": title,
                             "url": url,
-                            "image_url": image_url,
+                            "doc_id": doc_id,
+                            "page": record.get("page"),
+                            "section": section,
+                            "anchor": anchor,
+                            "chunk_index": i,
+                            "char_start": char_start,
+                            "char_end": char_end,
                             "images": images,
-                            "pdf_url": pdf_url,
+                            "tables": record.get("tables", []),
+                            "latex": latex,
+                            "published": published,
                             "authors": authors,
-                            "categories": categories,
+                            "embedding_cached": False,
+                            "topics": chunk_topics,
+                            "topic": topic,
                             "matched_keywords": matched_keywords,
-                            "source": filename,
-                            "chunk_index": f"{i}_{j}" if len(sub_chunks) > 1 else i,
-                            "text": sub_chunk,
                             "reference_urls": reference_urls,
                             "loadtime": loadtime,
-                            "raw_type": "json"
+                            "raw_type": "json",
+                            "level": "unknown",
                         }
                     )
         logger.info(f"Processed {len(results)} chunks from JSON {filepath.name}")
