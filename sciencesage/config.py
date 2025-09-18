@@ -14,6 +14,7 @@ RAW_XML_DIR = os.path.join(RAW_DATA_DIR, "xml")
 CHUNKS_FILE = "data/chunks/chunks.jsonl"
 EMBEDDINGS_FILE = "data/embeddings/embeddings.jsonl"
 FEEDBACK_FILE = "data/feedback/feedback.jsonl"
+GOLDEN_DATA_FILE = "data/eval/golden_dataset.jsonl"
 
 # --- API Keys ---
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
