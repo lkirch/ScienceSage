@@ -5,9 +5,9 @@ from datetime import datetime
 from pathlib import Path
 from loguru import logger
 
-from sciencesage.config import TOPICS, TOPIC_KEYWORDS, LEVELS
+from sciencesage.config import TOPICS, TOPIC_KEYWORDS, LEVELS, GOLDEN_DATA_FILE
 
-GOLDEN_DATA_FILE = Path("data/eval/golden_dataset.jsonl")
+GOLDEN_DATA_FILE = Path(GOLDEN_DATA_FILE)
 GOLDEN_DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 logger.add("logs/create_golden_data.log", rotation="5 MB", retention="7 days", level="INFO")
@@ -46,7 +46,7 @@ def interactive_add_examples():
 
             topic_choice = input(f"Enter choice [1-{len(TOPICS)+1}]: ").strip()
             if not topic_choice.isdigit() or int(topic_choice) not in range(1, len(TOPICS)+2):
-                print("Invalid choice, try again.")
+                print("Invalid choice, please try again.")
                 continue
 
             topic_choice = int(topic_choice)
@@ -62,7 +62,7 @@ def interactive_add_examples():
                 print(f"  {i}. {level}")
             level_choice = input(f"Enter choice [1-{len(LEVELS)}]: ").strip()
             if not level_choice.isdigit() or int(level_choice) not in range(1, len(LEVELS)+1):
-                print("Invalid choice, try again.")
+                print("Invalid choice, please try again.")
                 continue
             level = LEVELS[int(level_choice)-1]
 
@@ -70,7 +70,14 @@ def interactive_add_examples():
             question = input("\nEnter question: ").strip()
             expected_answer = input("Enter expected answer (short reference answer): ").strip()
             reference_urls = input("Enter reference URLs (comma separated, optional): ").strip()
-            reference_urls = [u.strip() for u in reference_urls.split(",")] if reference_urls else []
+            reference_urls = [u.strip() for u in reference_urls.split(",") if u.strip()] if reference_urls else []
+
+            # Enter keywords
+            keywords_input = input("Enter keywords (comma separated, or leave blank to use topic defaults): ").strip()
+            if keywords_input:
+                keywords = [k.strip() for k in keywords_input.split(",") if k.strip()]
+            else:
+                keywords = TOPIC_KEYWORDS.get(topic, [])
 
             # Build example
             example = {
@@ -82,7 +89,7 @@ def interactive_add_examples():
                 "reference_urls": reference_urls,
                 "metadata": {
                     "created_at": datetime.utcnow().isoformat(),
-                    "keywords": TOPIC_KEYWORDS.get(topic, []),
+                    "keywords": keywords,
                 }
             }
 
