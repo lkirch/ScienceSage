@@ -51,6 +51,7 @@ NASA_APOD_DAYS = 30                      # Number of days of APOD to fetch
 NASA_APOD_START_DATE = None  # e.g., "2023-01-01", or None to fetch latest
 
 # --- Wikipedia settings ---
+WIKI_URL = "https://en.wikipedia.org"
 WIKI_USER_AGENT = "ScienceSageBot/1.0 (contact: lkonthego@gmail.com)"
 WIKI_CRAWL_DEPTH = 1   # Set to desired depth (1 = just topics, 2 = topics + linked pages, etc.)
 WIKI_MAX_PAGES = 100    # Limit the number of pages to crawl
@@ -68,7 +69,15 @@ ARXIV_CATEGORIES = [
     "physics.geo-ph",    # Geophysics
     "climate-change",    # Climate Change
 ]
-ARXIV_MAX_RESULTS = 10  # Number of papers to fetch per category
+ARXIV_MAX_RESULTS = 3    # Number of papers to fetch per category
+
+# --- Standard chunk fields ---
+STANDARD_CHUNK_FIELDS = [
+    "id", "uuid", "text", "source", "title", "url", "doc_id", "page", "section", "anchor",
+    "chunk_index", "char_start", "char_end", "images", "tables", "latex", "published", "authors",
+    "embedding_cached", "topics", "topic", "matched_keywords", "reference_urls", "loadtime",
+    "raw_type", "level", "abstract"
+]
 
 # --- Topics ---
 TOPICS = [
@@ -86,7 +95,7 @@ TOPIC_KEYWORDS = {
         "earth", "moon", "mars", "jupiter", "saturn", "venus", "mercury", "uranus", "neptune",
         "international space station", "space debris", 
         "Hubble", "space probe", "gravity", "dark matter", "dark energy", "astrobiology",
-        "Artemis", "Perseverance rover", "Curiosity rover",
+        "Artemis program", "Perseverance rover", "Curiosity rover",
         "OSIRIS-REx", "James Webb Space Telescope", "Hubble Space Telescope",
         "Voyager", "Cassini-Huygens", "New Horizons"
     ],
