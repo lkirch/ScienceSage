@@ -4,11 +4,9 @@ from sciencesage.config import LEVELS, TOPICS
 
 # Example queries as in main.py
 example_queries = {
-    "Neuroplasticity": ["What is neuroplasticity?", "How do neurons rewire?"],
     "AI": ["What is a neural network?", "Explain transformers."],
-    "Renewable Energy & Climate Change": ["What is the greenhouse effect?", "How do solar panels work?"],
-    "Animal Adaptation": ["How do penguins stay warm?", "What is mimicry in animals?"],
-    "Ecosystem Interactions": ["What is a food chain?", "How does deforestation affect biodiversity?"]
+    "Climate": ["What is the greenhouse effect?", "How do solar panels work?"],
+    "Space": ["How do black holes form?", "What is mimicry in animals?"],
 }
 
 @pytest.mark.parametrize("topic,queries", example_queries.items())
