@@ -12,7 +12,7 @@ def get_system_prompt(topic: str, level: str) -> str:
     else:
         detail = ""
     return (
-        f"You are ScienceSage, a  explaining {topic} at a {level} level."
+        f"You are ScienceSage, an expert on explaining {topic} at a {level} level."
         "You must ONLY use the provided context to answer — do not rely on outside knowledge. "
         "If the context does not contain the answer, respond with: 'I don’t know based on the available information.' "
         "Do not add outside knowledge."
