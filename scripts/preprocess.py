@@ -18,7 +18,9 @@ from sciencesage.config import (
     CHUNK_OVERLAP,
     TOPIC_KEYWORDS,
     MAX_TOKENS,
-    EMBEDDING_MODEL, 
+    EMBEDDING_MODEL,
+    WIKI_URL,
+    STANDARD_CHUNK_FIELDS, 
 )
 
 import trafilatura
@@ -41,7 +43,7 @@ def extract_reference_urls_from_html(html: str) -> List[str]:
         if href.startswith("http"):
             refs.append(href)
         elif href.startswith("/wiki/"):
-            refs.append("https://en.wikipedia.org" + href)
+            refs.append(WIKI_URL + href)
     return list(set(refs))
 
 def extract_images_from_html(html: str) -> List[Dict]:
@@ -54,7 +56,7 @@ def extract_images_from_html(html: str) -> List[Dict]:
         if src.startswith("//"):
             src = "https:" + src
         elif src.startswith("/"):
-            src = "https://en.wikipedia.org" + src
+            src = WIKI_URL + src
         caption = tag.get("alt") or ""
         parent = tag.find_parent(["figure", "div"])
         if parent:
@@ -150,6 +152,27 @@ def get_topic_from_keywords(text: str) -> str:
             return topic
     return "Other"
 
+def make_standard_chunk(**kwargs):
+    """Return a dict with all standard fields, filling missing ones with None or sensible defaults."""
+    chunk = {}
+    for field in STANDARD_CHUNK_FIELDS:
+        if field in kwargs:
+            chunk[field] = kwargs[field]
+        else:
+            if field in ("images", "tables", "authors", "topics", "matched_keywords", "reference_urls"):
+                chunk[field] = []
+            elif field == "embedding_cached":
+                chunk[field] = False
+            elif field == "chunk_index":
+                chunk[field] = 0
+            elif field == "char_start":
+                chunk[field] = 0
+            elif field == "char_end":
+                chunk[field] = 0
+            else:
+                chunk[field] = None
+    return chunk
+
 def process_html_file(filepath: Path) -> List[Dict]:
     logger.info(f"Processing HTML file: {filepath}")
     try:
@@ -174,11 +197,12 @@ def process_html_file(filepath: Path) -> List[Dict]:
         chunks = chunk_text_by_paragraphs(text_with_placeholders)
         results = []
         char_offset = 0
-        section = None  # TODO: Improve this by extracting section headers if available
-        anchor = None   # TODO: Improve this by extracting HTML anchors if available
-        published = extracted_json.get("date")  # TODO: Try to get published date if available
+        section = None
+        anchor = None
+        published = extracted_json.get("date")
         authors = extracted_json.get("author", [])
-        latex = None  # TODO: Add LaTeX extraction if available
+        latex = None
+        abstract = extracted_json.get("description") or None  # Try to get a summary/lead if available
         for i, chunk in enumerate(chunks):
             sub_chunks = split_chunk_by_tokens(chunk, MAX_TOKENS)
             for j, sub_chunk in enumerate(sub_chunks):
@@ -189,34 +213,34 @@ def process_html_file(filepath: Path) -> List[Dict]:
                 char_end = char_offset + len(sub_chunk)
                 char_offset = char_end
                 results.append(
-                    {
-                        "id": chunk_id,
-                        "uuid": chunk_uuid,
-                        "text": sub_chunk,
-                        "source": "wikipedia" if "wikipedia" in filename else "html",
-                        "title": title,
-                        "url": url,
-                        "doc_id": filename,
-                        "page": None,
-                        "section": section,
-                        "anchor": anchor,
-                        "chunk_index": i,
-                        "char_start": char_start,
-                        "char_end": char_end,
-                        "images": [img["src"] for img in images],
-                        "tables": [f"data/raw/tables/{filename}_table{i}.csv" for i in range(len(tables))],
-                        "latex": latex,
-                        "published": published,
-                        "authors": authors if isinstance(authors, list) else [authors],
-                        "embedding_cached": False,
-                        "topics": chunk_topics,
-                        "topic": topic,
-                        "matched_keywords": matched_keywords,
-                        "reference_urls": reference_urls,
-                        "loadtime": loadtime,
-                        "raw_type": "html",
-                        "level": "unknown",
-                    }
+                    make_standard_chunk(
+                        id=chunk_id,
+                        uuid=chunk_uuid,
+                        text=sub_chunk,
+                        source="wikipedia" if "wikipedia" in filename else "html",
+                        title=title,
+                        url=url,
+                        doc_id=filename,
+                        page=None,
+                        section=section,
+                        anchor=anchor,
+                        chunk_index=i,
+                        char_start=char_start,
+                        char_end=char_end,
+                        images=[img["src"] for img in images],
+                        tables=[f"data/raw/tables/{filename}_table{i}.csv" for i in range(len(tables))],
+                        latex=latex,
+                        published=published,
+                        authors=authors if isinstance(authors, list) else [authors],
+                        topics=chunk_topics,
+                        topic=topic,
+                        matched_keywords=matched_keywords,
+                        reference_urls=reference_urls,
+                        loadtime=loadtime,
+                        raw_type="html",
+                        level="unknown",
+                        abstract=abstract,
+                    )
                 )
         logger.info(f"Processed {len(results)} chunks from HTML {filepath.name}")
         return results
@@ -243,6 +267,7 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
         announced_date = None
         published = None
         doc_id = filename
+        abstract = None
         if xml_path and xml_path.exists():
             try:
                 with open(xml_path, "r", encoding="utf-8") as xf:
@@ -261,6 +286,7 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
                         announced_date = entry.find('atom:updated', ns).text
                         published = submitted_date
                         doc_id = arxiv_id
+                        abstract = entry.find('atom:summary', ns).text.strip()
                         break
             except Exception as e:
                 logger.warning(f"Could not parse arXiv XML for {filename}: {e}")
@@ -270,7 +296,7 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
         loadtime = datetime.datetime.now(datetime.UTC).isoformat()
         results = []
         char_offset = 0
-        latex = None  # Add LaTeX extraction if available
+        latex = None
         for page_num, page in enumerate(pdf.pages):
             page_text = page.extract_text() or ""
             chunks = chunk_text_by_paragraphs(page_text)
@@ -284,34 +310,34 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
                     char_end = char_offset + len(sub_chunk)
                     char_offset = char_end
                     results.append(
-                        {
-                            "id": chunk_id,
-                            "uuid": chunk_uuid,
-                            "text": sub_chunk,
-                            "source": "arxiv" if "arxiv" in filename else "pdf",
-                            "title": title,
-                            "url": url,
-                            "doc_id": doc_id,
-                            "page": page_num + 1,
-                            "section": None,
-                            "anchor": None,
-                            "chunk_index": i,
-                            "char_start": char_start,
-                            "char_end": char_end,
-                            "images": [],  # TODO: Add image extraction if available
-                            "tables": [],  # TODO: Add table extraction if available
-                            "latex": latex,
-                            "published": published,
-                            "authors": authors,
-                            "embedding_cached": False,
-                            "topics": chunk_topics,
-                            "topic": topic,
-                            "matched_keywords": matched_keywords,
-                            "reference_urls": reference_urls,
-                            "loadtime": loadtime,
-                            "raw_type": "pdf",
-                            "level": "unknown",
-                        }
+                        make_standard_chunk(
+                            id=chunk_id,
+                            uuid=chunk_uuid,
+                            text=sub_chunk,
+                            source="arxiv" if "arxiv" in filename else "pdf",
+                            title=title,
+                            url=url,
+                            doc_id=doc_id,
+                            page=page_num + 1,
+                            section=None,
+                            anchor=None,
+                            chunk_index=i,
+                            char_start=char_start,
+                            char_end=char_end,
+                            images=[],
+                            tables=[],
+                            latex=latex,
+                            published=published,
+                            authors=authors,
+                            topics=chunk_topics,
+                            topic=topic,
+                            matched_keywords=matched_keywords,
+                            reference_urls=reference_urls,
+                            loadtime=loadtime,
+                            raw_type="pdf",
+                            level="unknown",
+                            abstract=abstract,
+                        )
                     )
         logger.info(f"Processed {len(results)} chunks from PDF {filepath.name}")
         return results
@@ -347,6 +373,7 @@ def process_json_file(filepath: Path) -> List[Dict]:
             latex = record.get("latex")
             section = record.get("section")
             anchor = record.get("anchor")
+            abstract = record.get("abstract")
             chunks = chunk_text_by_paragraphs(text)
             char_offset = 0
             for i, chunk in enumerate(chunks):
@@ -359,34 +386,34 @@ def process_json_file(filepath: Path) -> List[Dict]:
                     char_end = char_offset + len(sub_chunk)
                     char_offset = char_end
                     results.append(
-                        {
-                            "id": chunk_id,
-                            "uuid": chunk_uuid,
-                            "text": sub_chunk,
-                            "source": record.get("source", "json"),
-                            "title": title,
-                            "url": url,
-                            "doc_id": doc_id,
-                            "page": record.get("page"),
-                            "section": section,
-                            "anchor": anchor,
-                            "chunk_index": i,
-                            "char_start": char_start,
-                            "char_end": char_end,
-                            "images": images,
-                            "tables": record.get("tables", []),
-                            "latex": latex,
-                            "published": published,
-                            "authors": authors,
-                            "embedding_cached": False,
-                            "topics": chunk_topics,
-                            "topic": topic,
-                            "matched_keywords": matched_keywords,
-                            "reference_urls": reference_urls,
-                            "loadtime": loadtime,
-                            "raw_type": "json",
-                            "level": "unknown",
-                        }
+                        make_standard_chunk(
+                            id=chunk_id,
+                            uuid=chunk_uuid,
+                            text=sub_chunk,
+                            source=record.get("source", "json"),
+                            title=title,
+                            url=url,
+                            doc_id=doc_id,
+                            page=record.get("page"),
+                            section=section,
+                            anchor=anchor,
+                            chunk_index=i,
+                            char_start=char_start,
+                            char_end=char_end,
+                            images=images,
+                            tables=record.get("tables", []),
+                            latex=latex,
+                            published=published,
+                            authors=authors,
+                            topics=chunk_topics,
+                            topic=topic,
+                            matched_keywords=matched_keywords,
+                            reference_urls=reference_urls,
+                            loadtime=loadtime,
+                            raw_type="json",
+                            level="unknown",
+                            abstract=abstract,
+                        )
                     )
         logger.info(f"Processed {len(results)} chunks from JSON {filepath.name}")
         return results
