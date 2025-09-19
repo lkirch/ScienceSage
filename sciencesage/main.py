@@ -84,15 +84,7 @@ st.markdown("""
 <span style="color:#9DC183; font-size:1.5em;">&#11015;</span>
 """, unsafe_allow_html=True)
 
-# --- Query input field ---
-query_input = st.text_input(
-    "Enter your question here",
-    value=st.session_state.query,
-    key="query_input",
-    on_change=lambda: run_retrieval(st.session_state.query_input, topic, level)
-)
-
-# Helper function to format references
+# --- Helper function to format references
 def format_reference(url: str):
     if url.startswith("10."):
         url = f"https://doi.org/{url}"
@@ -136,11 +128,12 @@ def run_retrieval(query: str, topic: str, level: str):
     # -------------------------
     def replace_citation(match):
         idx = int(match.group(1)) - 1
-        if 0 <= idx < len(st.session_state.references):
-            ref = st.session_state.references[idx]
-            url = ref["url"]
+        if 0 <= idx < len(st.session_state.context):
+            c = st.session_state.context[idx]
+            url = c.get("url", "#")
             domain = format_reference(url)
-            return f'<a href="{url}" target="_blank">[{idx+1} - {domain}]</a>'
+            chunk_info = f'{c.get("source", "unknown source")} (chunk {c.get("chunk", "?")})'
+            return f'<a href="{url}" target="_blank">[{idx+1} - {domain}]</a> <span style="color:gray;font-size:0.9em;">{chunk_info}</span>'
         return match.group(0)
 
     answer_with_links = re.sub(r"\[(\d+)\]", replace_citation, answer)
@@ -167,10 +160,16 @@ def run_retrieval(query: str, topic: str, level: str):
                 for c in sorted(contexts, key=lambda x: x['score'], reverse=True):
                     conf = int(c["score"] * 100)
                     color = "green" if conf > 85 else "orange" if conf > 60 else "red"
+                    url_display = (
+                        f'<b><a href="{c.get("url", "#")}" target="_blank">{format_reference(c.get("url", "#"))}</a></b>'
+                        if c.get("url") else "<b>No URL</b>"
+                    )
+                    chunk_info = f'{c.get("source", "unknown source")} (chunk {c.get("chunk", "?")})'
                     st.markdown(f'''
                         <div style="min-width:300px; padding:8px; margin-bottom:5px; border-left:3px solid #9DC183;
                                     background-color:#f9f9f9; border-radius:5px;">
-                            <b>{c['source']} (chunk {c['chunk']})</b><br>
+                            {url_display}<br>
+                            <span style="color:gray; font-size:0.95em;">{chunk_info}</span><br>
                             <span style="color:{color}; font-weight:bold;">[Confidence: {conf}%]</span><br>
                             {c['text']}
                         </div>
@@ -178,49 +177,20 @@ def run_retrieval(query: str, topic: str, level: str):
                 st.markdown('</div>', unsafe_allow_html=True)
             else:
                 st.info("No context retrieved.")
+
+# --- Query input field ---
+query_input = st.text_input(
+    "Enter your question here",
+    value=st.session_state.query,
+    key="query_input",
+    on_change=lambda: run_retrieval(st.session_state.query_input, topic, level)
+)
 
 # -------------------------
 # Get Answer button (single, full width)
 # -------------------------
 if st.button("Get Answer"):
     run_retrieval(query_input, topic, level)
-
-# -------------------------
-# Answer (full width)
-# -------------------------
-if "answer" in st.session_state and st.session_state.answer:
-    with st.container():
-        st.subheader("Answer")
-        st.markdown(
-            re.sub(
-                r"\[(\d+)\]",
-                lambda match: (
-                    f"[{match.group(1)}]"
-                ),
-                st.session_state.answer
-            ),
-            unsafe_allow_html=True
-        )
-
-        # --- Retrieved Context in expandable section ---
-        with st.expander("Show Retrieved Context"):
-            contexts = st.session_state.get("context", [])
-            if contexts:
-                st.markdown('<div style="overflow-x:auto; display:flex; gap:10px;">', unsafe_allow_html=True)
-                for c in sorted(contexts, key=lambda x: x['score'], reverse=True):
-                    conf = int(c["score"] * 100)
-                    color = "green" if conf > 85 else "orange" if conf > 60 else "red"
-                    st.markdown(f'''
-                        <div style="min-width:300px; padding:8px; margin-bottom:5px; border-left:3px solid #9DC183;
-                                    background-color:#f9f9f9; border-radius:5px;">
-                            <b>{c['source']} (chunk {c['chunk']})</b><br>
-                            <span style="color:{color}; font-weight:bold;">[Confidence: {conf}%]</span><br>
-                            {c['text']}
-                        </div>
-                    ''', unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-            else:
-                st.info("No context retrieved.")
 
 # -------------------------
 # Feedback buttons
