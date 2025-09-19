@@ -173,6 +173,10 @@ def make_standard_chunk(**kwargs):
                 chunk[field] = None
     return chunk
 
+def remove_wikipedia_refs(text: str) -> str:
+    # Remove patterns like [14], [15], [14][15], [a], [citation needed], etc.
+    return re.sub(r'\[(?:\d+|[a-zA-Z]+|citation needed)\]', '', text)
+
 def process_html_file(filepath: Path) -> List[Dict]:
     logger.info(f"Processing HTML file: {filepath}")
     try:
@@ -184,6 +188,7 @@ def process_html_file(filepath: Path) -> List[Dict]:
             return []
         extracted_json = json.loads(extracted)
         text = extracted_json.get("text", "")
+        text = remove_wikipedia_refs(text)  # Clean Wikipedia reference markers
         title = extracted_json.get("title") or filepath.stem
         url = extracted_json.get("url")
         images = extract_images_from_html(html_content)
