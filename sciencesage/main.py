@@ -52,11 +52,18 @@ topic = st.sidebar.selectbox("Choose a topic", TOPICS)
 level = st.sidebar.radio("Select explanation level", LEVELS)
 
 example_queries = {
-    "Neuroplasticity": ["What is neuroplasticity?", "How do neurons rewire?"],
-    "AI": ["What is a neural network?", "Explain transformers."],
-    "Renewable Energy & Climate Change": ["What is the greenhouse effect?", "How do solar panels work?"],
-    "Animal Adaptation": ["How do penguins stay warm?", "What is mimicry in animals?"],
-    "Ecosystem Interactions": ["What is a food chain?", "How does deforestation affect biodiversity?"]
+    "Space": [
+        "What causes a solar eclipse?",
+        "How do black holes form?"
+    ],
+    "AI": [
+        "What is a neural network?",
+        "How does machine learning differ from traditional programming?"
+    ],
+    "Climate": [
+        "What is the greenhouse effect?",
+        "How does climate change impact sea levels?"
+    ]
 }
 
 # Initialize session_state for query and rephrased query
@@ -78,7 +85,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Query input field ---
-query_input = st.text_input("Enter your question here", value=st.session_state.query, key="query_input")
+query_input = st.text_input(
+    "Enter your question here",
+    value=st.session_state.query,
+    key="query_input",
+    on_change=lambda: run_retrieval(st.session_state.query_input, topic, level)
+)
 
 # Helper function to format references
 def format_reference(url: str):
@@ -134,86 +146,93 @@ def run_retrieval(query: str, topic: str, level: str):
     answer_with_links = re.sub(r"\[(\d+)\]", replace_citation, answer)
 
     # -------------------------
-    # Display answer
+    # Display answer and context using full width
     # -------------------------
-    st.subheader("Answer")
-    st.markdown(answer_with_links, unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+    .full-width-container > div {
+        flex: 1 1 0%;
+        min-width: 0;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    with st.container():
+        st.subheader("Answer")
+        st.markdown(answer_with_links, unsafe_allow_html=True)
 
-    # -------------------------
-    # Horizontal scrollable context
-    # -------------------------
-    st.markdown("### Retrieved Context")
-    if contexts:
-        st.markdown('<div style="overflow-x:auto; display:flex; gap:10px;">', unsafe_allow_html=True)
-        for c in sorted(contexts, key=lambda x: x['score'], reverse=True):
-            conf = int(c["score"] * 100)
-            color = "green" if conf > 85 else "orange" if conf > 60 else "red"
-            st.markdown(f'''
-                <div style="min-width:300px; padding:8px; margin-bottom:5px; border-left:3px solid #9DC183;
-                            background-color:#f9f9f9; border-radius:5px;">
-                    <b>{c['source']} (chunk {c['chunk']})</b><br>
-                    <span style="color:{color}; font-weight:bold;">[Confidence: {conf}%]</span><br>
-                    {c['text']}
-                </div>
-            ''', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        st.info("No context retrieved.")
-
-    # -------------------------
-    # Horizontal scrollable references
-    # -------------------------
-    st.markdown("### 🔗 References")
-    if references:
-        # Merge URLs by snippet
-        merged_refs = {}
-        for r in references:
-            key = r["snippet"]
-            if key not in merged_refs:
-                merged_refs[key] = {"urls": [r["url"]], "score": r["score"], "snippet": r["snippet"]}
+        # --- Retrieved Context in expandable section ---
+        with st.expander("Show Retrieved Context"):
+            if contexts:
+                st.markdown('<div style="overflow-x:auto; display:flex; gap:10px;">', unsafe_allow_html=True)
+                for c in sorted(contexts, key=lambda x: x['score'], reverse=True):
+                    conf = int(c["score"] * 100)
+                    color = "green" if conf > 85 else "orange" if conf > 60 else "red"
+                    st.markdown(f'''
+                        <div style="min-width:300px; padding:8px; margin-bottom:5px; border-left:3px solid #9DC183;
+                                    background-color:#f9f9f9; border-radius:5px;">
+                            <b>{c['source']} (chunk {c['chunk']})</b><br>
+                            <span style="color:{color}; font-weight:bold;">[Confidence: {conf}%]</span><br>
+                            {c['text']}
+                        </div>
+                    ''', unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
             else:
-                merged_refs[key]["urls"] = list(set(merged_refs[key]["urls"] + [r["url"]]))
-        st.markdown('<div style="overflow-x:auto; display:flex; gap:10px;">', unsafe_allow_html=True)
-        for idx, ref in enumerate(merged_refs.values(), start=1):
-            conf = int(ref["score"] * 100)
-            color = "green" if conf > 85 else "orange" if conf > 60 else "red"
-            urls_links = ", ".join([f'<a href="{u}" target="_blank">{format_reference(u)}</a>' for u in ref["urls"]])
-            st.markdown(f'''
-                <div style="min-width:250px; padding:8px; margin-bottom:5px; border:1px solid #ccc;
-                            border-radius:10px; background-color:#f9f9f9;">
-                    <b>[{idx}]</b> {urls_links}
-                    <span style="color:{color}; font-weight:bold;">({conf}% match)</span><br>
-                    <small style="color: gray;">{ref["snippet"]}</small>
-                </div>
-            ''', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        st.info("No references retrieved.")
+                st.info("No context retrieved.")
 
 # -------------------------
-# Buttons: Rephrase & Regenerate (inline)
+# Get Answer button (single, full width)
 # -------------------------
-st.markdown("### Actions")
-col1, col2, col3 = st.columns([1, 1, 2])
-with col1:
-    if st.button("Get Answer"):
-        run_retrieval(query_input, topic, level)
-with col2:
-    if st.button("Rephrase Question"):
-        if query_input.strip():
-            rephrased = rephrase_query(query_input, topic)
-            st.session_state.rephrased_query = rephrased
-            run_retrieval(rephrased, topic, level)
-with col3:
-    if st.button("Regenerate Answer"):
-        q_to_use = st.session_state.rephrased_query or query_input
-        run_retrieval(q_to_use, topic, level)
+if st.button("Get Answer"):
+    run_retrieval(query_input, topic, level)
 
 # -------------------------
-# Feedback buttons (inline)
+# Answer (full width)
 # -------------------------
-st.markdown("### Feedback on this answer")
-fb_col1, fb_col2 = st.columns([1, 1])
+if "answer" in st.session_state and st.session_state.answer:
+    with st.container():
+        st.subheader("Answer")
+        st.markdown(
+            re.sub(
+                r"\[(\d+)\]",
+                lambda match: (
+                    f"[{match.group(1)}]"
+                ),
+                st.session_state.answer
+            ),
+            unsafe_allow_html=True
+        )
+
+        # --- Retrieved Context in expandable section ---
+        with st.expander("Show Retrieved Context"):
+            contexts = st.session_state.get("context", [])
+            if contexts:
+                st.markdown('<div style="overflow-x:auto; display:flex; gap:10px;">', unsafe_allow_html=True)
+                for c in sorted(contexts, key=lambda x: x['score'], reverse=True):
+                    conf = int(c["score"] * 100)
+                    color = "green" if conf > 85 else "orange" if conf > 60 else "red"
+                    st.markdown(f'''
+                        <div style="min-width:300px; padding:8px; margin-bottom:5px; border-left:3px solid #9DC183;
+                                    background-color:#f9f9f9; border-radius:5px;">
+                            <b>{c['source']} (chunk {c['chunk']})</b><br>
+                            <span style="color:{color}; font-weight:bold;">[Confidence: {conf}%]</span><br>
+                            {c['text']}
+                        </div>
+                    ''', unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+            else:
+                st.info("No context retrieved.")
+
+# -------------------------
+# Feedback buttons
+# -------------------------
+st.markdown("""
+<div style="display: flex; align-items: center; gap: 10px; margin-top: 1em;">
+    <span style="font-weight: 600; font-size: 1.1em;">Feedback on this answer:</span>
+</div>
+""", unsafe_allow_html=True)
+
+fb_col1, fb_col2 = st.columns([0.07, 0.07])
+feedback_msg = ""
 with fb_col1:
     if st.button("👍", key="feedback_up"):
         save_feedback(
@@ -223,7 +242,7 @@ with fb_col1:
             st.session_state.get("last_level", ""),
             "up"
         )
-        st.success("Thanks for your feedback! 👍")
+        feedback_msg = "Thanks for your feedback! 👍"
         logger.info("User gave positive feedback")
 with fb_col2:
     if st.button("👎", key="feedback_down"):
@@ -234,5 +253,28 @@ with fb_col2:
             st.session_state.get("last_level", ""),
             "down"
         )
-        st.success("Thanks for your feedback! 👎")
+        feedback_msg = "Thanks for your feedback! 👎"
         logger.info("User gave negative feedback")
+
+if feedback_msg:
+    st.success(feedback_msg)
+
+# -------------------------
+# Rephrase and Regenerate section
+# -------------------------
+st.markdown("""
+<div style="margin-top: 1.5em; margin-bottom: 0.5em;">
+    <span style="font-weight: 600; font-size: 1.1em;">Rephrase and Regenerate</span>
+</div>
+""", unsafe_allow_html=True)
+
+rr_col1, rr_col2 = st.columns([0.15, 0.15])
+with rr_col1:
+    if st.button("Rephrase Question"):
+        if st.session_state.query_input.strip():
+            rephrased = rephrase_query(st.session_state.query_input)
+            st.session_state.rephrased_query = rephrased
+            run_retrieval(rephrased, topic, level)
+with rr_col2:
+    if st.button("Regenerate Answer"):
+        run_retrieval(st.session_state.query_input, topic, level)
