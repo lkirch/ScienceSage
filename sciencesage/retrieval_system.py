@@ -156,7 +156,14 @@ def retrieve_answer(query: str, topic: Union[str, List[str]], level: str) -> Tup
                 "score": r["score"]
             })
 
-    context_text = "\n\n".join([f"[{c['source']}:{c['chunk']}] {c['text']}" for c in contexts])
+    context_text = "\n\n".join([
+        (
+            f"[Source: <a href='{r['urls'][0]}' target='_blank'>{get_domain(r['urls'][0])}</a> | chunk {c['chunk']}] {c['text']}"
+            if r.get("urls") else
+            f"[Source: {c['source']} | chunk {c['chunk']}] {c['text']}"
+        )
+        for c, r in zip(contexts, top_results)
+    ])
     if not context_text:
         context_text = "No additional context found in the database."
         logger.warning("No relevant context found above threshold.")
@@ -211,3 +218,11 @@ def rephrase_query(query: str) -> str:
     except Exception as e:
         logger.error(f"Rephrase query failed: {e}")
         return query
+
+def get_domain(url):
+    from urllib.parse import urlparse
+    try:
+        netloc = urlparse(url).netloc
+        return netloc.replace("www.", "") if netloc else url
+    except Exception:
+        return url
