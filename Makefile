@@ -1,7 +1,7 @@
 # Makefile for ScienceSage
 
 # Paths
-APP_DIR=app
+APP_DIR=sciencesage
 SCRIPTS_DIR=scripts
 DATA_DIR=data
 ENV_FILE=.env
@@ -36,7 +36,7 @@ ingest: download preprocess embed
 
 run-app:
 	@echo ">>> Starting Streamlit app..."
-	streamlit run $(APP_DIR)/app.py --server.port=8501
+	streamlit run $(APP_DIR)/main.py --server.port=8501
 
 ## ------------------------
 ## Testing
