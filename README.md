@@ -17,7 +17,7 @@ Powered by **GPT-4**, **Qdrant**, and **Streamlit**, and developed in **Codespac
 ## ✨ Features
 - **End-to-end RAG pipeline** (OpenAI GPT + Qdrant vector DB).  
 - **Multi-level answers** (simple → advanced).  
-- **Public domain data sources** (NASA, Wikipedia, Stanford).  
+- **Public domain data sources** (NASA, Wikipedia, arXiv).  
 - **Feedback system** (👍 / 👎 per answer, stored for analysis).  
 - **Streamlit interface** with example queries and sidebar controls.  
 
@@ -276,7 +276,7 @@ Here are some example questions to try for each topic:
 
 ---
 
-## 📦 Requirements
+## ✅ Requirements
 
 All Python dependencies are listed in `requirements.txt`.  
 Install with:
