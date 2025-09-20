@@ -156,11 +156,23 @@ def retrieve_answer(query: str, topic: Union[str, List[str]], level: str) -> Tup
                 "score": r["score"]
             })
 
+    def get_source_label(payload):
+        # Prefer title, fallback to domain, fallback to source
+        title = payload.get("title")
+        urls = payload.get("urls") or []
+        domain = get_domain(urls[0]) if urls else None
+        if title:
+            return title
+        elif domain:
+            return domain
+        else:
+            return payload.get("source", "unknown")
+
     context_text = "\n\n".join([
         (
-            f"[Source: <a href='{r['urls'][0]}' target='_blank'>{get_domain(r['urls'][0])}</a> | chunk {c['chunk']}] {c['text']}"
+            f"[Source: <a href='{r['urls'][0]}' target='_blank'>{get_source_label(r)}</a> | chunk {c['chunk']}] {c['text']}"
             if r.get("urls") else
-            f"[Source: {c['source']} | chunk {c['chunk']}] {c['text']}"
+            f"[Source: {get_source_label(r)} | chunk {c['chunk']}] {c['text']}"
         )
         for c, r in zip(contexts, top_results)
     ])
