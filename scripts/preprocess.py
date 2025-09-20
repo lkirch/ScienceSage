@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 import json
 import hashlib
@@ -7,12 +6,13 @@ import datetime
 import re
 from typing import List, Dict
 from loguru import logger
-import tiktoken
 
 from sciencesage.config import (
     RAW_HTML_DIR,
     RAW_PDF_DIR,
     RAW_DATA_DIR,
+    RAW_XML_DIR,
+    RAW_JSON_DIR,
     CHUNKS_FILE,
     CHUNK_SIZE,
     CHUNK_OVERLAP,
@@ -161,8 +161,6 @@ def make_standard_chunk(**kwargs):
         else:
             if field in ("images", "tables", "authors", "topics", "matched_keywords", "reference_urls"):
                 chunk[field] = []
-            elif field == "embedding_cached":
-                chunk[field] = False
             elif field == "chunk_index":
                 chunk[field] = 0
             elif field == "char_start":
@@ -190,7 +188,17 @@ def process_html_file(filepath: Path) -> List[Dict]:
         text = extracted_json.get("text", "")
         text = remove_wikipedia_refs(text)  # Clean Wikipedia reference markers
         title = extracted_json.get("title") or filepath.stem
-        url = extracted_json.get("url")
+
+        # --- Get URL from meta.json if it exists ---
+        meta_path = filepath.with_suffix(filepath.suffix + ".meta.json")
+        url = None
+        if meta_path.exists():
+            with open(meta_path, "r") as f:
+                meta = json.load(f)
+            url = meta.get("url")
+        else:
+            url = extracted_json.get("url")
+
         images = extract_images_from_html(html_content)
         tables = extract_tables_from_html(html_content)
         reference_urls = extracted_json.get("links", []) or extract_reference_urls_from_html(html_content)
@@ -202,11 +210,7 @@ def process_html_file(filepath: Path) -> List[Dict]:
         chunks = chunk_text_by_paragraphs(text_with_placeholders)
         results = []
         char_offset = 0
-        section = None
-        anchor = None
-        published = extracted_json.get("date")
         authors = extracted_json.get("author", [])
-        latex = None
         abstract = extracted_json.get("description") or None  # Try to get a summary/lead if available
         for i, chunk in enumerate(chunks):
             sub_chunks = split_chunk_by_tokens(chunk, MAX_TOKENS)
@@ -227,15 +231,11 @@ def process_html_file(filepath: Path) -> List[Dict]:
                         url=url,
                         doc_id=filename,
                         page=None,
-                        section=section,
-                        anchor=anchor,
                         chunk_index=i,
                         char_start=char_start,
                         char_end=char_end,
                         images=[img["src"] for img in images],
                         tables=[f"data/raw/tables/{filename}_table{i}.csv" for i in range(len(tables))],
-                        latex=latex,
-                        published=published,
                         authors=authors if isinstance(authors, list) else [authors],
                         topics=chunk_topics,
                         topic=topic,
@@ -243,7 +243,6 @@ def process_html_file(filepath: Path) -> List[Dict]:
                         reference_urls=reference_urls,
                         loadtime=loadtime,
                         raw_type="html",
-                        level="unknown",
                         abstract=abstract,
                     )
                 )
@@ -262,15 +261,31 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
             logger.warning(f"No text extracted from {filepath.name}")
             return []
         filename = filepath.stem
-        xml_path = Path(RAW_DATA_DIR) / f"arxiv_{filename.split('_')[1]}.xml" if "arxiv_" in filename else None
+        # --- Find the matching XML file in RAW_XML_DIR ---
+        arxiv_id = None
+        if filename.startswith("arxiv_"):
+            arxiv_id = filename.replace("arxiv_", "")
+        xml_path = None
+        if arxiv_id:
+            # Find the XML file that contains this arxiv_id
+            for xml_file in Path(RAW_XML_DIR).glob("arxiv_*.xml"):
+                with open(xml_file, "r", encoding="utf-8") as xf:
+                    xml_content = xf.read()
+                root = ET.fromstring(xml_content)
+                ns = {'atom': 'http://www.w3.org/2005/Atom'}
+                for entry in root.findall('atom:entry', ns):
+                    entry_id = entry.find('atom:id', ns).text.split('/abs/')[-1]
+                    if arxiv_id in entry_id:
+                        xml_path = xml_file
+                        break
+                if xml_path:
+                    break
+
         title = filename
         url = None
         pdf_url = None
         authors = []
         categories = []
-        submitted_date = None
-        announced_date = None
-        published = None
         doc_id = filename
         abstract = None
         if xml_path and xml_path.exists():
@@ -280,18 +295,28 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
                 root = ET.fromstring(xml_content)
                 ns = {'atom': 'http://www.w3.org/2005/Atom'}
                 for entry in root.findall('atom:entry', ns):
-                    arxiv_id = entry.find('atom:id', ns).text.split('/abs/')[-1]
-                    if arxiv_id in filename:
+                    entry_id = entry.find('atom:id', ns).text.split('/abs/')[-1]
+                    if arxiv_id and arxiv_id in entry_id:
                         title = entry.find('atom:title', ns).text.strip()
-                        url = next((l.attrib['href'] for l in entry.findall('atom:link', ns) if l.attrib.get('type') == 'text/html'), None)
-                        pdf_url = f"https://arxiv.org/pdf/{arxiv_id}.pdf"
+                        url = entry.find('atom:id', ns).text  # Use arXiv entry URL
+                        pdf_url = f"https://arxiv.org/pdf/{entry_id}.pdf"
+                        # Prefer <author> fields, but fallback to <author> or <authors> if present
                         authors = [a.find('atom:name', ns).text for a in entry.findall('atom:author', ns)]
+                        # If not found, try <author> or <authors> field directly
+                        if not authors:
+                            author_field = entry.find('atom:author', ns)
+                            if author_field is not None and author_field.text:
+                                authors = [author_field.text.strip()]
                         categories = [c.attrib['term'] for c in entry.findall('atom:category', ns)]
-                        submitted_date = entry.find('atom:published', ns).text
-                        announced_date = entry.find('atom:updated', ns).text
-                        published = submitted_date
-                        doc_id = arxiv_id
-                        abstract = entry.find('atom:summary', ns).text.strip()
+                        doc_id = entry_id
+                        # Prefer <summary> for abstract, fallback to <abstract> if present
+                        summary_elem = entry.find('atom:summary', ns)
+                        if summary_elem is not None and summary_elem.text:
+                            abstract = summary_elem.text.strip()
+                        else:
+                            abstract_elem = entry.find('atom:abstract', ns)
+                            if abstract_elem is not None and abstract_elem.text:
+                                abstract = abstract_elem.text.strip()
                         break
             except Exception as e:
                 logger.warning(f"Could not parse arXiv XML for {filename}: {e}")
@@ -301,7 +326,6 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
         loadtime = datetime.datetime.now(datetime.UTC).isoformat()
         results = []
         char_offset = 0
-        latex = None
         for page_num, page in enumerate(pdf.pages):
             page_text = page.extract_text() or ""
             chunks = chunk_text_by_paragraphs(page_text)
@@ -324,15 +348,11 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
                             url=url,
                             doc_id=doc_id,
                             page=page_num + 1,
-                            section=None,
-                            anchor=None,
                             chunk_index=i,
                             char_start=char_start,
                             char_end=char_end,
                             images=[],
                             tables=[],
-                            latex=latex,
-                            published=published,
                             authors=authors,
                             topics=chunk_topics,
                             topic=topic,
@@ -340,7 +360,6 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
                             reference_urls=reference_urls,
                             loadtime=loadtime,
                             raw_type="pdf",
-                            level="unknown",
                             abstract=abstract,
                         )
                     )
@@ -355,36 +374,38 @@ def process_json_file(filepath: Path) -> List[Dict]:
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
-        results = []
-        loadtime = datetime.datetime.now(datetime.UTC).isoformat()
-        records = data if isinstance(data, list) else [data]
-        for record in records:
-            text = record.get("text") or record.get("abstract") or ""
-            if not text.strip():
-                continue
-            filename = filepath.stem
-            reference_urls = record.get("references", []) or extract_urls(text)
-            title = record.get("title", filename)
-            url = record.get("url")
-            image_url = record.get("image_url")
-            images = record.get("images", [])
-            pdf_url = record.get("pdf_url")
-            authors = record.get("authors", [])
-            categories = record.get("categories", [])
-            matched_keywords = record.get("matched_keywords", [])
-            topic = record.get("topic") if "topic" in record else get_topic_from_keywords(text)
-            published = record.get("published")
-            doc_id = record.get("doc_id", filename)
-            latex = record.get("latex")
-            section = record.get("section")
-            anchor = record.get("anchor")
-            abstract = record.get("abstract")
+        # Handle NASA APOD JSON structure (copyright is optional)
+        if (
+            "title" in data
+            and "explanation" in data
+            and "url" in data
+            and "hdurl" in data
+        ):
+            title = data.get("title")
+            text = data.get("explanation")
+            url = data.get("url")
+            abstract = data.get("explanation")
+            reference_urls = [data.get("hdurl")]
+            # Copyright is optional
+            copyright_val = data.get("copyright")
+            authors = [copyright_val] if copyright_val else []
+            doc_id = filepath.stem
+            loadtime = datetime.datetime.now(datetime.UTC).isoformat()
+            matched_keywords = [kw for kw in sum(TOPIC_KEYWORDS.values(), []) if kw.lower() in text.lower()]
+            topic = get_topic_from_keywords(text)
             chunks = chunk_text_by_paragraphs(text)
+            # Ensure at least one chunk
+            if not chunks:
+                chunks = [text]
+            results = []
             char_offset = 0
             for i, chunk in enumerate(chunks):
                 sub_chunks = split_chunk_by_tokens(chunk, MAX_TOKENS)
+                # Ensure at least one sub_chunk
+                if not sub_chunks:
+                    sub_chunks = [chunk]
                 for j, sub_chunk in enumerate(sub_chunks):
-                    chunk_id = generate_id(sub_chunk, filename + f"_{i}_{j}")
+                    chunk_id = generate_id(sub_chunk, doc_id + f"_{i}_{j}")
                     chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk_id))
                     chunk_topics = auto_tag_chunk(sub_chunk)
                     char_start = char_offset
@@ -395,20 +416,16 @@ def process_json_file(filepath: Path) -> List[Dict]:
                             id=chunk_id,
                             uuid=chunk_uuid,
                             text=sub_chunk,
-                            source=record.get("source", "json"),
+                            source="nasa",
                             title=title,
                             url=url,
                             doc_id=doc_id,
-                            page=record.get("page"),
-                            section=section,
-                            anchor=anchor,
+                            page=None,
                             chunk_index=i,
                             char_start=char_start,
                             char_end=char_end,
-                            images=images,
-                            tables=record.get("tables", []),
-                            latex=latex,
-                            published=published,
+                            images=[],
+                            tables=[],
                             authors=authors,
                             topics=chunk_topics,
                             topic=topic,
@@ -416,12 +433,14 @@ def process_json_file(filepath: Path) -> List[Dict]:
                             reference_urls=reference_urls,
                             loadtime=loadtime,
                             raw_type="json",
-                            level="unknown",
                             abstract=abstract,
                         )
                     )
-        logger.info(f"Processed {len(results)} chunks from JSON {filepath.name}")
-        return results
+            logger.info(f"Processed {len(results)} chunks from NASA APOD JSON {filepath.name}")
+            return results
+        else:
+            logger.warning(f"JSON structure not recognized for {filepath.name}")
+            return []
     except Exception as e:
         logger.error(f"Failed to process JSON file {filepath}: {e}")
         return []
@@ -452,7 +471,7 @@ def main():
             logger.error(f"Failed to process PDF {filepath}: {e}")
 
     # Process JSON files (for NASA APOD and any other JSON sources)
-    raw_data_dir = Path(RAW_DATA_DIR)
+    raw_data_dir = Path(RAW_JSON_DIR)
     json_files = list(raw_data_dir.glob("*.json"))
     for filepath in json_files:
         logger.info(f"Processing JSON: {filepath.name}")
