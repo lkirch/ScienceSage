@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 import os
 import requests
 import wikipediaapi
-import json  # Add this at the top
+import json
+import argparse
 
 from sciencesage.config import (
     RAW_DATA_DIR,
@@ -70,6 +71,10 @@ def fetch_nasa_apod(api_key: str, api_url: str, days: int = 1, start_date: str =
                     img_fname = f"nasa_apod_{date}.{ext}"
                     save_file(os.path.join(RAW_IMAGES_DIR, img_fname), img_resp.content, binary=True)
                     logger.info(f"Downloaded NASA APOD image to {img_fname}")
+                    # Save metadata
+                    meta = {"url": img_url}
+                    with open(f"{os.path.join(RAW_IMAGES_DIR, img_fname)}.meta.json", "w") as f:
+                        json.dump(meta, f)
         except Exception as e:
             logger.error(f"Exception fetching NASA APOD for {date}: {e}")
 
@@ -95,6 +100,9 @@ def crawl_wikipedia_keywords(topic_keywords, depth=1, max_pages=50, user_agent="
                     html_fname = f"wikipedia_{keyword.replace(' ', '_')}.html"
                     save_file(os.path.join(RAW_HTML_DIR, html_fname), resp.text)
                     logger.info(f"Saved Wikipedia HTML to {html_fname}")
+                    meta = {"url": page.fullurl}
+                    with open(os.path.join(RAW_HTML_DIR, html_fname + ".meta.json"), "w") as f:
+                        json.dump(meta, f)
                 else:
                     logger.warning(f"Failed to fetch HTML for {keyword}: {resp.status_code}")
             except Exception as e:
@@ -131,6 +139,9 @@ def fetch_arxiv_papers(categories, max_results=10):
                         pdf_fname = f"arxiv_{arxiv_id}.pdf"
                         save_file(os.path.join(RAW_PDF_DIR, pdf_fname), pdf_resp.content, binary=True)
                         logger.info(f"Saved arXiv PDF to {pdf_fname}")
+                        meta = {"url": pdf_url}
+                        with open(os.path.join(RAW_PDF_DIR, pdf_fname + ".meta.json"), "w") as f:
+                            json.dump(meta, f)
                     else:
                         logger.warning(f"Failed to fetch PDF for {arxiv_id}: {pdf_resp.status_code}")
                 except Exception as e:
@@ -139,16 +150,28 @@ def fetch_arxiv_papers(categories, max_results=10):
             logger.error(f"Exception fetching arXiv for {cat}: {e}")
 
 if __name__ == "__main__":
-    fetch_nasa_apod(
-        NASA_API_KEY,
-        NASA_APOD_API_URL,
-        days=NASA_APOD_DAYS,
-        start_date=NASA_APOD_START_DATE
+    parser = argparse.ArgumentParser(description="Download data for ScienceSage.")
+    parser.add_argument(
+        "--source",
+        choices=["nasa", "wikipedia", "arxiv", "all"],
+        default="all",
+        help="Which data source to download? (default: all)"
     )
-    crawl_wikipedia_keywords(
-        TOPIC_KEYWORDS,
-        depth=WIKI_CRAWL_DEPTH,
-        max_pages=WIKI_MAX_PAGES,
-        user_agent=WIKI_USER_AGENT
-    )
-    fetch_arxiv_papers(ARXIV_CATEGORIES, max_results=ARXIV_MAX_RESULTS)
+    args = parser.parse_args()
+
+    if args.source in ("nasa", "all"):
+        fetch_nasa_apod(
+            NASA_API_KEY,
+            NASA_APOD_API_URL,
+            days=NASA_APOD_DAYS,
+            start_date=NASA_APOD_START_DATE
+        )
+    if args.source in ("wikipedia", "all"):
+        crawl_wikipedia_keywords(
+            TOPIC_KEYWORDS,
+            depth=WIKI_CRAWL_DEPTH,
+            max_pages=WIKI_MAX_PAGES,
+            user_agent=WIKI_USER_AGENT
+        )
+    if args.source in ("arxiv", "all"):
+        fetch_arxiv_papers(ARXIV_CATEGORIES, max_results=ARXIV_MAX_RESULTS)
