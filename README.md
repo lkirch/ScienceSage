@@ -184,6 +184,7 @@ python [evaluate_rag.py]
 - Results are saved to data/eval/eval_results.jsonl.
 - The script reports retrieval recall and answer match metrics.
 
+---
 
 ## 🛠️ Using the Makefile
 
