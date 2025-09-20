@@ -71,10 +71,6 @@ def fetch_nasa_apod(api_key: str, api_url: str, days: int = 1, start_date: str =
                     img_fname = f"nasa_apod_{date}.{ext}"
                     save_file(os.path.join(RAW_IMAGES_DIR, img_fname), img_resp.content, binary=True)
                     logger.info(f"Downloaded NASA APOD image to {img_fname}")
-                    # Save metadata
-                    meta = {"url": img_url}
-                    with open(f"{os.path.join(RAW_IMAGES_DIR, img_fname)}.meta.json", "w") as f:
-                        json.dump(meta, f)
         except Exception as e:
             logger.error(f"Exception fetching NASA APOD for {date}: {e}")
 
@@ -139,9 +135,6 @@ def fetch_arxiv_papers(categories, max_results=10):
                         pdf_fname = f"arxiv_{arxiv_id}.pdf"
                         save_file(os.path.join(RAW_PDF_DIR, pdf_fname), pdf_resp.content, binary=True)
                         logger.info(f"Saved arXiv PDF to {pdf_fname}")
-                        meta = {"url": pdf_url}
-                        with open(os.path.join(RAW_PDF_DIR, pdf_fname + ".meta.json"), "w") as f:
-                            json.dump(meta, f)
                     else:
                         logger.warning(f"Failed to fetch PDF for {arxiv_id}: {pdf_resp.status_code}")
                 except Exception as e:
