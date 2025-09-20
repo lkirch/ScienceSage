@@ -27,6 +27,9 @@ import trafilatura
 import pdfplumber
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
+import fitz  # PyMuPDF
+import os
+import csv
 
 logger.add("logs/preprocess.log", rotation="5 MB", retention="7 days")
 logger.info("Started preprocess.py script.")
@@ -175,6 +178,41 @@ def remove_wikipedia_refs(text: str) -> str:
     # Remove patterns like [14], [15], [14][15], [a], [citation needed], etc.
     return re.sub(r'\[(?:\d+|[a-zA-Z]+|citation needed)\]', '', text)
 
+def extract_images_from_pdf(filepath: Path, output_dir: Path) -> list:
+    """Extract images from PDF using fitz and save them to output_dir. Returns list of image file paths."""
+    images = []
+    doc = fitz.open(str(filepath))
+    for page_num in range(len(doc)):
+        page = doc[page_num]
+        for img_index, img in enumerate(page.get_images(full=True)):
+            xref = img[0]
+            base_image = doc.extract_image(xref)
+            image_bytes = base_image["image"]
+            image_ext = base_image["ext"]
+            image_name = f"{filepath.stem}_page{page_num+1}_img{img_index+1}.{image_ext}"
+            image_path = output_dir / image_name
+            with open(image_path, "wb") as img_file:
+                img_file.write(image_bytes)
+            images.append(str(image_path))
+    return images
+
+def extract_tables_from_pdf(pdf, output_dir: Path, filename: str) -> list:
+    """Extract tables from pdfplumber PDF object and save as CSV. Returns list of CSV file paths."""
+    tables = []
+    for page_num, page in enumerate(pdf.pages):
+        page_tables = page.extract_tables()
+        for tbl_idx, table in enumerate(page_tables):
+            if not table:
+                continue
+            csv_name = f"{filename}_page{page_num+1}_table{tbl_idx+1}.csv"
+            csv_path = output_dir / csv_name
+            with open(csv_path, "w", newline='', encoding="utf-8") as csvfile:
+                writer = csv.writer(csvfile)
+                for row in table:
+                    writer.writerow(row)
+            tables.append(str(csv_path))
+    return tables
+
 def process_html_file(filepath: Path) -> List[Dict]:
     logger.info(f"Processing HTML file: {filepath}")
     try:
@@ -255,8 +293,18 @@ def process_html_file(filepath: Path) -> List[Dict]:
 def process_pdf_file(filepath: Path) -> List[Dict]:
     logger.info(f"Processing PDF file: {filepath}")
     try:
+        # --- Extract images using fitz ---
+        images_dir = Path(RAW_DATA_DIR) / "pdf_images"
+        images_dir.mkdir(parents=True, exist_ok=True)
+        images = extract_images_from_pdf(filepath, images_dir)
+
+        # --- Extract tables using pdfplumber ---
+        tables_dir = Path(RAW_DATA_DIR) / "tables"
+        tables_dir.mkdir(parents=True, exist_ok=True)
         with pdfplumber.open(filepath) as pdf:
             text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+            tables = extract_tables_from_pdf(pdf, tables_dir, filepath.stem)
+
         if not text.strip():
             logger.warning(f"No text extracted from {filepath.name}")
             return []
@@ -267,7 +315,6 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
             arxiv_id = filename.replace("arxiv_", "")
         xml_path = None
         if arxiv_id:
-            # Find the XML file that contains this arxiv_id
             for xml_file in Path(RAW_XML_DIR).glob("arxiv_*.xml"):
                 with open(xml_file, "r", encoding="utf-8") as xf:
                     xml_content = xf.read()
@@ -298,18 +345,15 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
                     entry_id = entry.find('atom:id', ns).text.split('/abs/')[-1]
                     if arxiv_id and arxiv_id in entry_id:
                         title = entry.find('atom:title', ns).text.strip()
-                        url = entry.find('atom:id', ns).text  # Use arXiv entry URL
+                        url = entry.find('atom:id', ns).text
                         pdf_url = f"https://arxiv.org/pdf/{entry_id}.pdf"
-                        # Prefer <author> fields, but fallback to <author> or <authors> if present
                         authors = [a.find('atom:name', ns).text for a in entry.findall('atom:author', ns)]
-                        # If not found, try <author> or <authors> field directly
                         if not authors:
                             author_field = entry.find('atom:author', ns)
                             if author_field is not None and author_field.text:
                                 authors = [author_field.text.strip()]
                         categories = [c.attrib['term'] for c in entry.findall('atom:category', ns)]
                         doc_id = entry_id
-                        # Prefer <summary> for abstract, fallback to <abstract> if present
                         summary_elem = entry.find('atom:summary', ns)
                         if summary_elem is not None and summary_elem.text:
                             abstract = summary_elem.text.strip()
@@ -326,43 +370,44 @@ def process_pdf_file(filepath: Path) -> List[Dict]:
         loadtime = datetime.datetime.now(datetime.UTC).isoformat()
         results = []
         char_offset = 0
-        for page_num, page in enumerate(pdf.pages):
-            page_text = page.extract_text() or ""
-            chunks = chunk_text_by_paragraphs(page_text)
-            for i, chunk in enumerate(chunks):
-                sub_chunks = split_chunk_by_tokens(chunk, MAX_TOKENS)
-                for j, sub_chunk in enumerate(sub_chunks):
-                    chunk_id = generate_id(sub_chunk, filename + f"_{page_num}_{i}_{j}")
-                    chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk_id))
-                    chunk_topics = auto_tag_chunk(sub_chunk)
-                    char_start = char_offset
-                    char_end = char_offset + len(sub_chunk)
-                    char_offset = char_end
-                    results.append(
-                        make_standard_chunk(
-                            id=chunk_id,
-                            uuid=chunk_uuid,
-                            text=sub_chunk,
-                            source="arxiv" if "arxiv" in filename else "pdf",
-                            title=title,
-                            url=url,
-                            doc_id=doc_id,
-                            page=page_num + 1,
-                            chunk_index=i,
-                            char_start=char_start,
-                            char_end=char_end,
-                            images=[],
-                            tables=[],
-                            authors=authors,
-                            topics=chunk_topics,
-                            topic=topic,
-                            matched_keywords=matched_keywords,
-                            reference_urls=reference_urls,
-                            loadtime=loadtime,
-                            raw_type="pdf",
-                            abstract=abstract,
+        with pdfplumber.open(filepath) as pdf:
+            for page_num, page in enumerate(pdf.pages):
+                page_text = page.extract_text() or ""
+                chunks = chunk_text_by_paragraphs(page_text)
+                for i, chunk in enumerate(chunks):
+                    sub_chunks = split_chunk_by_tokens(chunk, MAX_TOKENS)
+                    for j, sub_chunk in enumerate(sub_chunks):
+                        chunk_id = generate_id(sub_chunk, filename + f"_{page_num}_{i}_{j}")
+                        chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk_id))
+                        chunk_topics = auto_tag_chunk(sub_chunk)
+                        char_start = char_offset
+                        char_end = char_offset + len(sub_chunk)
+                        char_offset = char_end
+                        results.append(
+                            make_standard_chunk(
+                                id=chunk_id,
+                                uuid=chunk_uuid,
+                                text=sub_chunk,
+                                source="arxiv" if "arxiv" in filename else "pdf",
+                                title=title,
+                                url=url,
+                                doc_id=doc_id,
+                                page=page_num + 1,
+                                chunk_index=i,
+                                char_start=char_start,
+                                char_end=char_end,
+                                images=images,
+                                tables=tables,
+                                authors=authors,
+                                topics=chunk_topics,
+                                topic=topic,
+                                matched_keywords=matched_keywords,
+                                reference_urls=reference_urls,
+                                loadtime=loadtime,
+                                raw_type="pdf",
+                                abstract=abstract,
+                            )
                         )
-                    )
         logger.info(f"Processed {len(results)} chunks from PDF {filepath.name}")
         return results
     except Exception as e:
