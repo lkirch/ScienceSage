@@ -73,10 +73,9 @@ ARXIV_MAX_RESULTS = 3    # Number of papers to fetch per category
 
 # --- Standard chunk fields ---
 STANDARD_CHUNK_FIELDS = [
-    "id", "uuid", "text", "source", "title", "url", "doc_id", "page", "section", "anchor",
-    "chunk_index", "char_start", "char_end", "images", "tables", "latex", "published", "authors",
-    "embedding_cached", "topics", "topic", "matched_keywords", "reference_urls", "loadtime",
-    "raw_type", "level", "abstract"
+    "id", "uuid", "text", "source", "title", "url", "doc_id", "page", "chunk_index", "char_start", "char_end",
+    "images", "tables", "authors", "embedding_cached", "topics", "topic", "matched_keywords", "reference_urls", "loadtime",
+    "raw_type", "abstract"
 ]
 
 # --- Topics ---
