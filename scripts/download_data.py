@@ -5,9 +5,10 @@ import json
 import requests
 import wikipediaapi
 from tqdm import tqdm
+import time
 
 from sciencesage.config import (
-    RAW_HTML_DIR,
+    RAW_DATA_DIR,
     WIKI_USER_AGENT,
     WIKI_URL,
     TOPICS,
@@ -15,8 +16,7 @@ from sciencesage.config import (
 
 logger.add("logs/download_data.log", rotation="5 MB", retention="7 days")
 
-for d in [RAW_HTML_DIR]:
-    os.makedirs(d, exist_ok=True)
+os.makedirs(RAW_DATA_DIR, exist_ok=True)
 
 def save_file(path: str, content: str):
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -78,7 +78,7 @@ def download_wikipedia_raw(topic: str, user_agent: str):
         return
     # Save raw text
     text_fname = f"wikipedia_{topic.replace(' ', '_')}.txt"
-    save_file(os.path.join(RAW_HTML_DIR, text_fname), page.text)
+    save_file(os.path.join(RAW_DATA_DIR, text_fname), page.text)
     # Get image URLs
     image_urls = get_image_urls(topic, user_agent)
     # Save meta data
@@ -90,13 +90,13 @@ def download_wikipedia_raw(topic: str, user_agent: str):
         "images": image_urls,
     }
     meta_fname = f"wikipedia_{topic.replace(' ', '_')}.meta.json"
-    save_json(os.path.join(RAW_HTML_DIR, meta_fname), meta)
+    save_json(os.path.join(RAW_DATA_DIR, meta_fname), meta)
     # Save HTML (optional, but often useful)
     html_url = f"{WIKI_URL}/api/rest_v1/page/html/{topic.replace(' ', '_')}"
     resp = requests.get(html_url, headers={"User-Agent": user_agent}, timeout=20)
     if resp.status_code == 200:
         html_fname = f"wikipedia_{topic.replace(' ', '_')}.html"
-        save_file(os.path.join(RAW_HTML_DIR, html_fname), resp.text)
+        save_file(os.path.join(RAW_DATA_DIR, html_fname), resp.text)
         logger.info(f"Saved HTML, text, and meta for {topic}")
     else:
         logger.warning(f"Failed to fetch HTML for {topic}: {resp.status_code}")
@@ -120,6 +120,7 @@ def download_category_articles(category: str, user_agent: str):
     return count
 
 if __name__ == "__main__":
+    start_time = time.time()
     total_articles = 0
     for topic in tqdm(TOPICS, desc="Topics"):
         # If topic is a category, download all articles in the category
@@ -132,4 +133,6 @@ if __name__ == "__main__":
             logger.info(f"Downloading Wikipedia data for: {topic}")
             download_wikipedia_raw(topic, WIKI_USER_AGENT)
             total_articles += 1
+    elapsed = time.time() - start_time
     logger.info(f"Total number of articles downloaded: {total_articles}")
+    logger.info(f"Total elapsed time: {elapsed:.2f} seconds")
