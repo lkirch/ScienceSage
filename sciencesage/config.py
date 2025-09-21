@@ -46,15 +46,17 @@ WIKI_USER_AGENT = "ScienceSageBot/1.0 (contact: lkonthego@gmail.com)"
 # --- Standard chunk fields ---
 STANDARD_CHUNK_FIELDS = [
     "id",                # Unique chunk ID
+    "uuid",              # Unique chunk UUID
     "text",              # The chunked text content
     "title",             # Page/article title
     "source_url",        # Source URL
-    "section",           # Section/subsection title   
     "categories",        # Wikipedia categories for the page
     "images",            # List of image URLs or metadata   
-    "embedding",         # The vector embedding (for Qdrant)
     "summary",           # Summary (if available)
-    "timestamp"          # Timestamp of creation or last update    
+    "chunk_index",       # Index of the chunk in the original text
+    "char_start",        # Character start position in original text
+    "char_end",          # Character end position in original text
+    "created_at"         # Timestamp of creation or last update    
 ]
 
 # --- Topics ---

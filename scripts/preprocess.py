@@ -37,15 +37,13 @@ def make_standard_chunk(text, meta, chunk_index, char_start, char_end):
         "text": text,
         "title": meta.get("title"),
         "source_url": meta.get("fullurl"),
-        "section": None,
         "categories": meta.get("categories", []),
         "images": meta.get("images", []),
-        "embedding": None,
         "summary": meta.get("summary"),
         "chunk_index": chunk_index,
         "char_start": char_start,
         "char_end": char_end,
-        "created_at": datetime.datetime.utcnow().isoformat(),
+        "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
     # Only keep fields in STANDARD_CHUNK_FIELDS
     return {k: chunk.get(k) for k in STANDARD_CHUNK_FIELDS if k in chunk}
@@ -56,7 +54,7 @@ def main():
     txt_files = list(raw_dir.glob("*.txt"))
     all_chunks = []
     for txt_path in tqdm(txt_files, desc="Preprocessing articles"):
-        meta_path = txt_path.with_suffix(".meta.json")  # <-- fixed here
+        meta_path = txt_path.with_suffix(".meta.json")
         if not meta_path.exists():
             logger.warning(f"Missing meta.json for {txt_path.name}")
             continue
