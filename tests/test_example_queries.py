@@ -1,6 +1,13 @@
 import pytest
 from sciencesage.retrieval_system import retrieve_answer
 from sciencesage.config import LEVELS, TOPICS
+from loguru import logger
+
+# -------------------------
+# Logging
+# -------------------------
+logger.add("logs/test_example_queries.log", rotation="5 MB", retention="7 days")
+logger.info("Started test_example_queries.py script.")
 
 # Example queries for current topics in config.py
 example_queries = {

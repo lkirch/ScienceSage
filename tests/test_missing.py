@@ -1,6 +1,13 @@
 import pytest
 from sciencesage import retrieval_system, feedback_manager
 from sciencesage.config import TOPICS, LEVELS
+from loguru import logger
+
+# -------------------------
+# Logging
+# -------------------------
+logger.add("logs/test_missing.log", rotation="5 MB", retention="7 days")
+logger.info("Started test_missing.py script.")
 
 def test_retrieve_answer_handles_empty_query(monkeypatch):
     # Should not raise, should return empty or default values

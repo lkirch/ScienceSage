@@ -1,4 +1,11 @@
 from qdrant_client.models import PointStruct
+from loguru import logger
+
+# -------------------------
+# Logging
+# -------------------------
+logger.add("logs/test_embed.log", rotation="5 MB", retention="7 days")
+logger.info("Started test_embed.py script.")
 
 def test_point_payload_contains_reference_urls():
     """Simulate a chunk and ensure reference_urls are preserved."""

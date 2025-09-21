@@ -1,4 +1,11 @@
 from sciencesage.prompts import get_system_prompt, get_user_prompt
+from loguru import logger
+
+# -------------------------
+# Logging
+# -------------------------
+logger.add("logs/test_prompts.log", rotation="5 MB", retention="7 days")
+logger.info("Started test_prompts.py script.")
 
 def test_system_prompt_varies_by_level():
     levels = ["Middle School", "College", "Advanced"]

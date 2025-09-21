@@ -1,4 +1,11 @@
 from sciencesage.retrieval_system import retrieve_answer
+from loguru import logger
+
+# -------------------------
+# Logging
+# -------------------------
+logger.add("logs/test_integration.log", rotation="5 MB", retention="7 days")
+logger.info("Started test_integration.py script.")
 
 def test_end_to_end_with_mock_qdrant(mock_qdrant):
     """Mini integration test: retrieval + GPT generation together for space exploration topics."""

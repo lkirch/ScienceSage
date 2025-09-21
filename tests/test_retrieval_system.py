@@ -1,4 +1,11 @@
 from sciencesage import retrieval_system
+from loguru import logger
+
+# -------------------------
+# Logging
+# -------------------------
+logger.add("logs/test_retrieval_system.log", rotation="5 MB", retention="7 days")
+logger.info("Started test_retrieval_system.py script.")
 
 def test_embed_text_returns_vector():
     from sciencesage.retrieval_system import embed_text
