@@ -45,7 +45,6 @@ WIKI_USER_AGENT = "ScienceSageBot/1.0 (contact: lkonthego@gmail.com)"
 
 # --- Standard chunk fields ---
 STANDARD_CHUNK_FIELDS = [
-    "id",                # Unique chunk ID
     "uuid",              # Unique chunk UUID
     "text",              # The chunked text content
     "title",             # Page/article title
