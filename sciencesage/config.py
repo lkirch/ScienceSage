@@ -6,8 +6,6 @@ load_dotenv()
 
 # --- File paths ---
 RAW_DATA_DIR = "data/raw"
-RAW_HTML_DIR = os.path.join(RAW_DATA_DIR, "html")
-RAW_IMAGES_DIR = os.path.join(RAW_DATA_DIR, "images")
 CHUNKS_FILE = "data/chunks/chunks.jsonl"
 EMBEDDINGS_FILE = "data/embeddings/embeddings.jsonl"
 FEEDBACK_FILE = "data/feedback/feedback.jsonl"
@@ -41,8 +39,8 @@ QDRANT_BATCH_SIZE = 64  # Number of vectors to upload in each batch
 # --- Wikipedia settings ---
 WIKI_URL = "https://en.wikipedia.org"
 WIKI_USER_AGENT = "ScienceSageBot/1.0 (contact: lkonthego@gmail.com)"
-WIKI_CRAWL_DEPTH = 1   # Set to desired depth (1 = just topics, 2 = topics + linked pages, etc.)
-WIKI_MAX_PAGES = 100    # Limit the number of pages to crawl
+#WIKI_CRAWL_DEPTH = 1   # Set to desired depth (1 = just topics, 2 = topics + linked pages, etc.)
+#WIKI_MAX_PAGES = 100    # Limit the number of pages to crawl
 
 
 # --- Standard chunk fields ---
@@ -62,6 +60,12 @@ STANDARD_CHUNK_FIELDS = [
 # --- Topics ---
 TOPICS = [
     "Space exploration",
+    "Category:Space missions",
+    "Category:Discovery and exploration of the Solar System",
+    "Category:Exploration of Mars",
+    "Category:Space missions",
+    "Category:Exploration of the Moon",
+    "Animals in space",
 ]
 
 # --- Education levels ---
