@@ -9,6 +9,8 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, VectorParams, Distance
 from loguru import logger
 import argparse
+from tqdm import tqdm
+import time
 
 from sciencesage.config import (
     CHUNKS_FILE, 
@@ -131,10 +133,11 @@ def main():
         logger.error(f"Failed to ensure collection: {e}")
         return
 
-    # Batch upload chunks
+    # Batch upload chunks with tqdm and elapsed time
     points = []
     failed_chunks = []
-    for idx, chunk in enumerate(chunks):
+    start_time = time.time()
+    for idx, chunk in enumerate(tqdm(chunks, desc="Embedding and uploading chunks")):
         try:
             vector = get_embedding(chunk["text"])
             # Use id as point_id, fallback to uuid5 if needed
@@ -180,6 +183,9 @@ def main():
         except Exception as e:
             logger.error(f"Failed to upload final batch to Qdrant: {e}")
             failed_chunks.extend([p.payload.get("id", "unknown") for p in points])
+
+    elapsed = time.time() - start_time
+    logger.info(f"Elapsed time: {elapsed:.2f} seconds")
 
     if failed_chunks:
         logger.warning(f"Failed to embed/upload {len(failed_chunks)} chunks. IDs: {failed_chunks}")
