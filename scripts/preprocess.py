@@ -1,6 +1,5 @@
 from pathlib import Path
 import json
-import hashlib
 import uuid
 import datetime
 import time
@@ -29,10 +28,9 @@ def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
     return chunks
 
 def make_standard_chunk(text, meta, chunk_index, char_start, char_end):
-    chunk_id = hashlib.md5((meta["title"] + text).encode("utf-8")).hexdigest()[:12]
-    chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, chunk_id))
+    # use uuid for unique identification
+    chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, meta.get("title", "") + text))
     chunk = {
-        "id": chunk_id,
         "uuid": chunk_uuid,
         "text": text,
         "title": meta.get("title"),

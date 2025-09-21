@@ -141,8 +141,8 @@ def main():
     for idx, chunk in enumerate(tqdm(chunks, desc="Embedding and uploading chunks")):
         try:
             vector = get_embedding(chunk["text"])
-            # Use id as point_id, fallback to uuid5 if needed
-            point_id = chunk.get("id") or str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk)))
+            # Use uuid as point_id, fallback to uuid5 if needed
+            point_id = chunk.get("uuid") or str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk)))
             # Only include fields in STANDARD_CHUNK_FIELDS, and update embedding
             payload = {k: chunk.get(k) for k in STANDARD_CHUNK_FIELDS if k != "embedding"}
             payload["embedding"] = vector
