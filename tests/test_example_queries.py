@@ -2,11 +2,32 @@ import pytest
 from sciencesage.retrieval_system import retrieve_answer
 from sciencesage.config import LEVELS, TOPICS
 
-# Example queries as in main.py
+# Example queries for current topics in config.py
 example_queries = {
-    "AI": ["What is a neural network?", "Explain transformers."],
-    "Climate": ["What is the greenhouse effect?", "How do solar panels work?"],
-    "Space": ["How do black holes form?", "What is mimicry in animals?"],
+    "Space exploration": [
+        "What are the main challenges of sending humans to Mars?",
+        "How has space exploration advanced our understanding of the universe?"
+    ],
+    "Category:Space missions": [
+        "What was the objective of the Voyager missions?",
+        "Which space missions have explored the outer planets?"
+    ],
+    "Category:Discovery and exploration of the Solar System": [
+        "How were the planets in our solar system discovered?",
+        "What are the most important discoveries about the solar system in the last 50 years?"
+    ],
+    "Category:Exploration of Mars": [
+        "What have we learned from the Mars rover missions?",
+        "Why is Mars considered a candidate for future human colonization?"
+    ],
+    "Category:Exploration of the Moon": [
+        "What did the Apollo missions discover about the Moon?",
+        "What is the significance of water ice on the Moon?"
+    ],
+    "Animals in space": [
+        "Why were animals sent into space before humans?",
+        "Which animals have traveled the farthest from Earth?"
+    ]
 }
 
 @pytest.mark.parametrize("topic,queries", example_queries.items())

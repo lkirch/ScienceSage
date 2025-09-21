@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from loguru import logger
-from sciencesage.config import QDRANT_URL
+from sciencesage.config import QDRANT_URL, LEVELS, TOPICS
 
 # -------------------------
 # Logging
@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env
 load_dotenv()
 
-# Construct QDRANT_URL from QDRANT_HOST and QDRANT_PORT
+# Ensure QDRANT_URL is set in the environment
 os.environ["QDRANT_URL"] = os.getenv("QDRANT_URL")
 
 from sciencesage import feedback_manager, retrieval_system, prompts
@@ -22,21 +22,29 @@ from sciencesage import feedback_manager, retrieval_system, prompts
 # --- Unit Tests ---
 
 def test_get_system_prompt_levels():
-    topic = "AI"
+    topic = "Space exploration"
     logger.info("Testing get_system_prompt for all levels.")
-    assert "simple language" in prompts.get_system_prompt(topic, "Middle School")
-    assert "undergraduates" in prompts.get_system_prompt(topic, "College")
-    assert "graduate students" in prompts.get_system_prompt(topic, "Advanced")
+    ms_prompt = prompts.get_system_prompt(topic, "Middle School")
+    college_prompt = prompts.get_system_prompt(topic, "College")
+    adv_prompt = prompts.get_system_prompt(topic, "Advanced")
+    assert "simple language" in ms_prompt.lower() or "no jargon" in ms_prompt.lower()
+    assert "undergraduates" in college_prompt.lower() or "technical terms" in college_prompt.lower()
+    assert "graduate students" in adv_prompt.lower() or "in-depth" in adv_prompt.lower()
+    assert "middle school" in ms_prompt.lower()
+    assert "college" in college_prompt.lower()
+    assert "advanced" in adv_prompt.lower()
     logger.success("test_get_system_prompt_levels passed.")
 
-def test_get_user_prompt_includes_context():
-    query = "What is AI?"
-    context = "Artificial Intelligence is..."
-    logger.info("Testing get_user_prompt includes query and context.")
-    prompt = prompts.get_user_prompt(query, context)
+def test_get_user_prompt_includes_context_and_level():
+    query = "What are the main challenges of sending humans to Mars?"
+    context = "Sending humans to Mars involves overcoming challenges such as radiation exposure, long-duration space travel, and landing safely on the Martian surface."
+    level = "College"
+    logger.info("Testing get_user_prompt includes query, context, and level.")
+    prompt = prompts.get_user_prompt(query, context, level)
     assert query in prompt
     assert context in prompt
-    logger.success("test_get_user_prompt_includes_context passed.")
+    assert level.lower() in prompt.lower()
+    logger.success("test_get_user_prompt_includes_context_and_level passed.")
 
 def test_save_feedback_creates_file_and_writes(tmp_path):
     logger.info("Testing save_feedback creates file and writes content.")
@@ -44,11 +52,11 @@ def test_save_feedback_creates_file_and_writes(tmp_path):
     orig_file = feedback_manager.FEEDBACK_FILE
     feedback_manager.FEEDBACK_FILE = os.path.join(str(tmp_path), "feedback.csv")
 
-    feedback_manager.save_feedback("Q", "A", "AI", "College", "up")
+    feedback_manager.save_feedback("Q", "A", "Space exploration", "College", "up")
     assert os.path.exists(feedback_manager.FEEDBACK_FILE)
     with open(feedback_manager.FEEDBACK_FILE) as f:
         lines = f.readlines()
-    assert any("AI" in line for line in lines)
+    assert any("Space exploration" in line for line in lines)
 
     # Restore
     feedback_manager.FEEDBACK_FILE = orig_file
@@ -68,7 +76,9 @@ def test_retrieve_answer_returns_answer_and_context(monkeypatch):
     monkeypatch.setattr(retrieval_system, "embed_text", lambda text: [0.0]*1536)
     # Monkeypatch qdrant.query_points to return fake context
     class DummyPoint:
-        def __init__(self, text): self.payload = {"text": text}
+        def __init__(self, text, score=1.0):
+            self.payload = {"text": text}
+            self.score = score
     class DummyResults:
         points = [DummyPoint("context1"), DummyPoint("context2")]
     monkeypatch.setattr(retrieval_system.qdrant, "query_points", lambda **kwargs: DummyResults())
@@ -80,11 +90,15 @@ def test_retrieve_answer_returns_answer_and_context(monkeypatch):
         choices = [DummyChoice()]
     monkeypatch.setattr(retrieval_system.client.chat.completions, "create", lambda **kwargs: DummyCompletion())
 
-    answer, contexts, references = retrieval_system.retrieve_answer("What is AI?", "AI", "College")
-    assert "answer" in answer
+    answer, contexts, references = retrieval_system.retrieve_answer(
+        "What are the main challenges of sending humans to Mars?",
+        "Space exploration",
+        "College"
+    )
+    assert "answer" in answer.lower()
     assert isinstance(contexts, list)
     assert len(contexts) > 0
-    assert "context1" in contexts[0]
-    assert "context2" in contexts[1]
+    assert "context1" in contexts[0]["text"]
+    assert "context2" in contexts[1]["text"]
     assert isinstance(references, list)
     logger.success("test_retrieve_answer_returns_answer_and_context passed.")

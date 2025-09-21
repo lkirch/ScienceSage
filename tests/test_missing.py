@@ -1,5 +1,6 @@
 import pytest
 from sciencesage import retrieval_system, feedback_manager
+from sciencesage.config import TOPICS, LEVELS
 
 def test_retrieve_answer_handles_empty_query(monkeypatch):
     # Should not raise, should return empty or default values
@@ -7,7 +8,7 @@ def test_retrieve_answer_handles_empty_query(monkeypatch):
         "sciencesage.retrieval_system.retrieve_answer",
         lambda q, t, l: ("", [], [])
     )
-    answer, context, refs = retrieval_system.retrieve_answer("", "AI", "College")
+    answer, context, refs = retrieval_system.retrieve_answer("", TOPICS[0], LEVELS[1])
     assert answer == ""
     assert context == []
     assert refs == []
@@ -17,13 +18,13 @@ def test_retrieve_answer_handles_api_error(monkeypatch):
         raise RuntimeError("API down")
     monkeypatch.setattr("sciencesage.retrieval_system.retrieve_answer", raise_error)
     with pytest.raises(RuntimeError):
-        retrieval_system.retrieve_answer("What is AI?", "AI", "College")
+        retrieval_system.retrieve_answer("What is space exploration?", TOPICS[0], LEVELS[1])
 
 def test_save_feedback_handles_file_error(monkeypatch):
     monkeypatch.setattr("sciencesage.feedback_manager.FEEDBACK_FILE", "/root/forbidden.jsonl")
     # Should not raise, but may log error
     try:
-        feedback_manager.save_feedback("Q", "A", "AI", "College", "up")
+        feedback_manager.save_feedback("Q", "A", TOPICS[0], LEVELS[1], "up")
     except PermissionError:
         pass  # Acceptable if system raises due to permissions
 

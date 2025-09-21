@@ -1,14 +1,23 @@
 from sciencesage.prompts import get_system_prompt, get_user_prompt
 
 def test_system_prompt_varies_by_level():
-    p1 = get_system_prompt("AI", "Middle School")
-    assert "simple language" in p1
-    p2 = get_system_prompt("AI", "Advanced")
-    assert "in-depth" in p2
+    levels = ["Middle School", "College", "Advanced"]
+    for level in levels:
+        prompt = get_system_prompt("Space exploration", level)
+        # Check that the prompt includes the level and the detail string for that level
+        if level == "Middle School":
+            assert "simple language" in prompt.lower() or "no jargon" in prompt.lower()
+        elif level == "College":
+            assert "undergraduates" in prompt.lower() or "technical terms" in prompt.lower()
+        elif level == "Advanced":
+            assert "graduate students" in prompt.lower() or "in-depth" in prompt.lower()
+        assert level.lower() in prompt.lower()
 
-def test_user_prompt_contains_query_and_context():
-    query = "What is AI?"
-    ctx = "AI is the study of intelligent agents."
-    result = get_user_prompt(query, ctx)
+def test_user_prompt_contains_query_context_and_level():
+    query = "What are the main challenges of sending humans to Mars?"
+    ctx = "Sending humans to Mars involves overcoming challenges such as radiation exposure, long-duration space travel, and landing safely on the Martian surface."
+    level = "College"
+    result = get_user_prompt(query, ctx, level)
     assert query in result
     assert ctx in result
+    assert level.lower() in result.lower()

@@ -4,13 +4,13 @@ from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 from qdrant_client.models import Filter, FieldCondition, MatchValue
 import numpy as np
-import inspect
 from loguru import logger
 
 from sciencesage.config import (
     QDRANT_HOST, 
     QDRANT_PORT, 
-    QDRANT_COLLECTION
+    QDRANT_COLLECTION,
+    STANDARD_CHUNK_FIELDS 
 )
 
 # -------------------------
@@ -45,12 +45,10 @@ def list_topics_and_counts(client, collection_name):
                 with_vectors=False
             )
             for point in points:
-                # Check for both 'topic' (string) and 'topics' (list)
-                topics = []
-                if "topics" in point.payload and isinstance(point.payload["topics"], list):
-                    topics = point.payload["topics"]
-                elif "topic" in point.payload and isinstance(point.payload["topic"], str):
-                    topics = [point.payload["topic"]]
+                topics = point.payload.get("topics", [])
+                if not isinstance(topics, list):
+                    logger.warning(f"Point {point.id} has non-list 'topics': {topics}")
+                    continue
                 for topic in topics:
                     if topic:
                         topic_counts[topic] = topic_counts.get(topic, 0) + 1
@@ -85,9 +83,16 @@ def show_total_points(info):
 def fetch_random_point(client, collection_name):
     logger.info(f"Fetching a random point from '{collection_name}':")
     try:
-        result = client.scroll(collection_name=collection_name, limit=1)
+        result = client.scroll(collection_name=collection_name, limit=1, with_payload=True)
         if result[0]:
-            logger.info(result[0][0])
+            point = result[0][0]
+            logger.info(point)
+            # Check all standard fields
+            missing_fields = [f for f in STANDARD_CHUNK_FIELDS if f not in point.payload]
+            if missing_fields:
+                logger.warning(f"Point {point.id} is missing fields: {missing_fields}")
+            else:
+                logger.info(f"Point {point.id} contains all standard fields.")
         else:
             logger.info("No points found.")
     except Exception as e:

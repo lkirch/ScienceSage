@@ -11,24 +11,28 @@ def test_retrieve_answer_with_no_results(mock_qdrant):
     """When Qdrant returns no points, answer still comes back with safe context."""
     mock_qdrant([])  # no points
     answer, contexts, refs = retrieval_system.retrieve_answer(
-        query="What is AI?", topic="AI", level="College"
+        query="What are the main challenges of sending humans to Mars?",
+        topic="Space exploration",
+        level="College"
     )
-    assert answer  # answer is still generated
+    assert answer  
     assert contexts == []
     assert refs == []
 
 def test_retrieve_answer_with_results(mock_qdrant):
-    """Verify that contexts and references are extracted properly."""
+    """Verify that contexts and references are extracted properly for space exploration."""
     mock_qdrant([
         {
-            "text": "AI is the study of intelligent agents.",
-            "source": "test_source",
+            "text": "Sending humans to Mars involves overcoming challenges such as radiation exposure and long-duration space travel.",
+            "source": "Mars Exploration",
             "chunk_index": 0,
-            "reference_urls": ["http://example.com/ai"]
+            "source_url": "http://example.com/mars"
         }
     ])
     answer, contexts, refs = retrieval_system.retrieve_answer(
-        query="What is AI?", topic="AI", level="College"
+        query="What are the main challenges of sending humans to Mars?",
+        topic="Space exploration",
+        level="College"
     )
-    assert any("AI is the study" in c for c in contexts)
-    assert refs == ["http://example.com/ai"]
+    assert any("radiation exposure" in c["text"] or "space travel" in c["text"] for c in contexts)
+    assert any(r.get("url") == "http://example.com/mars" for r in refs)

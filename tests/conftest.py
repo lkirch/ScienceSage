@@ -16,7 +16,7 @@ def mock_openai_embeddings(monkeypatch):
 def mock_openai_chat(monkeypatch):
     """Auto-mock OpenAI chat.completions.create for all tests."""
     fake_choice = MagicMock()
-    fake_choice.message.content = "Neuroplasticity is the brain's ability to rewire itself."
+    fake_choice.message.content = "Sending humans to Mars involves overcoming challenges such as radiation exposure and long-duration space travel."
     fake_completion = MagicMock()
     fake_completion.choices = [fake_choice]
     with patch("sciencesage.retrieval_system.client.chat.completions.create", return_value=fake_completion):
