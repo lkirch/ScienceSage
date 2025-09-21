@@ -4,7 +4,7 @@
 Smart Science, Made Simple
 
 An end-to-end **Retrieval-Augmented Generation (RAG)** project built for the [LLM Zoomcamp Capstone](https://github.com/DataTalksClub/llm-zoomcamp).  
-This system helps users **explore complex scientific topics** (like neuroplasticity, AI concepts, renewable energy, animal behavior, and ecosystem interactions) at **different levels of explanation**:
+This system helps users **explore complex scientific topics**—focused on **space exploration**—at **different levels of explanation**:
 
 - 🏫 **Middle School** (simple, intuitive)  
 - 🎓 **College** (intermediate, with more depth)  
@@ -17,16 +17,14 @@ Powered by **GPT-4**, **Qdrant**, and **Streamlit**, and developed in **Codespac
 ## ✨ Features
 - **End-to-end RAG pipeline** (OpenAI GPT + Qdrant vector DB).  
 - **Multi-level answers** (simple → advanced).  
-- **Public domain data sources** (NASA, Wikipedia, arXiv).  
+- **Wikipedia as the primary data source** (focused on space exploration).  
 - **Feedback system** (👍 / 👎 per answer, stored for analysis).  
 - **Streamlit interface** with example queries and sidebar controls.  
 
 ---
 
 ## 🔹 Topics
-- **Space**
-- **AI Concepts** (transformers, RAG, embeddings, etc.)
-- **Climate**
+- **Space Exploration** (missions, spacecraft, astronomy, planets, etc.)
 
 ---
 
@@ -57,7 +55,7 @@ ScienceSage/
 │ └── sanity_check.ipynb
 │
 ├── scripts/                # Utilities
-│ ├── download_and_clean.py # Download NASA/Wikipedia/PDF → text
+│ ├── download_and_clean.py # Download Wikipedia → text
 │ ├── preprocess.py         # Chunk text → JSONL
 │ ├── embed.py              # Embed chunks → Qdrant
 │ ├── rag_api.py            # FastAPI RAG backend (retrieval + answer)
@@ -91,11 +89,9 @@ ScienceSage/
 
 ---
 
-## 📊 Data Sources (Public Domain)
+## 📊 Data Sources
 
-- [Wikipedia](https://www.wikipedia.org/)
-- [arXiv](https://arxiv.org/)
-- [NASA Astronomy Picture of the Day](https://apod.nasa.gov/apod/astropix.html) 
+- [Wikipedia](https://www.wikipedia.org/) (focused on space exploration topics)
 
 ---
 
@@ -138,9 +134,9 @@ Alternatively, see [Qdrant documentation](https://qdrant.tech/documentation/quic
 
 ### 5. Prepare the data
 ```bash
-python scripts/download_data.py        # fetch NASA/Wikipedia/PDF
-python scripts/preprocess.py           # clean & chunk into JSONL
-python scripts/embed.py                # embed & store in Qdrant
+python scripts/download_and_clean.py        # fetch Wikipedia (space exploration)
+python scripts/preprocess.py                # clean & chunk into JSONL
+python scripts/embed.py                     # embed & store in Qdrant
 ```
 
 ### 6. Run the Streamlit app
@@ -159,7 +155,7 @@ uvicorn scripts.rag_api:app --reload
 The API will be available at http://localhost:8000.  You can test it with:
 
 ```bash
-curl -X POST "http://localhost:8000/rag" -H "Content-Type: application/json" -d '{"query": "What is the Hubble constant?"}'
+curl -X POST "http://localhost:8000/rag" -H "Content-Type: application/json" -d '{"query": "What is the Hubble Space Telescope?"}'
 ```
 
 ### 8. Run the Streamlit Frontend
@@ -178,7 +174,7 @@ streamlit run scripts/streamlit_app.py
 You can evaluate your RAG pipeline using a golden dataset:
 
 ```bash
-python [evaluate_rag.py]
+python scripts/evaluate_rag.py
 ```
 
 - Results are saved to data/eval/eval_results.jsonl.
@@ -250,30 +246,24 @@ You can skip these by default, or set the required environment variables to enab
 
 ## 🖥️ Usage
 
-- Select a topic in the sidebar (AI, Neuroplasticity, Climate, etc.).
-- Ask a question (e.g., "Explain transformers like I’m 12").
+- Select a topic in the sidebar (Space Exploration).
+- Ask a question (e.g., "Explain the Mars Rover missions like I’m 12").
 - Choose answer complexity (Middle School / College / Advanced).
-- Get a generated answer with citations to sources.
+- Get a generated answer with citations to Wikipedia sources.
 - Provide feedback via 👍 / 👎.
 
 ---
 
 ## 💡 Example Queries
 
-Here are some example questions to try for each topic:
+Here are some example questions to try for space exploration:
 
 
-🤖 AI Concepts
+🚀 Space Exploration
 
-- Middle School: "What is a transformer in AI, explained simply?"
-- College: "How do attention mechanisms work in transformers?"
-- Advanced: "Compare RAG with fine-tuning for knowledge integration."
-
-🌍 Climate
-
-- Middle School: "Why is Earth getting hotter?"
-- College: "What are the main human causes of climate change?"
-- Advanced: "Explain how feedback loops (like melting ice) accelerate climate change."
+- Middle School: "What is the International Space Station?"
+- College: "How do Mars rovers navigate on the surface?"
+- Advanced: "Describe the main scientific instruments on the James Webb Space Telescope."
 
 ---
 
@@ -294,7 +284,7 @@ pip install -r requirements.txt
 - **Input:**  
   ```json
   {
-    "query": "What is the Hubble constant?",
+    "query": "What is the Hubble Space Telescope?",
     "top_k": 5
   }
   ```
@@ -304,7 +294,7 @@ pip install -r requirements.txt
   {
     "answer": "...",
     "context_chunks": [...],
-    "sources": ["[1] https://en.wikipedia.org/wiki/Hubble_constant", ...]
+    "sources": ["[1] https://en.wikipedia.org/wiki/Hubble_Space_Telescope", ...]
   }
   ```
 
@@ -316,9 +306,9 @@ Each line in `data/eval/golden_dataset.jsonl` should be a JSON object like:
 
 ```json
 {
-  "query": "What is the Hubble constant?",
-  "expected_sources": ["https://en.wikipedia.org/wiki/Hubble_constant"],
-  "expected_answer": "about 70 kilometers per second per megaparsec"
+  "query": "What is the Hubble Space Telescope?",
+  "expected_sources": ["https://en.wikipedia.org/wiki/Hubble_Space_Telescope"],
+  "expected_answer": "A large space-based observatory launched in 1990 that has provided deep views of the universe."
 }
 ```
 
@@ -329,7 +319,7 @@ Each line in `data/eval/golden_dataset.jsonl` should be a JSON object like:
 - The **Streamlit app** in `sciencesage/main.py` is the original UI.  
   The **newer frontend** for the RAG API is in `scripts/streamlit_app.py`.  
   Try the new frontend for the best RAG experience.
-- Make sure to set up your `.env` file with `OPENAI_API_KEY` (and `NASA_API_KEY` if using NASA data).
+- Make sure to set up your `.env` file with `OPENAI_API_KEY`.
 - To open the Streamlit app in your browser from the dev container, use:
   ```bash
   $BROWSER http://localhost:8501
@@ -343,8 +333,6 @@ Each line in `data/eval/golden_dataset.jsonl` should be a JSON object like:
 - [DataTalksClub LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp)
 - [GitHub Codespaces](https://github.com/features/codespaces)
 - [Wikipedia API](https://pypi.org/project/Wikipedia-API/)
-- [arXiv API](https://info.arxiv.org/help/api/index.html)
-- [NASA APOD API](https://github.com/nasa/apod-api)
 - [Qdrant](https://qdrant.tech/)
 - [Streamlit](https://streamlit.io/)
 - [OpenAI](https://openai.com/)
