@@ -13,15 +13,12 @@ Space exploration is fascinating but often hard to understand—especially for y
 
 Space exploration inspires curiosity and innovation, but understanding it shouldn’t be limited by age or background.
 
-An end-to-end **Retrieval-Augmented Generation (RAG)** project built for the [LLM Zoomcamp Capstone](https://github.com/DataTalksClub/llm-zoomcamp).  
-
-This system helps users **explore complex scientific topics**—focused on **space exploration**—at **different levels of explanation**:
-
-- 🏫 **Middle School** (simple, intuitive)  
-- 🎓 **College** (intermediate, with more depth)  
+This system helps users **explore complex scientific topics—focused on space exploration—at different levels of explanation**:
+- 🏫 **Middle School** (simple, intuitive)
+- 🎓 **College** (intermediate, with more depth)
 - 🧪 **Advanced** (detailed, technical)
 
-Powered by **GPT-4**, **Qdrant**, and **Streamlit**, and developed in **Codespaces (Python 3.12)**.
+**ScienceSage** is an end-to-end **Retrieval-Augmented Generation (RAG)** project built for the [LLM Zoomcamp Capstone](https://github.com/DataTalksClub/llm-zoomcamp), powered by **GPT-4**, **Qdrant**, and **Streamlit**, and developed in Codespaces (Python 3.12).
 
 ---
 
