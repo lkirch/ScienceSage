@@ -52,17 +52,35 @@ topic = st.sidebar.selectbox("Choose a topic", TOPICS)
 level = st.sidebar.radio("Select explanation level", LEVELS)
 
 example_queries = {
-    "Space": [
-        "What causes a solar eclipse?",
-        "How do black holes form?"
+    "Space exploration": [
+        "What are the main challenges of sending humans to Mars?",
+        "How has space exploration advanced our understanding of the universe?",
+        "What technologies are essential for deep space missions?"
     ],
-    "AI": [
-        "What is a neural network?",
-        "How does machine learning differ from traditional programming?"
+    "Category:Space missions": [
+        "What was the objective of the Voyager missions?",
+        "How do robotic space missions differ from crewed missions?",
+        "Which space missions have explored the outer planets?"
     ],
-    "Climate": [
-        "What is the greenhouse effect?",
-        "How does climate change impact sea levels?"
+    "Category:Discovery and exploration of the Solar System": [
+        "How were the planets in our solar system discovered?",
+        "What are the most important discoveries about the solar system in the last 50 years?",
+        "How do scientists study asteroids and comets?"
+    ],
+    "Category:Exploration of Mars": [
+        "What have we learned from the Mars rover missions?",
+        "Why is Mars considered a candidate for future human colonization?",
+        "What challenges do robots face when exploring Mars?"
+    ],
+    "Category:Exploration of the Moon": [
+        "What did the Apollo missions discover about the Moon?",
+        "How do modern lunar missions differ from those in the 20th century?",
+        "What is the significance of water ice on the Moon?"
+    ],
+    "Animals in space": [
+        "Why were animals sent into space before humans?",
+        "What have we learned from animal experiments in space?",
+        "Which animals have traveled the farthest from Earth?"
     ]
 }
 
