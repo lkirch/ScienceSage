@@ -44,7 +44,14 @@ with col_title:
         unsafe_allow_html=True,
     )
 
-st.markdown("Ask me anything about science! Powered by LLMs and Vector Databases.")
+st.markdown("""
+<div style="margin-bottom: 1em; font-size: 1.1em;">
+    🚀 <b>Curious about science?</b> Ask any question, big or small!<br>
+    <span style="color:#9DC183;">
+        <b>Tip:</b> For the best experience, try asking about <u>space exploration</u>—missions, discoveries, challenges, or the mysteries of our universe.
+    </span>
+</div>
+""", unsafe_allow_html=True)
 
 # --- Sidebar controls ---
 st.sidebar.header("Controls")
