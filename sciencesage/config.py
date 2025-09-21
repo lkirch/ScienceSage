@@ -64,7 +64,6 @@ TOPICS = [
     "Category:Space missions",
     "Category:Discovery and exploration of the Solar System",
     "Category:Exploration of Mars",
-    "Category:Space missions",
     "Category:Exploration of the Moon",
     "Animals in space",
 ]
