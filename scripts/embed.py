@@ -137,34 +137,17 @@ def main():
     for idx, chunk in enumerate(chunks):
         try:
             vector = get_embedding(chunk["text"])
-            point_id = chunk.get("uuid", str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk["id"]))))
-            topics = chunk.get("topics")
-            if isinstance(topics, str):
-                topics = [topics]
-            elif topics is None:
-                topics = []
+            # Use id as point_id, fallback to uuid5 if needed
+            point_id = chunk.get("id") or str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk)))
             payload = {
                 "id": chunk.get("id"),
-                "uuid": chunk.get("uuid"),
-                "doc_id": chunk.get("doc_id"),
-                "page": chunk.get("page"),
-                "char_start": chunk.get("char_start"),
-                "char_end": chunk.get("char_end"),
-                "topics": topics,
-                "topic": chunk.get("topic"),
-                "title": chunk.get("title"),
-                "url": chunk.get("url"),
-                "images": chunk.get("images"),
-                "tables": chunk.get("tables"),
-                "authors": chunk.get("authors"),
-                "matched_keywords": chunk.get("matched_keywords"),
-                "source": chunk.get("source"),
-                "chunk_index": chunk.get("chunk_index"),
                 "text": chunk.get("text"),
-                "reference_urls": chunk.get("reference_urls", []),
-                "loadtime": chunk.get("loadtime"),
-                "raw_type": chunk.get("raw_type"),
-                "abstract": chunk.get("abstract"),
+                "title": chunk.get("title"),
+                "source_url": chunk.get("source_url"),
+                "section": chunk.get("section"),
+                "categories": chunk.get("categories"),
+                "images": chunk.get("images"),
+                "summary": chunk.get("summary"),
             }
             payload = {k: v for k, v in payload.items() if v is not None}
             points.append(
