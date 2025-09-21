@@ -19,6 +19,7 @@ from sciencesage.config import (
     QDRANT_COLLECTION, 
     EMBED_MODEL,
     QDRANT_BATCH_SIZE, 
+    STANDARD_CHUNK_FIELDS,
 )
 
 # -------------------------
@@ -142,17 +143,9 @@ def main():
             vector = get_embedding(chunk["text"])
             # Use id as point_id, fallback to uuid5 if needed
             point_id = chunk.get("id") or str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk)))
-            payload = {
-                "id": chunk.get("id"),
-                "text": chunk.get("text"),
-                "title": chunk.get("title"),
-                "source_url": chunk.get("source_url"),
-                "section": chunk.get("section"),
-                "categories": chunk.get("categories"),
-                "images": chunk.get("images"),
-                "summary": chunk.get("summary"),
-            }
-            payload = {k: v for k, v in payload.items() if v is not None}
+            # Only include fields in STANDARD_CHUNK_FIELDS, and update embedding
+            payload = {k: chunk.get(k) for k in STANDARD_CHUNK_FIELDS if k != "embedding"}
+            payload["embedding"] = vector
             points.append(
                 PointStruct(
                     id=point_id,
