@@ -11,6 +11,7 @@ EMBEDDINGS_FILE = "data/embeddings/embeddings.jsonl"
 FEEDBACK_FILE = "data/feedback/feedback.jsonl"
 GOLDEN_DATA_FILE = "data/eval/golden_dataset.jsonl"
 EVAL_RESULTS_FILE = "data/eval/eval_results.jsonl"
+METRICS_SUMMARY_FILE = "data/eval/metrics_summary.csv"
 
 # --- API Keys ---
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
