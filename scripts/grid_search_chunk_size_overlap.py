@@ -9,17 +9,17 @@ from tqdm import tqdm
 # Paths and config
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 DATA_DIR = os.path.join(PROJECT_ROOT, "data")
-CHUNK_CONFIG_FILE = os.path.join(PROJECT_ROOT, "sciencesage", "config_chunking.json")
+CHUNK_CONFIG_FILE = os.path.join(DATA_DIR, "chunks", "config_chunking.json")
 METRICS_SUMMARY_FILE = os.path.join(PROJECT_ROOT, "data", "eval", "metrics_summary.csv")
 
 # Define your grid based on using text-embedding-3-small
-# (max 8191 tokens per chunk, but we want to stay well below that)
 CHUNK_SIZES = [256, 384, 512, 768]
 OVERLAPS = [0, 64, 128, 192]
 
 # Helper to update chunking config
 def update_chunking_config(chunk_size, overlap):
     config = {"chunk_size": chunk_size, "chunk_overlap": overlap}
+    os.makedirs(os.path.dirname(CHUNK_CONFIG_FILE), exist_ok=True)
     with open(CHUNK_CONFIG_FILE, "w") as f:
         json.dump(config, f)
 
