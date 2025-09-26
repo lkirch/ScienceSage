@@ -45,6 +45,10 @@ def contextual_recall_and_sufficiency(retrieved, relevant, k):
     # Placeholder: in practice, this may require human or LLM judgment
     return recall_at_k(retrieved, relevant, k)
 
+def context_ids_to_int(context_ids):
+    # Converts ["chunk_0", "chunk_1"] -> [0, 1]
+    return [int(cid.split("_")[-1]) for cid in context_ids]
+
 def main():
     # All paths are relative to the project root
     project_root = os.path.dirname(os.path.dirname(__file__))
@@ -58,7 +62,8 @@ def main():
     metrics = []
     for g, r in zip(golden, results):
         retrieved = r.get("retrieved_chunks", [])
-        relevant = g.get("ground_truth_chunks", [])
+        # Convert context_ids (e.g., "chunk_0") to integers for comparison
+        relevant = context_ids_to_int(g.get("context_ids", []))
         metrics.append({
             "query": g.get("query", ""),
             f"precision@{TOP_K}": precision_at_k(retrieved, relevant, TOP_K),
