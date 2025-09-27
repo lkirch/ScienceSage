@@ -9,8 +9,8 @@ RAW_DATA_DIR = "data/raw"
 CHUNKS_FILE = "data/processed/chunks.jsonl"
 
 # Embedding files for each backend
-OPENAI_EMBEDDING_FILE = "data/embeddings/openai_embeddings.npy"
-SENTENCE_TRANSFORMER_EMBEDDING_FILE = "data/embeddings/sbert_embeddings.npy"
+OPENAI_EMBEDDING_FILE = "data/embeddings/openai_embeddings.parquet"
+SENTENCE_TRANSFORMER_EMBEDDING_FILE = "data/embeddings/sbert_embeddings.parquet"
 
 EMBEDDING_FILES = {
     "openai": OPENAI_EMBEDDING_FILE,
@@ -47,7 +47,7 @@ EMBEDDING_MODELS = {
 }
 
 # Select backend
-EMBEDDING_BACKEND = os.getenv("EMBEDDING_BACKEND", "openai")  # "openai" or "sentence-transformers"
+EMBEDDING_BACKEND = os.getenv("EMBEDDING_BACKEND", "sentence-transformers")  # "openai" or "sentence-transformers"
 
 # --- Chunking ---
 CHUNK_SIZE = None
@@ -143,5 +143,7 @@ CHAT_MODEL = "gpt-4o-mini"
 TOP_K = 5
 SIMILARITY_THRESHOLD = 0.2
 
-logger.add("logs/sciencesage.log", rotation="10 MB", retention="10 days", level="INFO")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+
+logger.add("logs/sciencesage.log", rotation="10 MB", retention="10 days", level=LOG_LEVEL)
 logger.info("Configuration loaded for backend: %s", EMBEDDING_BACKEND)
