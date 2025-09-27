@@ -4,9 +4,6 @@ import json
 from typing import List, Dict
 import uuid
 from dotenv import load_dotenv
-from openai import OpenAI
-from qdrant_client import QdrantClient
-from qdrant_client.models import PointStruct, VectorParams, Distance
 from loguru import logger
 import argparse
 from tqdm import tqdm
@@ -14,14 +11,15 @@ import time
 import pandas as pd
 
 from sciencesage.config import (
-    CHUNKS_FILE, 
-    EMBEDDING_FILE, 
-    QDRANT_HOST, 
-    QDRANT_PORT, 
-    QDRANT_COLLECTION, 
-    EMBEDDING_MODEL,
-    QDRANT_BATCH_SIZE, 
-    STANDARD_CHUNK_FIELDS,
+    CHUNKS_FILE,
+    EMBEDDING_FILES,
+    EMBEDDING_MODELS,
+    EMBEDDING_BACKEND,
+    QDRANT_HOST,
+    QDRANT_PORT,
+    QDRANT_COLLECTION,
+    QDRANT_BATCH_SIZE,
+    CHUNK_FIELDS,
 )
 
 # -------------------------
@@ -36,9 +34,20 @@ logger.info("Started embed.py script.")
 load_dotenv()  # Load variables from .env if present
 
 # -------------------------
-# Clients
+# Backend-specific imports
 # -------------------------
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+if EMBEDDING_BACKEND == "openai":
+    from openai import OpenAI
+    openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+elif EMBEDDING_BACKEND == "sentence-transformers":
+    from sentence_transformers import SentenceTransformer
+    sbert_model = SentenceTransformer(EMBEDDING_MODELS["sentence-transformers"]["model"])
+else:
+    raise ValueError(f"Unsupported EMBEDDING_BACKEND: {EMBEDDING_BACKEND}")
+
+from qdrant_client import QdrantClient
+from qdrant_client.models import PointStruct, VectorParams, Distance
+
 qdrant = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
 
 # -------------------------
@@ -57,18 +66,29 @@ def load_chunks(path: Path) -> List[Dict]:
         return []
 
 def get_embedding(text: str) -> List[float]:
-    """Fetch embedding from OpenAI."""
+    """Fetch embedding from selected backend."""
     logger.debug(f"Getting embedding for text (first 50 chars): {text[:50]}...")
-    try:
-        response = openai_client.embeddings.create(
-            model=EMBEDDING_MODEL,
-            input=text
-        )
-        logger.debug("Embedding fetched successfully.")
-        return response.data[0].embedding
-    except Exception as e:
-        logger.error(f"Failed to get embedding: {e}")
-        raise
+    if EMBEDDING_BACKEND == "openai":
+        try:
+            response = openai_client.embeddings.create(
+                model=EMBEDDING_MODELS["openai"]["model"],
+                input=text
+            )
+            logger.debug("Embedding fetched successfully (OpenAI).")
+            return response.data[0].embedding
+        except Exception as e:
+            logger.error(f"Failed to get embedding from OpenAI: {e}")
+            raise
+    elif EMBEDDING_BACKEND == "sentence-transformers":
+        try:
+            embedding = sbert_model.encode(text)
+            logger.debug("Embedding fetched successfully (SBERT).")
+            return embedding.tolist()
+        except Exception as e:
+            logger.error(f"Failed to get embedding from SBERT: {e}")
+            raise
+    else:
+        raise ValueError(f"Unsupported EMBEDDING_BACKEND: {EMBEDDING_BACKEND}")
 
 def ensure_collection(vector_size: int):
     """Create collection in Qdrant if not exists."""
@@ -121,14 +141,8 @@ def main():
         logger.error("No chunks found. Run preprocess.py first.")
         return
 
-    # Quick embedding to check vector size
-    try:
-        sample_vector = get_embedding("test")
-        vector_size = len(sample_vector)
-        logger.debug(f"Sample embedding vector size: {vector_size}")
-    except Exception as e:
-        logger.error(f"Failed to get sample embedding: {e}")
-        return
+    # Use config for vector size
+    vector_size = EMBEDDING_MODELS[EMBEDDING_BACKEND]["dim"]
 
     try:
         ensure_collection(vector_size)
@@ -139,13 +153,13 @@ def main():
     # Batch upload chunks with tqdm and elapsed time
     points = []
     failed_chunks = []
-    embeddings_records = []  # <-- collect for parquet
+    embeddings_records = []
     start_time = time.time()
     for idx, chunk in enumerate(tqdm(chunks, desc="Embedding and uploading chunks")):
         try:
             vector = get_embedding(chunk["text"])
             point_id = chunk.get("uuid") or str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk)))
-            payload = {k: chunk.get(k) for k in STANDARD_CHUNK_FIELDS if k != "embedding"}
+            payload = {k: chunk.get(k) for k in CHUNK_FIELDS if k != "embedding"}
             payload["embedding"] = vector
             points.append(
                 PointStruct(
@@ -154,11 +168,9 @@ def main():
                     payload=payload
                 )
             )
-            # Save embedding record for parquet
             record = payload.copy()
             record["id"] = point_id
             embeddings_records.append(record)
-            # Upload in batches
             if len(points) >= QDRANT_BATCH_SIZE:
                 try:
                     qdrant.upsert(collection_name=QDRANT_COLLECTION, points=points)
@@ -173,7 +185,6 @@ def main():
             logger.error(f"Failed to process chunk id {chunk_id}: {e}")
             failed_chunks.append(chunk_id)
 
-    # Upload any remaining points
     if points:
         try:
             qdrant.upsert(collection_name=QDRANT_COLLECTION, points=points)
@@ -183,10 +194,11 @@ def main():
             failed_chunks.extend([p.payload.get("id", "unknown") for p in points])
 
     # Save embeddings to parquet
+    embedding_file = EMBEDDING_FILES[EMBEDDING_BACKEND]
     try:
         df = pd.DataFrame(embeddings_records)
-        df.to_parquet(EMBEDDING_FILE, index=False)
-        logger.info(f"Saved embeddings to parquet: {EMBEDDING_FILE}")
+        df.to_parquet(embedding_file, index=False)
+        logger.info(f"Saved embeddings to parquet: {embedding_file}")
     except Exception as e:
         logger.error(f"Failed to save embeddings to parquet: {e}")
 
