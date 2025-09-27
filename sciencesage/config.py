@@ -108,4 +108,4 @@ SIMILARITY_THRESHOLD = 0.2
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 logger.add("logs/sciencesage.log", rotation="10 MB", retention="10 days", level=LOG_LEVEL)
-logger.info("Configuration loaded for model: %s", EMBEDDING_MODEL)
+logger.info("Configuration loaded.")
