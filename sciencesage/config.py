@@ -7,10 +7,19 @@ load_dotenv()
 # --- File paths ---
 RAW_DATA_DIR = "data/raw"
 CHUNKS_FILE = "data/processed/chunks.jsonl"
-EMBEDDING_FILE = "data/embeddings/embeddings.parquet"
+
+# Embedding files for each backend
+OPENAI_EMBEDDING_FILE = "data/embeddings/openai_embeddings.npy"
+SENTENCE_TRANSFORMER_EMBEDDING_FILE = "data/embeddings/sbert_embeddings.npy"
+
+EMBEDDING_FILES = {
+    "openai": OPENAI_EMBEDDING_FILE,
+    "sentence-transformers": SENTENCE_TRANSFORMER_EMBEDDING_FILE,
+}
+
 FEEDBACK_FILE = "data/feedback/feedback.jsonl"
 GROUND_TRUTH_FILE = "data/ground_truth/ground_truth_dataset.jsonl"
-EVAL_RESULTS_FILE = "data/eval/eval_results.jsonl" # Stores the output of your retrieval system for each query (retrieved chunks, answers, etc.) for retrieval performance evaluation
+EVAL_RESULTS_FILE = "data/eval/eval_results.jsonl"
 LLM_EVAL_FILE = "data/eval/llm_eval.jsonl"
 METRICS_SUMMARY_FILE = "data/eval/metrics_summary.csv"
 
@@ -20,43 +29,58 @@ if not OPENAI_API_KEY:
     raise RuntimeError("OPENAI_API_KEY environment variable not set")
 
 # --- Embeddings ---
-EMBEDDING_MODEL = "text-embedding-3-small" # or "text-embedding-3-large"
-EMBEDDING_DIM = 1536
-DISTANCE_METRIC = "Cosine"
+EMBEDDING_MODELS = {
+    "openai": {
+        "model": os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
+        "dim": 1536,
+        "max_tokens": 8192,
+        "distance_metric": "Cosine",
+        "collection": "scientific_concepts_openai",
+    },
+    "sentence-transformers": {
+        "model": os.getenv("SENTENCE_TRANSFORMER_MODEL", "all-MiniLM-L6-v2"),
+        "dim": 384,
+        "max_tokens": 512,
+        "distance_metric": "Cosine",
+        "collection": "scientific_concepts_sbert",
+    },
+}
+
+# Select backend
+EMBEDDING_BACKEND = os.getenv("EMBEDDING_BACKEND", "openai")  # "openai" or "sentence-transformers"
 
 # --- Chunking ---
-CHUNK_SIZE = None # No fixed size when chunking by paragraphs
-CHUNK_OVERLAP = 0  # No overlap when chunking by paragraphs
+CHUNK_SIZE = None
+CHUNK_OVERLAP = 0
 
 # --- Tokens ---
-MAX_TOKENS = 8192  # For OpenAI text-embedding-3-small or test-embedding-3-large
+MAX_TOKENS = EMBEDDING_MODELS[EMBEDDING_BACKEND]["max_tokens"]
 
 # --- Qdrant ---
 QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
-QDRANT_COLLECTION = "scientific_concepts"
+QDRANT_COLLECTION = EMBEDDING_MODELS[EMBEDDING_BACKEND]["collection"]
 QDRANT_URL = f"http://{QDRANT_HOST}:{QDRANT_PORT}"
-QDRANT_BATCH_SIZE = 64  # Number of vectors to upload in each batch
+QDRANT_BATCH_SIZE = 64
 
 # --- Wikipedia settings ---
 WIKI_URL = "https://en.wikipedia.org"
 WIKI_USER_AGENT = "ScienceSageBot/1.0 (contact: lkonthego@gmail.com)"
 
-
 # --- Chunk fields ---
 CHUNK_FIELDS = [
-    "uuid",              # Unique chunk UUID
-    "text",              # The chunked text content
-    "title",             # Page/article title
-    "source_url",        # Source URL
-    "categories",        # Wikipedia categories for the page
-    "topic",             # Inferred topic based on categories
-    "images",            # List of image URLs or metadata   
-    "summary",           # Summary (if available)
-    "chunk_index",       # Index of the chunk in the original text
-    "char_start",        # Character start position in original text
-    "char_end",          # Character end position in original text
-    "created_at"         # Timestamp of creation or last update    
+    "uuid",
+    "text",
+    "title",
+    "source_url",
+    "categories",
+    "topic",
+    "images",
+    "summary",
+    "chunk_index",
+    "char_start",
+    "char_end",
+    "created_at"
 ]
 
 EXCLUDED_CATEGORY_PREFIXES = sorted([
@@ -116,9 +140,8 @@ LEVELS = [
 CHAT_MODEL = "gpt-4o-mini"
 
 # --- Retrieval settings ---
-TOP_K = 5   # number of chunks to retrieve
-
-SIMILARITY_THRESHOLD = 0.2  # discard very low-similarity scores
+TOP_K = 5
+SIMILARITY_THRESHOLD = 0.2
 
 logger.add("logs/sciencesage.log", rotation="10 MB", retention="10 days", level="INFO")
-logger.info("Configuration loaded.")
+logger.info("Configuration loaded for backend: %s", EMBEDDING_BACKEND)
