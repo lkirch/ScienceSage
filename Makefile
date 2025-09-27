@@ -7,7 +7,7 @@ DATA_DIR=data
 ENV_FILE=.env
 
 # Main targets
-.PHONY: all ingest run-app test test-qdrant clean logs help download preprocess embed install data run run-api
+.PHONY: all ingest run-app test test-qdrant clean logs help download preprocess embed install data run run-api create-golden validate-golden generate-eval-results rag-llm-eval
 
 all: ingest run-app
 
@@ -93,3 +93,19 @@ data: ingest
 
 run: run-app
     @echo ">>> App started!"
+
+create-golden:
+    @echo ">>> Creating golden dataset..."
+    python $(SCRIPTS_DIR)/create_golden_dataset.py
+
+validate-golden:
+    @echo ">>> Validating golden dataset..."
+    python $(SCRIPTS_DIR)/validate_golden_dataset.py
+
+generate-eval-results:
+    @echo ">>> Generating evaluation results..."
+    python $(SCRIPTS_DIR)/generate_eval_results.py
+
+rag-llm-eval:
+    @echo ">>> Running RAG LLM evaluation..."
+    python $(SCRIPTS_DIR)/rag_llm_evaluation.py
