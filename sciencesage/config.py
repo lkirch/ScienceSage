@@ -4,7 +4,7 @@ from loguru import logger
 # --- File paths ---
 RAW_DATA_DIR = "data/raw"
 CHUNKS_FILE = "data/processed/chunks.jsonl"
-EMBEDDING_FILE = "data/embeddings/sbert_embeddings.parquet"
+EMBEDDING_FILE = "data/embeddings/embeddings.parquet"
 FEEDBACK_FILE = "data/feedback/feedback.jsonl"
 GROUND_TRUTH_FILE = "data/ground_truth/ground_truth_dataset.jsonl"
 EVAL_RESULTS_FILE = "data/eval/eval_results.jsonl"
@@ -15,8 +15,8 @@ METRICS_SUMMARY_FILE = "data/eval/metrics_summary.csv"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 EMBEDDING_DIM = 384
 MAX_TOKENS = 512
-DISTANCE_METRIC = "Cosine"
-QDRANT_COLLECTION = "scientific_concepts_sbert"
+DISTANCE_METRIC = "Cosine" # Options: Cosine, Euclidean, Dot
+QDRANT_COLLECTION = "scientific_concepts"
 
 # --- Chunking ---
 CHUNK_SIZE = None
