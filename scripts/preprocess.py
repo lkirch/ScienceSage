@@ -9,20 +9,57 @@ from tqdm import tqdm
 from sciencesage.config import (
     RAW_DATA_DIR,
     CHUNKS_FILE,
-    STANDARD_CHUNK_FIELDS,
+    CHUNK_FIELDS,
     EXCLUDED_CATEGORY_PREFIXES
 )
 
 logger.add("logs/preprocess.log", rotation="5 MB", retention="7 days")
 logger.info("Started preprocess.py script.")
 
-def chunk_text_by_paragraphs(text):
-    # Split text into paragraphs using double newline or single newline
+def chunk_text_by_paragraphs(text, min_length=100, max_length=1200):
+    """
+    Split text into paragraphs, merge short ones, and split long ones.
+    - min_length: minimum number of characters for a chunk
+    - max_length: maximum number of characters for a chunk
+    """
     paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
-    # If no double newlines, fallback to single newline
     if len(paragraphs) <= 1:
         paragraphs = [p.strip() for p in text.split('\n') if p.strip()]
-    return paragraphs
+
+    # Merge short paragraphs with the next one
+    merged = []
+    buffer = ""
+    for para in paragraphs:
+        if len(buffer) == 0:
+            buffer = para
+        else:
+            if len(buffer) < min_length:
+                buffer += " " + para
+            else:
+                merged.append(buffer)
+                buffer = para
+    if buffer:
+        merged.append(buffer)
+
+    # Split long paragraphs
+    final_chunks = []
+    for para in merged:
+        if len(para) > max_length:
+            # Split by sentences if possible
+            sentences = para.split('. ')
+            chunk = ""
+            for sentence in sentences:
+                if len(chunk) + len(sentence) < max_length:
+                    chunk += sentence + '. '
+                else:
+                    final_chunks.append(chunk.strip())
+                    chunk = sentence + '. '
+            if chunk.strip():
+                final_chunks.append(chunk.strip())
+        else:
+            final_chunks.append(para)
+    # Remove empty chunks
+    return [c for c in final_chunks if c.strip()]
 
 def filter_categories(categories):
     return [
@@ -31,18 +68,25 @@ def filter_categories(categories):
     ]
 
 def infer_topic(meta):
-    cats = [c.lower() for c in filter_categories(meta.get("categories", []))]
-    if "planets" in cats:
+    """
+    Infer topic from article title and categories.
+    """
+    title = meta.get("title", "").lower()
+    categories = [c.lower() for c in meta.get("categories", [])]
+
+    # Example mappings
+    if "mars" in title or any("mars" in c for c in categories):
+        return "mars"
+    if "moon" in title or any("moon" in c for c in categories):
+        return "moon"
+    if "space exploration" in title or any("space exploration" in c for c in categories):
+        return "space exploration"
+    if "animals in space" in title or any("animals in space" in c for c in categories):
+        return "animals in space"
+    if any("planet" in c for c in categories):
         return "planets"
-    if "space missions" in cats:
-        return "space_missions"
-    if "astronauts" in cats:
-        return "astronauts"
-    if "space technology" in cats or "space tech" in cats:
-        return "space_tech"
-    if "space exploration" in cats:
-        return "space_exploration"
-    # Add more rules as needed
+    # Add more mappings as needed
+
     return "other"
 
 def make_standard_chunk(text, meta, chunk_index, char_start, char_end):
@@ -62,7 +106,7 @@ def make_standard_chunk(text, meta, chunk_index, char_start, char_end):
         "char_end": char_end,
         "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
-    return {k: chunk.get(k) for k in STANDARD_CHUNK_FIELDS if k in chunk}
+    return {k: chunk.get(k) for k in CHUNK_FIELDS if k in chunk}
 
 def main():
     start_time = time.time()
