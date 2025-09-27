@@ -57,3 +57,19 @@ def test_point_payload_contains_standard_fields():
     assert "Space exploration" in point.payload["topics"]
     assert point.payload["title"] == "Apollo program"
     assert point.payload["source_url"].startswith("https://en.wikipedia.org/")
+
+def test_point_payload_contains_embedding():
+    """Simulate a chunk and ensure embedding is present and correct dimension."""
+    chunk = {
+        "uuid": "abc123",
+        "text": "Sample text.",
+        "embedding": [0.1] * 1536  # match EMBEDDING_DIM
+    }
+    point = PointStruct(
+        id="test",
+        vector=chunk["embedding"],
+        payload=chunk
+    )
+    assert "embedding" in point.payload
+    assert isinstance(point.payload["embedding"], list)
+    assert len(point.payload["embedding"]) == 1536
