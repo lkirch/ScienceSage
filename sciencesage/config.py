@@ -9,7 +9,7 @@ RAW_DATA_DIR = "data/raw"
 CHUNKS_FILE = "data/processed/chunks.jsonl"
 EMBEDDING_FILE = "data/embeddings/embeddings.parquet"
 FEEDBACK_FILE = "data/feedback/feedback.jsonl"
-GOLDEN_DATA_FILE = "data/golden/golden_dataset.jsonl"
+GROUND_TRUTH_FILE = "data/ground_truth/ground_truth_dataset.jsonl"
 EVAL_RESULTS_FILE = "data/eval/eval_results.jsonl" # Stores the output of your retrieval system for each query (retrieved chunks, answers, etc.) for retrieval performance evaluation
 LLM_EVAL_FILE = "data/eval/llm_eval.jsonl"
 METRICS_SUMMARY_FILE = "data/eval/metrics_summary.csv"
@@ -43,8 +43,8 @@ WIKI_URL = "https://en.wikipedia.org"
 WIKI_USER_AGENT = "ScienceSageBot/1.0 (contact: lkonthego@gmail.com)"
 
 
-# --- Standard chunk fields ---
-STANDARD_CHUNK_FIELDS = [
+# --- Chunk fields ---
+CHUNK_FIELDS = [
     "uuid",              # Unique chunk UUID
     "text",              # The chunked text content
     "title",             # Page/article title
@@ -95,7 +95,7 @@ CHAT_MODEL = "gpt-4o-mini"
 # --- Retrieval settings ---
 TOP_K = 5   # number of chunks to retrieve
 
-MIN_SCORE_THRESHOLD = 0.2  # discard very low-similarity scores
+SIMILARITY_THRESHOLD = 0.2  # discard very low-similarity scores
 
 logger.add("logs/sciencesage.log", rotation="10 MB", retention="10 days", level="INFO")
 logger.info("Configuration loaded.")
