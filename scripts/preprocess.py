@@ -132,11 +132,20 @@ def main():
             all_chunks.append(chunk_dict)
         logger.info(f"Processed {len(paragraphs)} paragraph chunks from {txt_path.name}")
 
+    # After all_chunks is populated
+    seen_texts = set()
+    deduped_chunks = []
+    for chunk in all_chunks:
+        if chunk["text"] not in seen_texts:
+            deduped_chunks.append(chunk)
+            seen_texts.add(chunk["text"])
+    # Save deduped_chunks instead of all_chunks
     with open(CHUNKS_FILE, "w", encoding="utf-8") as f:
-        for entry in all_chunks:
+        for entry in deduped_chunks:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    logger.success(f"Saved {len(deduped_chunks)} unique paragraph chunks to {CHUNKS_FILE}")
     elapsed = time.time() - start_time
-    logger.success(f"Saved {len(all_chunks)} paragraph chunks to {CHUNKS_FILE}")
+    logger.success(f"Saved {len(deduped_chunks)} paragraph chunks to {CHUNKS_FILE}")
     logger.info(f"Total elapsed time: {elapsed:.2f} seconds")
 
 if __name__ == "__main__":
