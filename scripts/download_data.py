@@ -70,6 +70,27 @@ def get_image_urls(page_title, user_agent, max_images=10):
             break
     return image_urls[:max_images]
 
+# Add this constant for excluded category prefixes
+EXCLUDED_CATEGORY_PREFIXES = [
+    "Category:Articles",
+    "Category:CS1",
+    "Category:Wikipedia",
+    "Category:Pages",
+    "Category:Vague",
+    "Category:Use",
+    "Category:Short",
+    "Category:Webarchive",
+    "Category:All",
+    "Category:Commons",
+]
+
+def filter_categories(categories):
+    """Filter out categories with excluded prefixes."""
+    return [
+        cat for cat in categories
+        if not any(cat.startswith(prefix) for prefix in EXCLUDED_CATEGORY_PREFIXES)
+    ]
+
 def download_wikipedia_raw(topic: str, user_agent: str):
     wiki = wikipediaapi.Wikipedia(language='en', user_agent=user_agent)
     page = wiki.page(topic)
@@ -81,11 +102,13 @@ def download_wikipedia_raw(topic: str, user_agent: str):
     save_file(os.path.join(RAW_DATA_DIR, text_fname), page.text)
     # Get image URLs
     image_urls = get_image_urls(topic, user_agent)
+    # Filter categories
+    filtered_categories = filter_categories(list(page.categories.keys()))
     # Save meta data
     meta = {
         "title": page.title,
         "fullurl": page.fullurl,
-        "categories": list(page.categories.keys()),
+        "categories": filtered_categories,
         "summary": page.summary,
         "images": image_urls,
     }
