@@ -13,6 +13,7 @@ uvicorn
 # AI/Embeddings
 openai
 tiktoken
+sentence-transformers
 
 # Database/Vector Search
 qdrant-client
