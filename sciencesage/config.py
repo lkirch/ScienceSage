@@ -10,7 +10,8 @@ CHUNKS_FILE = "data/processed/chunks.jsonl"
 EMBEDDING_FILE = "data/embeddings/embeddings.parquet"
 FEEDBACK_FILE = "data/feedback/feedback.jsonl"
 GOLDEN_DATA_FILE = "data/golden/golden_dataset.jsonl"
-EVAL_RESULTS_FILE = "data/eval/eval_results.jsonl"
+EVAL_RESULTS_FILE = "data/eval/eval_results.jsonl" # Stores the output of your retrieval system for each query (retrieved chunks, answers, etc.) for retrieval performance evaluation
+LLM_EVAL_FILE = "data/eval/llm_eval.jsonl"
 METRICS_SUMMARY_FILE = "data/eval/metrics_summary.csv"
 
 # --- API Keys ---
