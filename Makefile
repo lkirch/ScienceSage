@@ -6,7 +6,7 @@ SCRIPTS_DIR=scripts
 DATA_DIR=data
 ENV_FILE=.env
 
-.PHONY: all setup ingest preprocess embed create-golden validate-golden generate-eval-results rag-llm-eval eval-all run-app run-api test test-qdrant clean logs help install data run
+.PHONY: all setup ingest preprocess embed create-ground-truth validate-ground-truth generate-eval-results rag-llm-eval eval-all run-app run-api test test-qdrant clean logs help install data run clean-logs
 
 ## ------------------------
 ## Setup & Installation
@@ -42,16 +42,16 @@ data: ingest
 	@echo ">>> Data pipeline complete!"
 
 ## ------------------------
-## Golden Dataset & Evaluation
+## Ground Truth Dataset & Evaluation
 ## ------------------------
 
-create-golden:
-	@echo ">>> Creating golden dataset..."
-	python $(SCRIPTS_DIR)/create_golden_dataset.py
+create-ground-truth:
+	@echo ">>> Creating ground truth dataset..."
+	python $(SCRIPTS_DIR)/create_ground_truth_dataset.py
 
-validate-golden:
-	@echo ">>> Validating golden dataset..."
-	python $(SCRIPTS_DIR)/validate_golden_dataset.py
+validate-ground-truth:
+	@echo ">>> Validating ground truth dataset..."
+	python $(SCRIPTS_DIR)/validate_ground_truth_dataset.py
 
 generate-eval-results:
 	@echo ">>> Generating evaluation results..."
@@ -61,7 +61,7 @@ rag-llm-eval:
 	@echo ">>> Running RAG LLM evaluation..."
 	python $(SCRIPTS_DIR)/rag_llm_evaluation.py
 
-eval-all: create-golden validate-golden generate-eval-results rag-llm-eval
+eval-all: create-ground-truth validate-ground-truth generate-eval-results rag-llm-eval
 	@echo ">>> Full evaluation pipeline complete!"
 
 ## ------------------------
@@ -97,7 +97,11 @@ test-qdrant:
 
 clean:
 	@echo ">>> Cleaning data outputs..."
-	rm -rf $(DATA_DIR)/processed/* $(DATA_DIR)/chunks/*
+	rm -rf $(DATA_DIR)/processed/* $(DATA_DIR)/chunks/* $(DATA_DIR)/ground_truth/* $(DATA_DIR)/eval/* $(DATA_DIR)/embeddings/*
+
+clean-logs:
+	@echo ">>> Removing all log files..."
+	rm -rf logs/*.log
 
 logs:
 	@echo ">>> Showing latest logs..."
@@ -117,11 +121,11 @@ help:
 	@echo "  make embed                - Embed chunks into Qdrant"
 	@echo "  make ingest               - Run full pipeline: download → preprocess → embed"
 	@echo "  make data                 - Run full data pipeline (alias for ingest)"
-	@echo "  make create-golden        - Create golden evaluation dataset"
-	@echo "  make validate-golden      - Validate golden dataset"
-	@echo "  make generate-eval-results- Generate evaluation results"
+	@echo "  make create-ground-truth  - Create ground truth dataset"
+	@echo "  make validate-ground-truth - Validate ground truth dataset"
+	@echo "  make generate-eval-results - Generate evaluation results"
 	@echo "  make rag-llm-eval         - Run RAG LLM evaluation"
-	@echo "  make eval-all             - Run all evaluation steps (create-golden, validate-golden, generate-eval-results, rag-llm-eval)"
+	@echo "  make eval-all             - Run all evaluation steps (create-ground-truth, validate-ground-truth, generate-eval-results, rag-llm-eval)"
 	@echo "  make run-app              - Start the Streamlit application"
 	@echo "  make run-api              - Start the FastAPI RAG API"
 	@echo "  make run                  - Start the Streamlit application (alias)"
@@ -129,4 +133,5 @@ help:
 	@echo "  make test-qdrant          - Run Qdrant sanity check script"
 	@echo "  make clean                - Remove processed files and chunks"
 	@echo "  make logs                 - Show last 50 lines of logs"
+	@echo "  make clean-logs           - Remove all log files"
 	@echo "  make help                 - Display this help message"
