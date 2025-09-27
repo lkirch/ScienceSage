@@ -10,6 +10,7 @@ from sciencesage.config import (
     RAW_DATA_DIR,
     CHUNKS_FILE,
     STANDARD_CHUNK_FIELDS,
+    EXCLUDED_CATEGORY_PREFIXES
 )
 
 logger.add("logs/preprocess.log", rotation="5 MB", retention="7 days")
@@ -23,14 +24,37 @@ def chunk_text_by_paragraphs(text):
         paragraphs = [p.strip() for p in text.split('\n') if p.strip()]
     return paragraphs
 
+def filter_categories(categories):
+    return [
+        c for c in categories
+        if not any(c.startswith(prefix) for prefix in EXCLUDED_CATEGORY_PREFIXES)
+    ]
+
+def infer_topic(meta):
+    cats = [c.lower() for c in filter_categories(meta.get("categories", []))]
+    if "planets" in cats:
+        return "planets"
+    if "space missions" in cats:
+        return "space_missions"
+    if "astronauts" in cats:
+        return "astronauts"
+    if "space technology" in cats or "space tech" in cats:
+        return "space_tech"
+    if "space exploration" in cats:
+        return "space_exploration"
+    # Add more rules as needed
+    return "other"
+
 def make_standard_chunk(text, meta, chunk_index, char_start, char_end):
     chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, meta.get("title", "") + text))
+    filtered_categories = filter_categories(meta.get("categories", []))
     chunk = {
         "uuid": chunk_uuid,
         "text": text,
         "title": meta.get("title"),
         "source_url": meta.get("fullurl"),
-        "categories": meta.get("categories", []),
+        "categories": filtered_categories,
+        "topic": infer_topic(meta),
         "images": meta.get("images", []),
         "summary": meta.get("summary"),
         "chunk_index": chunk_index,
