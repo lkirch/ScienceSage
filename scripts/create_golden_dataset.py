@@ -79,9 +79,9 @@ def main():
 
     start_time = time.time()
     for idx, c in enumerate(tqdm(sampled_chunks, desc="Generating Q&A")):
-        logger.info(f"Processing chunk {idx+1}/{len(sampled_chunks)} (id={c.get('id', f'chunk_{idx}')})")
+        logger.info(f"Processing chunk {idx+1}/{len(sampled_chunks)} (id={c.get('id', str(idx))})")
         qas = generate_questions(c["text"])
-        chunk_id = c.get("id", f"chunk_{idx}")
+        chunk_id = c.get("id", str(idx))
         topic = c.get("topic") or c.get("title") or TOPICS[idx % len(TOPICS)]
         for qa in qas[:MAX_QUESTIONS_PER_CHUNK]:
             results.append({
