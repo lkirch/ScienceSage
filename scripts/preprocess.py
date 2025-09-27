@@ -9,26 +9,21 @@ from tqdm import tqdm
 from sciencesage.config import (
     RAW_DATA_DIR,
     CHUNKS_FILE,
-    CHUNK_SIZE,
-    CHUNK_OVERLAP,
     STANDARD_CHUNK_FIELDS,
 )
 
 logger.add("logs/preprocess.log", rotation="5 MB", retention="7 days")
 logger.info("Started preprocess.py script.")
 
-def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
-    words = text.split()
-    chunks = []
-    i = 0
-    while i < len(words):
-        chunk = words[i:i+chunk_size]
-        chunks.append(" ".join(chunk))
-        i += chunk_size - overlap
-    return chunks
+def chunk_text_by_paragraphs(text):
+    # Split text into paragraphs using double newline or single newline
+    paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
+    # If no double newlines, fallback to single newline
+    if len(paragraphs) <= 1:
+        paragraphs = [p.strip() for p in text.split('\n') if p.strip()]
+    return paragraphs
 
 def make_standard_chunk(text, meta, chunk_index, char_start, char_end):
-    # use uuid for unique identification
     chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, meta.get("title", "") + text))
     chunk = {
         "uuid": chunk_uuid,
@@ -43,7 +38,6 @@ def make_standard_chunk(text, meta, chunk_index, char_start, char_end):
         "char_end": char_end,
         "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
-    # Only keep fields in STANDARD_CHUNK_FIELDS
     return {k: chunk.get(k) for k in STANDARD_CHUNK_FIELDS if k in chunk}
 
 def main():
@@ -60,21 +54,21 @@ def main():
             text = f.read()
         with open(meta_path, "r", encoding="utf-8") as f:
             meta = json.load(f)
-        chunks = chunk_text(text)
+        paragraphs = chunk_text_by_paragraphs(text)
         char_offset = 0
-        for i, chunk in enumerate(chunks):
+        for i, para in enumerate(paragraphs):
             char_start = char_offset
-            char_end = char_offset + len(chunk)
+            char_end = char_offset + len(para)
             char_offset = char_end
-            chunk_dict = make_standard_chunk(chunk, meta, i, char_start, char_end)
+            chunk_dict = make_standard_chunk(para, meta, i, char_start, char_end)
             all_chunks.append(chunk_dict)
-        logger.info(f"Processed {len(chunks)} chunks from {txt_path.name}")
+        logger.info(f"Processed {len(paragraphs)} paragraph chunks from {txt_path.name}")
 
     with open(CHUNKS_FILE, "w", encoding="utf-8") as f:
         for entry in all_chunks:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
     elapsed = time.time() - start_time
-    logger.success(f"Saved {len(all_chunks)} chunks to {CHUNKS_FILE}")
+    logger.success(f"Saved {len(all_chunks)} paragraph chunks to {CHUNKS_FILE}")
     logger.info(f"Total elapsed time: {elapsed:.2f} seconds")
 
 if __name__ == "__main__":
