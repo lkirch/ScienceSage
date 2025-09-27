@@ -41,26 +41,30 @@ This system helps users **explore complex scientific topics—focused on space e
 ScienceSage/
 │
 ├── sciencesage/            # Application (Streamlit + backend logic)
-│ ├── main.py               # Streamlit UI
-│ ├── retrieval_system.py   # Query → retrieve → GPT pipeline
-│ ├── feedback_manager.py   # Save thumbs up/down
-│ ├── analyze_feedback.py   # Summarize user feedback
+│ ├── rag_api.py            # FastAPI backend for RAG
+│ ├── app.py                # Streamlit UI
 │ ├── config.py             # API keys & settings
 │ └── prompts.py            # Prompts
+│ ├── retrieval_system.py   # Query → retrieve → GPT pipeline
+│ ├── feedback_manager.py   # Save thumbs up/down
+│ └── analyze_feedback.py   # Summarize user feedback
 │
 ├── data/                   # Data sources & outputs
 │ ├── raw/                  # Original files (html, pdf, etc.)
 │ ├── processed/            # Clean text files
-│ ├── chunks/               # JSONL with chunked docs (JSONL)
-│ └── feedback/             # Feedback file for analysis
-│ └── eval/                 # Golden dataset + evaluation outputs
+│ ├── chunks/               # JSONL with chunked by paragraph (JSONL)
+│ ├── embeddings/           # Embeddings for each chunk in a parquet file
+│ ├── golden/               # Golden dataset for evaluation (JSONL)
+│ ├── eval/                 # Evaluation metrics and outputs
+│ └── feedback/             # USer feedback for analysis
 |
 ├── images/                 # Images
 |
 ├── logs/                   # Logs
 |
 ├── notebooks/              # Jupyter exploration
-│ └── sanity_check.ipynb
+│ ├── eda.ipynb             # EDA
+│ └── sanity_check.ipynb    # Checks to see if things are working
 │
 ├── scripts/                # Utilities
 │ ├── download_and_clean.py # Download Wikipedia → text
@@ -149,7 +153,7 @@ python scripts/embed.py                     # embed & store in Qdrant
 
 ### 6. Run the Streamlit app
 ```bash
-streamlit run sciencesage/main.py
+streamlit run sciencesage/app.py
 ```
 
 ### 7. Run the FastAPI RAG API
@@ -310,7 +314,7 @@ pip install -r requirements.txt
 
 ## 🏅 Golden Dataset Format
 
-Each line in `data/eval/golden_dataset.jsonl` should be a JSON object like:
+Each line in `data/golden/golden_dataset.jsonl` should be a JSON object like:
 
 ```json
 {
@@ -324,9 +328,7 @@ Each line in `data/eval/golden_dataset.jsonl` should be a JSON object like:
 
 ## 📝 Notes
 
-- The **Streamlit app** in `sciencesage/main.py` is the original UI.  
-  The **newer frontend** for the RAG API is in `scripts/streamlit_app.py`.  
-  Try the new frontend for the best RAG experience.
+- The **Streamlit app** in `sciencesage/app.py` is the UI.  
 - Make sure to set up your `.env` file with `OPENAI_API_KEY`.
 - To open the Streamlit app in your browser from the dev container, use:
   ```bash
