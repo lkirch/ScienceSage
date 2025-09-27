@@ -21,20 +21,20 @@ def test_generate_eval_for_entry_returns_expected_fields():
 
 def test_main_creates_eval_results_file(monkeypatch, tmp_path):
     """Test that main() creates the eval results file with expected fields."""
-    # Monkeypatch GOLDEN_DATA_FILE and EVAL_RESULTS_FILE to use tmp_path
-    monkeypatch.setattr(generate_eval_results, "GOLDEN_DATA_FILE", str(tmp_path / "golden_data.jsonl"))
+    # Monkeypatch GROUND_TRUTH_FILE and EVAL_RESULTS_FILE to use tmp_path
+    monkeypatch.setattr(generate_eval_results, "GROUND_TRUTH_FILE", str(tmp_path / "ground_truth.jsonl"))
     monkeypatch.setattr(generate_eval_results, "EVAL_RESULTS_FILE", str(tmp_path / "eval_results.jsonl"))
 
-    # Write a sample golden entry to GOLDEN_DATA_FILE
-    golden_entry = {
+    # Write a sample ground truth entry to GROUND_TRUTH_FILE
+    ground_truth_entry = {
         "query": "What is Mars?",
         "expected_answer": "A planet.",
         "context_ids": ["0"],
         "difficulty_level": "middle_school",
         "metadata": {"topic": "planets"}
     }
-    with open(tmp_path / "golden_data.jsonl", "w", encoding="utf-8") as f:
-        f.write(json.dumps(golden_entry) + "\n")
+    with open(tmp_path / "ground_truth.jsonl", "w", encoding="utf-8") as f:
+        f.write(json.dumps(ground_truth_entry) + "\n")
 
     # Run main
     generate_eval_results.main()

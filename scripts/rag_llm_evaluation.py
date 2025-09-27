@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "sciencesage"))
-from sciencesage.config import GOLDEN_DATA_FILE, EVAL_RESULTS_FILE, TOP_K, METRICS_SUMMARY_FILE, LLM_EVAL_FILE
+from sciencesage.config import GROUND_TRUTH_FILE, EVAL_RESULTS_FILE, TOP_K, METRICS_SUMMARY_FILE, LLM_EVAL_FILE
 
 
 def load_jsonl(path):
@@ -70,12 +70,12 @@ def save_jsonl(records, path):
 def main():
     # All paths are relative to the project root
     project_root = os.path.dirname(os.path.dirname(__file__))
-    golden_path = os.path.join(project_root, GOLDEN_DATA_FILE)
+    ground_truth_path = os.path.join(project_root, GROUND_TRUTH_FILE)
     results_path = os.path.join(project_root, EVAL_RESULTS_FILE)
     metrics_path = os.path.join(project_root, METRICS_SUMMARY_FILE)
     llm_eval_path = os.path.join(project_root, LLM_EVAL_FILE)
 
-    golden = load_jsonl(golden_path)
+    ground_truth = load_jsonl(ground_truth_path)
     results = load_jsonl(results_path)
 
     # --- Existing metrics code ---

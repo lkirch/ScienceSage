@@ -4,7 +4,7 @@ import json
 from tqdm import tqdm
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "sciencesage"))
-from sciencesage.config import GOLDEN_DATA_FILE, EVAL_RESULTS_FILE, TOP_K
+from sciencesage.config import GROUND_TRUTH_FILE, EVAL_RESULTS_FILE, TOP_K
 
 from sciencesage.retrieval_system import embed_text
 from qdrant_client import QdrantClient
@@ -53,13 +53,13 @@ def generate_eval_for_entry(entry):
 
 def main():
     project_root = os.path.dirname(os.path.dirname(__file__))
-    golden_path = os.path.join(project_root, GOLDEN_DATA_FILE)
+    ground_truth_path = os.path.join(project_root, GROUND_TRUTH_FILE)
     eval_results_path = os.path.join(project_root, EVAL_RESULTS_FILE)
 
-    golden = load_jsonl(golden_path)
+    ground_truth = load_jsonl(ground_truth_path)
     eval_results = []
 
-    for entry in tqdm(golden, desc="Generating eval results"):
+    for entry in tqdm(ground_truth, desc="Generating eval results"):
         eval_result = generate_eval_for_entry(entry)
         eval_results.append(eval_result)
 
