@@ -11,13 +11,15 @@ from loguru import logger
 import argparse
 from tqdm import tqdm
 import time
+import pandas as pd
 
 from sciencesage.config import (
     CHUNKS_FILE, 
+    EMBEDDING_FILE, 
     QDRANT_HOST, 
     QDRANT_PORT, 
     QDRANT_COLLECTION, 
-    EMBED_MODEL,
+    EMBEDDING_MODEL,
     QDRANT_BATCH_SIZE, 
     STANDARD_CHUNK_FIELDS,
 )
@@ -59,7 +61,7 @@ def get_embedding(text: str) -> List[float]:
     logger.debug(f"Getting embedding for text (first 50 chars): {text[:50]}...")
     try:
         response = openai_client.embeddings.create(
-            model=EMBED_MODEL,
+            model=EMBEDDING_MODEL,
             input=text
         )
         logger.debug("Embedding fetched successfully.")
@@ -137,13 +139,12 @@ def main():
     # Batch upload chunks with tqdm and elapsed time
     points = []
     failed_chunks = []
+    embeddings_records = []  # <-- collect for parquet
     start_time = time.time()
     for idx, chunk in enumerate(tqdm(chunks, desc="Embedding and uploading chunks")):
         try:
             vector = get_embedding(chunk["text"])
-            # Use uuid as point_id, fallback to uuid5 if needed
             point_id = chunk.get("uuid") or str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk)))
-            # Only include fields in STANDARD_CHUNK_FIELDS, and update embedding
             payload = {k: chunk.get(k) for k in STANDARD_CHUNK_FIELDS if k != "embedding"}
             payload["embedding"] = vector
             points.append(
@@ -153,6 +154,10 @@ def main():
                     payload=payload
                 )
             )
+            # Save embedding record for parquet
+            record = payload.copy()
+            record["id"] = point_id
+            embeddings_records.append(record)
             # Upload in batches
             if len(points) >= QDRANT_BATCH_SIZE:
                 try:
@@ -176,6 +181,14 @@ def main():
         except Exception as e:
             logger.error(f"Failed to upload final batch to Qdrant: {e}")
             failed_chunks.extend([p.payload.get("id", "unknown") for p in points])
+
+    # Save embeddings to parquet
+    try:
+        df = pd.DataFrame(embeddings_records)
+        df.to_parquet(EMBEDDING_FILE, index=False)
+        logger.info(f"Saved embeddings to parquet: {EMBEDDING_FILE}")
+    except Exception as e:
+        logger.error(f"Failed to save embeddings to parquet: {e}")
 
     elapsed = time.time() - start_time
     logger.info(f"Elapsed time: {elapsed:.2f} seconds")
