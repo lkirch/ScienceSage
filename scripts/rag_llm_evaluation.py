@@ -5,7 +5,8 @@ import pandas as pd
 import numpy as np
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "sciencesage"))
-from sciencesage.config import GOLDEN_DATA_FILE, EVAL_RESULTS_FILE, TOP_K, METRICS_SUMMARY_FILE
+from sciencesage.config import GOLDEN_DATA_FILE, EVAL_RESULTS_FILE, TOP_K, METRICS_SUMMARY_FILE, LLM_EVAL_FILE
+
 
 def load_jsonl(path):
     with open(path) as f:
@@ -45,9 +46,26 @@ def contextual_recall_and_sufficiency(retrieved, relevant, k):
     # Placeholder: in practice, this may require human or LLM judgment
     return recall_at_k(retrieved, relevant, k)
 
-def context_ids_to_int(context_ids):
-    # Converts ["chunk_0", "chunk_1"] -> [0, 1]
-    return [int(cid.split("_")[-1]) for cid in context_ids]
+
+def evaluate_entry(entry):
+    """
+    Evaluate a single entry using LLM logic.
+    Returns a dict with expected fields.
+    """
+    # Dummy implementation for testing
+    return {
+        "query": entry.get("query"),
+        "expected_answer": entry.get("expected_answer"),
+        "retrieved_answer": entry.get("retrieved_answer"),
+        "llm_score": 1.0,  # Replace with actual LLM scoring logic
+        "context_ids": entry.get("context_ids"),
+        "metadata": entry.get("metadata"),
+    }
+
+def save_jsonl(records, path):
+    with open(path, "w") as f:
+        for rec in records:
+            f.write(json.dumps(rec) + "\n")
 
 def main():
     # All paths are relative to the project root
@@ -55,15 +73,16 @@ def main():
     golden_path = os.path.join(project_root, GOLDEN_DATA_FILE)
     results_path = os.path.join(project_root, EVAL_RESULTS_FILE)
     metrics_path = os.path.join(project_root, METRICS_SUMMARY_FILE)
+    llm_eval_path = os.path.join(project_root, LLM_EVAL_FILE)
 
     golden = load_jsonl(golden_path)
     results = load_jsonl(results_path)
 
+    # --- Existing metrics code ---
     metrics = []
     for g, r in zip(golden, results):
         retrieved = r.get("retrieved_chunks", [])
-        # Convert context_ids (e.g., "chunk_0") to integers for comparison
-        relevant = context_ids_to_int(g.get("context_ids", []))
+        relevant = [int(cid) for cid in g.get("context_ids", [])]
         metrics.append({
             "query": g.get("query", ""),
             f"precision@{TOP_K}": precision_at_k(retrieved, relevant, TOP_K),
@@ -76,10 +95,15 @@ def main():
     metrics_df = pd.DataFrame(metrics)
     print("Average Metrics:")
     print(metrics_df.mean(numeric_only=True))
-
-    # Save metrics summary
     metrics_df.to_csv(metrics_path, index=False)
     print(f"Saved metrics summary to {metrics_path}")
+
+    # --- NEW: LLM evaluation and save ---
+    llm_eval_results = []
+    for r in results:
+        llm_eval_results.append(evaluate_entry(r))
+    save_jsonl(llm_eval_results, llm_eval_path)
+    print(f"Saved LLM eval results to {llm_eval_path}")
 
 if __name__ == "__main__":
     main()
