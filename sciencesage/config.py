@@ -59,18 +59,41 @@ CHUNK_FIELDS = [
     "created_at"         # Timestamp of creation or last update    
 ]
 
-EXCLUDED_CATEGORY_PREFIXES = [
+EXCLUDED_CATEGORY_PREFIXES = sorted([
+    "Category:Accuracy",
+    "Category:All",
     "Category:Articles",
     "Category:CS1",
-    "Category:Wikipedia",
+    "Category:Commons",
+    "Category:Disambiguation",
+    "Category:Hidden",
+    "Category:Lists",
+    "Category:Lists of",
+    "Category:Maintenance",
+    "Category:Monitoring",
+    "Category:Non-article",
     "Category:Pages",
-    "Category:Vague",
-    "Category:Use",
+    "Category:Pages using",
+    "Category:Pages with",
+    "Category:Project",
+    "Category:Redirects",
     "Category:Short",
+    "Category:Stub",
+    "Category:Template",
+    "Category:Tracking",
+    "Category:Unprintworthy",
+    "Category:Use",
+    "Category:Vague",
     "Category:Webarchive",
-    "Category:All",
-    "Category:Commons"
-]
+    "Category:Wikipedia",
+    "Category:WikiProject",
+    "Category:Articles containing",
+    "Category:Articles lacking",
+    "Category:Articles missing",
+    "Category:Articles needing",
+    "Category:Articles using",
+    "Category:Articles with",
+])
 
 # --- Topics ---
 TOPICS = [
