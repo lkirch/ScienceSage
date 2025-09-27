@@ -6,7 +6,7 @@ SCRIPTS_DIR=scripts
 DATA_DIR=data
 ENV_FILE=.env
 
-.PHONY: all setup ingest preprocess embed create-golden validate-golden generate-eval-results rag-llm-eval run-app run-api test test-qdrant clean logs help install data run
+.PHONY: all setup ingest preprocess embed create-golden validate-golden generate-eval-results rag-llm-eval eval-all run-app run-api test test-qdrant clean logs help install data run
 
 ## ------------------------
 ## Setup & Installation
@@ -60,6 +60,9 @@ generate-eval-results:
 rag-llm-eval:
 	@echo ">>> Running RAG LLM evaluation..."
 	python $(SCRIPTS_DIR)/rag_llm_evaluation.py
+
+eval-all: create-golden validate-golden generate-eval-results rag-llm-eval
+	@echo ">>> Full evaluation pipeline complete!"
 
 ## ------------------------
 ## Application
@@ -118,6 +121,7 @@ help:
 	@echo "  make validate-golden      - Validate golden dataset"
 	@echo "  make generate-eval-results- Generate evaluation results"
 	@echo "  make rag-llm-eval         - Run RAG LLM evaluation"
+	@echo "  make eval-all             - Run all evaluation steps (create-golden, validate-golden, generate-eval-results, rag-llm-eval)"
 	@echo "  make run-app              - Start the Streamlit application"
 	@echo "  make run-api              - Start the FastAPI RAG API"
 	@echo "  make run                  - Start the Streamlit application (alias)"
