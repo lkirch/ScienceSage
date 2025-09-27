@@ -49,12 +49,26 @@ STANDARD_CHUNK_FIELDS = [
     "title",             # Page/article title
     "source_url",        # Source URL
     "categories",        # Wikipedia categories for the page
+    "topic",             # Inferred topic based on categories
     "images",            # List of image URLs or metadata   
     "summary",           # Summary (if available)
     "chunk_index",       # Index of the chunk in the original text
     "char_start",        # Character start position in original text
     "char_end",          # Character end position in original text
     "created_at"         # Timestamp of creation or last update    
+]
+
+EXCLUDED_CATEGORY_PREFIXES = [
+    "Category:Articles",
+    "Category:CS1",
+    "Category:Wikipedia",
+    "Category:Pages",
+    "Category:Vague",
+    "Category:Use",
+    "Category:Short",
+    "Category:Webarchive",
+    "Category:All",
+    "Category:Commons"
 ]
 
 # --- Topics ---
