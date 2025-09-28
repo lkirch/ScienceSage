@@ -2,7 +2,7 @@ import streamlit as st
 from pathlib import Path
 from sciencesage.retrieval_system import retrieve_answer
 from sciencesage.feedback_manager import save_feedback
-from sciencesage.config import LEVELS, TOPICS
+from sciencesage.config import LEVELS, TOPICS, EXAMPLE_QUERIES
 from loguru import logger
 from dotenv import load_dotenv
 import re
@@ -55,41 +55,10 @@ st.markdown("""
 
 # --- Sidebar controls ---
 st.sidebar.header("Controls")
-topic = st.sidebar.selectbox("Choose a topic", TOPICS)
-level = st.sidebar.radio("Select explanation level", LEVELS)
+topic = st.sidebar.selectbox("Choose a topic:", TOPICS)
+level = st.sidebar.radio("Select explanation level:", LEVELS)
 
-example_queries = {
-    "Space exploration": [
-        "Who was the first human to travel into outer space, and in which spacecraft did they fly?",
-        "What are the main rationales for space exploration?",
-        "WHow has international cooperation in space exploration evolved since the Space Race era, and what are the current examples of major cooperative programs?"
-    ],
-    "Category:Space missions": [
-        "What was the objective of the Voyager missions?",
-        "How do robotic space missions differ from crewed missions?",
-        "Which space missions have explored the outer planets?"
-    ],
-    "Category:Discovery and exploration of the Solar System": [
-        "What astronomical object was the first artificial satellite launched into space?",
-        "What was the significance of Johannes Kepler's work with Mars and how did it advance our understanding of the Solar System?",
-        "HHow have technological developments in astronomy and physics contributed to the redefinition of the Solar System from a geocentric to a heliocentric model?"
-    ],
-    "Category:Exploration of Mars": [
-        "What are the names of the two NASA rovers currently operating on the surface of Mars?",
-        "What is the main reason for the high failure rate of missions sent to Mars?",
-        "What is NASA's three-phase official plan for human exploration and colonization of Mars?"
-    ],
-    "Category:Exploration of the Moon": [
-        "Who were the first astronauts to land on the Moon, and in which year did this happen?",
-        "What significant firsts were achieved by China's Chang'e program on the Moon?",
-        "What are NASA's Artemis program goals and the scientific and logistical objectives supporting the return to the Moon?"
-    ],
-    "Animals in space": [
-        "Why were animals sent into space before humans?",
-        "What have we learned from animal experiments in space?",
-        "Which animals have traveled the farthest from Earth?"
-    ]
-}
+example_queries = EXAMPLE_QUERIES
 
 # Initialize session_state for query and answer
 if "query" not in st.session_state:
@@ -99,13 +68,15 @@ if "answer" not in st.session_state:
 
 # Example query button
 if st.sidebar.button("Try Example"):
-    st.session_state.query = example_queries[topic][0]
+    # Map level to index
+    level_idx = LEVELS.index(level) if level in LEVELS else 0
+    st.session_state.query = example_queries[topic][level_idx]
     st.session_state.answer = ""
 
 # Prompt arrow
 st.markdown("""
 <span style="color:#9DC183; font-size:1.5em;">&#11013;</span>
-<span style="font-size:1.1em;"> Please select a topic and an explanation level on the left, then enter your question below: </span>
+<span style="font-size:1.1em;"> Please select a topic and an explanation level on the left, then enter your question below or click on the <b>Try Example</b> button to use one of our questions: </span>
 <span style="color:#9DC183; font-size:1.5em;">&#11015;</span>
 """, unsafe_allow_html=True)
 
@@ -144,7 +115,7 @@ def run_retrieval(query: str, topic: str, level: str):
 
 # --- Query input field ---
 query_input = st.text_input(
-    "Enter your question here",
+    "Enter your question here:",
     value=st.session_state.query,
     key="query_input",
     on_change=lambda: run_retrieval(st.session_state.query_input, topic, level)
