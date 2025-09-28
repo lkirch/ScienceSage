@@ -28,7 +28,7 @@ qdrant = QdrantClient(url=QDRANT_URL)
 def retrieve_context(
     query: str,
     top_k: int = TOP_K,
-    level: Optional[str] = None,
+    topic: Optional[str] = None,
 ) -> List[dict]:
     """
     Retrieve top_k most relevant chunks from Qdrant for a given query.
@@ -37,15 +37,12 @@ def retrieve_context(
     """
     query_embedding = embedder.encode(query).tolist()
 
-    # Build metadata filter
+    # Build metadata filter (only topic, not level)
     qdrant_filter = None
-    if level:
-        if level not in LEVELS:
-            logger.warning(f"Level '{level}' not in {LEVELS}, ignoring level filter.")
-        else:
-            qdrant_filter = Filter(
-                must=[FieldCondition(key="level", match=MatchValue(value=level))]
-            )
+    #if topic:
+    #    qdrant_filter = Filter(
+    #        must=[FieldCondition(key="topic", match=MatchValue(value=topic))]
+    #    )
 
     search_result = qdrant.query_points(
         collection_name=QDRANT_COLLECTION,
@@ -65,7 +62,7 @@ def retrieve_context(
             "score": hit.score,
         })
 
-    logger.debug(f"Retrieved {len(chunks)} chunks (top_k={top_k}, level={level})")
+    logger.debug(f"Retrieved {len(chunks)} chunks (top_k={top_k}, topic={topic})")
     return chunks
 
 
@@ -108,7 +105,7 @@ def retrieve_answer(
     Full RAG pipeline: retrieve + generate
     """
     logger.info(f"Processing query: '{query}' | topic={topic} | level={level}")
-    context_chunks = retrieve_context(query, top_k=top_k, level=level)
+    context_chunks = retrieve_context(query, top_k=top_k, topic=topic)
 
     if not context_chunks:
         logger.warning("No context retrieved — returning fallback response.")
