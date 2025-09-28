@@ -8,7 +8,7 @@ def test_retrieve_context_returns_chunks():
     # If your Qdrant DB is empty, this may be 0; otherwise, should be >0
     for chunk in chunks:
         assert "text" in chunk
-        assert "source" in chunk
+        assert "source_url" in chunk
         assert "chunk_id" in chunk
         assert "score" in chunk
 
@@ -16,8 +16,8 @@ def test_generate_answer_returns_string():
     query = "Explain gravity."
     # Simulate context chunks
     context_chunks = [
-        {"text": "Gravity is a force...", "source": "Physics Book", "chunk_id": 1, "score": 0.95},
-        {"text": "It attracts objects...", "source": "Science Journal", "chunk_id": 2, "score": 0.93},
+        {"text": "Gravity is a force...", "source_url": "Physics Book", "chunk_id": 1, "score": 0.95},
+        {"text": "It attracts objects...", "source_url": "Science Journal", "chunk_id": 2, "score": 0.93},
     ]
     answer = generate_answer(query, context_chunks, level="College", topic="Physics")
     assert isinstance(answer, str)
