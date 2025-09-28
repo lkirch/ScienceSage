@@ -23,6 +23,7 @@ loguru
 tqdm
 pandas
 beautifulsoup4
+arize
 
 # Dev & Testing
 pytest
