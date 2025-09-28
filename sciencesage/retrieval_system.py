@@ -1,96 +1,117 @@
-from sciencesage.config import (
-    OPENAI_API_KEY, QDRANT_URL, QDRANT_COLLECTION,
-    TOPICS, CHAT_MODEL, MAX_TOKENS, EMBEDDING_MODEL
-)
-from sciencesage.prompts import get_system_prompt, get_user_prompt
+from typing import List, Optional
+from loguru import logger
 from openai import OpenAI
 from qdrant_client import QdrantClient
-from qdrant_client.models import Filter, FieldCondition, MatchAny
-from loguru import logger
+from qdrant_client.models import Filter, FieldCondition, MatchValue
 from sentence_transformers import SentenceTransformer
 
-# Initialize clients and models
-client = OpenAI(api_key=OPENAI_API_KEY)
-qdrant = QdrantClient(url=QDRANT_URL)
+from sciencesage.config import (
+    CHAT_MODEL,
+    TOP_K,
+    EMBEDDING_MODEL,
+    QDRANT_URL,
+    QDRANT_COLLECTION,
+    LEVELS,
+    SIMILARITY_THRESHOLD,
+)
+from sciencesage.prompts import get_system_prompt, get_user_prompt
+
+
+# -------- Initialization --------
+logger.info("Initializing Retrieval System...")
+client = OpenAI()
 embedder = SentenceTransformer(EMBEDDING_MODEL)
+qdrant = QdrantClient(url=QDRANT_URL)
 
-def embed_text(text: str):
-    """Embed text using SentenceTransformer."""
-    embedding = embedder.encode([text])[0]
-    return embedding.tolist()
 
-def retrieve_answer(query: str, topic: str, level: str):
+# -------- Retrieval Function --------
+def retrieve_context(
+    query: str,
+    top_k: int = TOP_K,
+    level: Optional[str] = None,
+) -> List[dict]:
     """
-    Embed query, search Qdrant, and use OpenAI to generate answer.
-    Returns:
-        answer: str
-        contexts: List[dict]
-        references: List[dict]
-    """
-    logger.info(f"Retrieving answer for query='{query[:50]}...', topic='{topic}', level='{level}'")
-    vector = embed_text(query)
+    Retrieve top_k most relevant chunks from Qdrant for a given query.
 
-    # Filter by topic
-    query_filter = Filter(
-        must=[
-            FieldCondition(
-                key="topics",
-                match=MatchAny(any=[topic])
+    Returns list of dicts with keys: text, source, chunk_id, score
+    """
+    query_embedding = embedder.encode(query).tolist()
+
+    # Build metadata filter
+    qdrant_filter = None
+    if level:
+        if level not in LEVELS:
+            logger.warning(f"Level '{level}' not in {LEVELS}, ignoring level filter.")
+        else:
+            qdrant_filter = Filter(
+                must=[FieldCondition(key="level", match=MatchValue(value=level))]
             )
-        ]
-    )
 
-    results = qdrant.query_points(
+    search_result = qdrant.query_points(
         collection_name=QDRANT_COLLECTION,
-        query=vector,
-        limit=5,
-        #query_filter=query_filter,
+        query=query_embedding,
+        limit=top_k,
+        query_filter=qdrant_filter,
+        with_payload=True,
+        score_threshold=SIMILARITY_THRESHOLD,
     )
 
-    if not results.points:
-        logger.warning("No results returned from Qdrant.")
-        return "Sorry, I couldn't find an answer for that.", [], []
-
-    # Gather contexts and references
-    contexts = []
-    references = []
-    for point in results.points:
-        payload = point.payload
-        text = payload.get("text", "")
-        url = payload.get("source_url", "")
-        contexts.append({
-            "text": text,
-            "source": payload.get("title", ""),
-            "chunk": payload.get("chunk_index", 0),
-            "score": point.score
-        })
-        references.append({
-            "url": url,
-            "snippet": text[:200],
-            "score": point.score
+    chunks = []
+    for i, hit in enumerate(search_result.points):
+        chunks.append({
+            "text": hit.payload["text"],
+            "source": hit.payload.get("source", "unknown"),
+            "chunk_id": hit.payload.get("chunk_id", i),
+            "score": hit.score,
         })
 
-    # Generate answer using OpenAI and prompts from prompts.py
-    context_texts = [c["text"] for c in contexts]
-    system_prompt = get_system_prompt(topic, level)
-    user_prompt = get_user_prompt(query, "\n".join(context_texts), level)
-    completion = client.chat.completions.create(
+    logger.debug(f"Retrieved {len(chunks)} chunks (top_k={top_k}, level={level})")
+    return chunks
+
+
+# -------- Generation Function --------
+def generate_answer(query: str, context_chunks: List[dict], level: str, topic: str) -> str:
+    """
+    Generate an answer from the chat model given a query and retrieved context.
+    """
+    # Format context with citations
+    context_text = "\n\n".join(
+        f"[{i+1}] {chunk['text']} (Source: {chunk['source']}, Chunk: {chunk['chunk_id']})"
+        for i, chunk in enumerate(context_chunks)
+    )
+
+    system_prompt = get_system_prompt(topic=topic, level=level)
+    user_prompt = get_user_prompt(query=query, context_text=context_text, level=level)
+
+    response = client.chat.completions.create(
         model=CHAT_MODEL,
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
+            {"role": "user", "content": user_prompt},
         ],
-        max_tokens=MAX_TOKENS if MAX_TOKENS <= 512 else 512
+        temperature=0.2,
     )
-    answer = completion.choices[0].message.content.strip()
-    return answer, contexts, references
 
-def rephrase_query(query: str) -> str:
-    """Rephrase a user query for clarity."""
-    prompt = f"Rephrase the following question for clarity:\n\n{query}"
-    completion = client.chat.completions.create(
-        model=CHAT_MODEL,
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=64
-    )
-    return completion.choices[0].message.content.strip()
+    answer = response.choices[0].message.content.strip()
+    logger.debug(f"Generated answer length: {len(answer)} characters")
+    return answer
+
+
+# -------- High-Level RAG Function --------
+def retrieve_answer(
+    query: str,
+    topic: str,
+    level: str = "College",
+    top_k: int = TOP_K,
+) -> str:
+    """
+    Full RAG pipeline: retrieve + generate
+    """
+    logger.info(f"Processing query: '{query}' | topic={topic} | level={level}")
+    context_chunks = retrieve_context(query, top_k=top_k, level=level)
+
+    if not context_chunks:
+        logger.warning("No context retrieved — returning fallback response.")
+        return "I don’t know based on the available information."
+
+    return generate_answer(query, context_chunks, level, topic)
