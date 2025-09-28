@@ -1,31 +1,29 @@
 import json
 import random
-import sys
-import re
 from pathlib import Path
-from openai import OpenAI
 from loguru import logger
 from tqdm import tqdm
-import time
+from sentence_transformers import SentenceTransformer
+from openai import OpenAI, RateLimitError
 
-# Ensure project root is in sys.path
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-from sciencesage.config import CHUNKS_FILE, GROUND_TRUTH_FILE, OPENAI_API_KEY, CHAT_MODEL, TOPICS
+from sciencesage.config import CHUNKS_FILE, GROUND_TRUTH_FILE, TOPICS, EMBEDDING_MODEL, LEVELS, CHAT_MODEL, MAX_TOKENS  
 
 logger.add("logs/create_ground_truth_dataset.log", rotation="5 MB", retention="7 days")
 
-client = OpenAI(api_key=OPENAI_API_KEY)
-
 NUM_EXAMPLES = 80
-MAX_QUESTIONS_PER_CHUNK = 2
+TEMPERATURE = 0.3
 
-SYSTEM_PROMPT = """You are a helpful assistant creating a golden evaluation dataset for a RAG LLM system.
-Given a passage, generate up to 2 diverse Q&A pairs that can be answered using the passage.
-- Include a mix of 'middle_school', 'college', and 'advanced' questions.
+SYSTEM_PROMPT = """You are a helpful assistant creating a ground truth evaluation dataset for a RAG LLM system.
+Given a chunk, generate up to 3 diverse Q&A pairs that can be answered using that chunk.
+- Only generate answers that are explicitly stated or can be directly inferred from the chunk.
+- Include a question at each level: 'Middle School', 'College', and 'Advanced'.
 - Keep questions grounded and factually answerable from the text.
+- Do not use outside knowledge.
 - Answers must be concise but factually correct.
 - Return as a JSON list with fields: query, expected_answer, difficulty_level.
 """
+
+client = OpenAI()
 
 def load_chunks():
     chunks = []
@@ -35,73 +33,95 @@ def load_chunks():
     return chunks
 
 def extract_json_from_codeblock(content):
-    """
-    Extract JSON from a markdown code block if present.
-    """
-    # Remove leading/trailing whitespace
-    content = content.strip()
-    # Remove triple backticks and optional 'json' after them
-    if content.startswith("```"):
-        # Remove the first line (```json or ```)
-        lines = content.splitlines()
-        # Remove the first and last line (the code block markers)
-        if len(lines) >= 3 and lines[0].startswith("```") and lines[-1].startswith("```"):
-            return "\n".join(lines[1:-1])
-    return content
+    # Extract JSON from code block if present
+    import re
+    match = re.search(r"```json(.*?)```", content, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    return content.strip()    
 
-def generate_questions(chunk_text):
-    prompt = f"Passage:\n{chunk_text}\n\nGenerate Q&A pairs as requested."
-    response = client.chat.completions.create(
-        model=CHAT_MODEL,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.7,
-    )
-    content = response.choices[0].message.content
-    if not content or not content.strip():
-        logger.error("OpenAI response was empty.")
-        return []
+def generate_questions_by_level(chunk: str) -> dict:
+    """
+    Calls GPT to generate up to 3 diverse Q&A pairs from the chunk.
+    Returns a dictionary keyed by level: {"Middle School": {...}, "College": {...}, "Advanced": {...}}
+    """
+    from sciencesage.config import LEVELS  
+    
+    prompt = SYSTEM_PROMPT + f"\nChunk:\n{chunk}\n\nGenerate questions now."
+
     try:
-        json_content = extract_json_from_codeblock(content)
-        return json.loads(json_content)
+        response = client.chat.completions.create(
+            model=CHAT_MODEL,  #            
+            messages=[{"role": "system", "content": SYSTEM_PROMPT},
+                      {"role": "user", "content": chunk}],
+            temperature=TEMPERATURE,
+            max_tokens=MAX_TOKENS,
+        )
+
+        content = response.choices[0].message.content
+        logger.debug(f"Raw OpenAI response: {content}")
+        json_str = extract_json_from_codeblock(content)
+
+        qa_list = json.loads(json_str)
+
+        result = {}
+        for qa in qa_list:
+            logger.debug(f"Returned difficulty_level: {qa.get('difficulty_level')}")
+            level = qa.get("difficulty_level", "").lower()
+            # Normalize level to match your LEVELS list
+            if level not in [lvl.lower() for lvl in LEVELS]:
+                logger.warning(f"Skipping QA with invalid difficulty_level: {level}")
+                continue
+            result[level] = {
+                "query": qa.get("query"),
+                "expected_answer": qa.get("expected_answer"),
+                "difficulty_level": level
+            }
+        return result
+
+    except RateLimitError as e:
+        logger.error(f"OpenAI rate limit error: {e}")
+        return {}
     except Exception as e:
-        logger.error(f"Failed to parse response: {e}\nRaw response: {content}")
-        return []
+        logger.error(f"Failed to generate Q&A for passage: {e}")
+        return {}
+
 
 def main():
     chunks = load_chunks()
     logger.info(f"Loaded {len(chunks)} chunks from {CHUNKS_FILE}")
 
+    model = SentenceTransformer(EMBEDDING_MODEL)
+    logger.info(f"Loaded embedding model: {EMBEDDING_MODEL}")
+
     sampled_chunks = random.sample(chunks, min(len(chunks), NUM_EXAMPLES))
     results = []
 
-    start_time = time.time()
-    for idx, c in enumerate(tqdm(sampled_chunks, desc="Generating Q&A")):
-        logger.info(f"Processing chunk {idx+1}/{len(sampled_chunks)} (id={c.get('id', str(idx))})")
-        qas = generate_questions(c["text"])
-        chunk_id = c.get("id", str(idx))
+    for idx, c in enumerate(tqdm(sampled_chunks, desc="Generating ground truth")):
+        chunk_id = c.get("uuid", str(idx))
         topic = c.get("topic") or c.get("title") or TOPICS[idx % len(TOPICS)]
-        for qa in qas[:MAX_QUESTIONS_PER_CHUNK]:
-            results.append({
-                "query": qa["query"],
-                "expected_answer": qa["expected_answer"],
-                "context_ids": [chunk_id],
-                "difficulty_level": qa.get("difficulty_level", "middle_school"),
-                "metadata": {"topic": topic}
-            })
-    elapsed = time.time() - start_time
+        text = c["text"]
 
-    # Ensure the parent directory exists
+        qa_pairs_by_level = generate_questions_by_level(text)
+        for level in LEVELS:
+            qa = qa_pairs_by_level.get(level)
+            if qa:
+                results.append({
+                    "chunk_id": chunk_id,
+                    "topic": topic,
+                    "text": text,
+                    "level": qa.get("difficulty_level", level),
+                    "question": qa["query"],
+                    "answer": qa["expected_answer"]
+                })
+
     ground_truth_path = Path(GROUND_TRUTH_FILE)
     ground_truth_path.parent.mkdir(parents=True, exist_ok=True)
     with open(ground_truth_path, "w") as f:
         for r in results:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
-    logger.success(f"Ground truth dataset created with {len(results)} examples at {GROUND_TRUTH_FILE}")
-    logger.info(f"Elapsed time: {elapsed:.2f} seconds")
+    logger.success(f"Ground truth dataset created with {len(results)} examples at {ground_truth_path}")
 
 if __name__ == "__main__":
     main()
