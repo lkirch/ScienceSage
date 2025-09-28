@@ -1,6 +1,6 @@
 import streamlit as st
 from pathlib import Path
-from sciencesage.retrieval_system import retrieve_answer, rephrase_query
+from sciencesage.retrieval_system import retrieve_answer
 from sciencesage.feedback_manager import save_feedback
 from sciencesage.config import LEVELS, TOPICS
 from loguru import logger
@@ -60,9 +60,9 @@ level = st.sidebar.radio("Select explanation level", LEVELS)
 
 example_queries = {
     "Space exploration": [
-        "What are the main challenges of sending humans to Mars?",
-        "How has space exploration advanced our understanding of the universe?",
-        "What technologies are essential for deep space missions?"
+        "Who was the first human to travel into outer space, and in which spacecraft did they fly?",
+        "What are the main rationales for space exploration?",
+        "WHow has international cooperation in space exploration evolved since the Space Race era, and what are the current examples of major cooperative programs?"
     ],
     "Category:Space missions": [
         "What was the objective of the Voyager missions?",
@@ -70,19 +70,19 @@ example_queries = {
         "Which space missions have explored the outer planets?"
     ],
     "Category:Discovery and exploration of the Solar System": [
-        "How were the planets in our solar system discovered?",
-        "What are the most important discoveries about the solar system in the last 50 years?",
-        "How do scientists study asteroids and comets?"
+        "What astronomical object was the first artificial satellite launched into space?",
+        "What was the significance of Johannes Kepler's work with Mars and how did it advance our understanding of the Solar System?",
+        "HHow have technological developments in astronomy and physics contributed to the redefinition of the Solar System from a geocentric to a heliocentric model?"
     ],
     "Category:Exploration of Mars": [
-        "What have we learned from the Mars rover missions?",
-        "Why is Mars considered a candidate for future human colonization?",
-        "What challenges do robots face when exploring Mars?"
+        "What are the names of the two NASA rovers currently operating on the surface of Mars?",
+        "What is the main reason for the high failure rate of missions sent to Mars?",
+        "What is NASA's three-phase official plan for human exploration and colonization of Mars?"
     ],
     "Category:Exploration of the Moon": [
-        "What did the Apollo missions discover about the Moon?",
-        "How do modern lunar missions differ from those in the 20th century?",
-        "What is the significance of water ice on the Moon?"
+        "Who were the first astronauts to land on the Moon, and in which year did this happen?",
+        "What significant firsts were achieved by China's Chang'e program on the Moon?",
+        "What are NASA's Artemis program goals and the scientific and logistical objectives supporting the return to the Moon?"
     ],
     "Animals in space": [
         "Why were animals sent into space before humans?",
@@ -91,16 +91,16 @@ example_queries = {
     ]
 }
 
-# Initialize session_state for query and rephrased query
+# Initialize session_state for query and answer
 if "query" not in st.session_state:
     st.session_state.query = ""
-if "rephrased_query" not in st.session_state:
-    st.session_state.rephrased_query = ""
+if "answer" not in st.session_state:
+    st.session_state.answer = ""
 
 # Example query button
 if st.sidebar.button("Try Example"):
     st.session_state.query = example_queries[topic][0]
-    st.session_state.rephrased_query = ""
+    st.session_state.answer = ""
 
 # Prompt arrow
 st.markdown("""
@@ -109,14 +109,6 @@ st.markdown("""
 <span style="color:#9DC183; font-size:1.5em;">&#11015;</span>
 """, unsafe_allow_html=True)
 
-# --- Helper function to format references
-def format_reference(url: str):
-    if url.startswith("10."):
-        url = f"https://doi.org/{url}"
-    parsed = urllib.parse.urlparse(url)
-    domain = parsed.netloc.replace("www.", "")
-    return domain or url
-
 # --- Main retrieval function ---
 def run_retrieval(query: str, topic: str, level: str):
     if not query.strip():
@@ -124,14 +116,11 @@ def run_retrieval(query: str, topic: str, level: str):
         return
 
     st.session_state.query = query
-    st.session_state.rephrased_query = ""
 
     # Retrieve answer
     try:
-        answer, contexts, references = retrieve_answer(query, topic, level)
+        answer = retrieve_answer(query, topic, level)
         st.session_state.answer = answer
-        st.session_state.context = contexts
-        st.session_state.references = references
         st.session_state.last_query = query
         st.session_state.last_topic = topic
         st.session_state.last_level = level
@@ -140,32 +129,7 @@ def run_retrieval(query: str, topic: str, level: str):
         st.error("An error occurred while retrieving the answer.")
         return
 
-    # -------------------------
-    # Low confidence warning
-    # -------------------------
-    if contexts:
-        top_conf = int(contexts[0]["score"] * 100)
-        if top_conf < 60:
-            st.warning("⚠️ Low confidence – consider rephrasing your question for better results.")
-
-    # -------------------------
-    # Replace citations in answer with clickable links
-    # -------------------------
-    def replace_citation(match):
-        idx = int(match.group(1)) - 1
-        if 0 <= idx < len(st.session_state.context):
-            c = st.session_state.context[idx]
-            url = c.get("url", "#")
-            domain = format_reference(url)
-            chunk_info = f'{c.get("source", "unknown source")} (chunk {c.get("chunk", "?")})'
-            return f'<a href="{url}" target="_blank">[{idx+1} - {domain}]</a> <span style="color:gray;font-size:0.9em;">{chunk_info}</span>'
-        return match.group(0)
-
-    answer_with_links = re.sub(r"\[(\d+)\]", replace_citation, answer)
-
-    # -------------------------
-    # Display answer and context using full width
-    # -------------------------
+    # Display answer
     st.markdown("""
     <style>
     .full-width-container > div {
@@ -176,32 +140,7 @@ def run_retrieval(query: str, topic: str, level: str):
     """, unsafe_allow_html=True)
     with st.container():
         st.subheader("Answer")
-        st.markdown(answer_with_links, unsafe_allow_html=True)
-
-        # --- Retrieved Context in expandable section ---
-        with st.expander("Show Retrieved Context"):
-            if contexts:
-                st.markdown('<div style="overflow-x:auto; display:flex; gap:10px;">', unsafe_allow_html=True)
-                for c in sorted(contexts, key=lambda x: x['score'], reverse=True):
-                    conf = int(c["score"] * 100)
-                    color = "green" if conf > 85 else "orange" if conf > 60 else "red"
-                    url_display = (
-                        f'<b><a href="{c.get("url", "#")}" target="_blank">{format_reference(c.get("url", "#"))}</a></b>'
-                        if c.get("url") else "<b>No URL</b>"
-                    )
-                    chunk_info = f'{c.get("source", "unknown source")} (chunk {c.get("chunk", "?")})'
-                    st.markdown(f'''
-                        <div style="min-width:300px; padding:8px; margin-bottom:5px; border-left:3px solid #9DC183;
-                                    background-color:#f9f9f9; border-radius:5px;">
-                            {url_display}<br>
-                            <span style="color:gray; font-size:0.95em;">{chunk_info}</span><br>
-                            <span style="color:{color}; font-weight:bold;">[Confidence: {conf}%]</span><br>
-                            {c['text']}
-                        </div>
-                    ''', unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-            else:
-                st.info("No context retrieved.")
+        st.markdown(st.session_state.answer, unsafe_allow_html=True)
 
 # --- Query input field ---
 query_input = st.text_input(
@@ -253,23 +192,3 @@ with fb_col2:
 
 if feedback_msg:
     st.success(feedback_msg)
-
-# -------------------------
-# Rephrase and Regenerate section
-# -------------------------
-st.markdown("""
-<div style="margin-top: 1.5em; margin-bottom: 0.5em;">
-    <span style="font-weight: 600; font-size: 1.1em;">Rephrase and Regenerate</span>
-</div>
-""", unsafe_allow_html=True)
-
-rr_col1, rr_col2 = st.columns([0.15, 0.15])
-with rr_col1:
-    if st.button("Rephrase Question"):
-        if st.session_state.query_input.strip():
-            rephrased = rephrase_query(st.session_state.query_input)
-            st.session_state.rephrased_query = rephrased
-            run_retrieval(rephrased, topic, level)
-with rr_col2:
-    if st.button("Regenerate Answer"):
-        run_retrieval(st.session_state.query_input, topic, level)
