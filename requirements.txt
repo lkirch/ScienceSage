@@ -28,6 +28,7 @@ beautifulsoup4
 pytest
 notebook
 ipykernel
+ipywidgets
 
 # Machine Learning
 scikit-learn
