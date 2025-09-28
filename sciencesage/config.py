@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 from loguru import logger
 
 # --- File paths ---
@@ -104,6 +107,10 @@ LEVELS = [
 # --- Retrieval settings ---
 TOP_K = 5
 SIMILARITY_THRESHOLD = 0.2
+
+# --- LLM Model ---
+CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4o-mini")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
