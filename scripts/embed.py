@@ -87,8 +87,10 @@ def main():
 
     points = []
     embeddings_records = []
-    for chunk in tqdm(chunks, desc="Embedding and uploading chunks"):
+    for i, chunk in enumerate(tqdm(chunks, desc="Embedding and uploading chunks")):
         vector = get_embedding(chunk["text"])
+        if i == 0:
+            print("Sample embedding:", vector)
         point_id = chunk.get("uuid") or str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk)))
         payload = {k: chunk.get(k) for k in CHUNK_FIELDS if k != "embedding"}
         payload["embedding"] = vector
