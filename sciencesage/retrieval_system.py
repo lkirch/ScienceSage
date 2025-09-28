@@ -33,7 +33,7 @@ def retrieve_context(
     """
     Retrieve top_k most relevant chunks from Qdrant for a given query.
 
-    Returns list of dicts with keys: text, source, chunk_id, score
+    Returns list of dicts with keys: text, source_url, chunk_id, score
     """
     query_embedding = embedder.encode(query).tolist()
 
@@ -60,7 +60,7 @@ def retrieve_context(
     for i, hit in enumerate(search_result.points):
         chunks.append({
             "text": hit.payload["text"],
-            "source": hit.payload.get("source", "unknown"),
+            "source_url": hit.payload.get("source_url", "unknown"),
             "chunk_id": hit.payload.get("chunk_id", i),
             "score": hit.score,
         })
@@ -76,7 +76,7 @@ def generate_answer(query: str, context_chunks: List[dict], level: str, topic: s
     """
     # Format context with citations
     context_text = "\n\n".join(
-        f"[{i+1}] {chunk['text']} (Source: {chunk['source']}, Chunk: {chunk['chunk_id']})"
+        f"[{i+1}] {chunk['text']} (Source: {chunk['source_url']}, Chunk: {chunk['chunk_id']})"
         for i, chunk in enumerate(context_chunks)
     )
 
