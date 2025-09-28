@@ -7,21 +7,21 @@ from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import Filter, FieldCondition, MatchAny
 from loguru import logger
+from sentence_transformers import SentenceTransformer
 
+# Initialize clients and models
 client = OpenAI(api_key=OPENAI_API_KEY)
 qdrant = QdrantClient(url=QDRANT_URL)
+embedder = SentenceTransformer(EMBEDDING_MODEL)
 
 def embed_text(text: str):
-    """Embed text using OpenAI embedding API."""
-    response = client.embeddings.create(
-        input=[text],
-        model=EMBEDDING_MODEL
-    )
-    return response.data[0].embedding
+    """Embed text using SentenceTransformer."""
+    embedding = embedder.encode([text])[0]
+    return embedding.tolist()
 
 def retrieve_answer(query: str, topic: str, level: str):
     """
-    Retrieve top context from Qdrant and generate answer.
+    Embed query, search Qdrant, and use OpenAI to generate answer.
     Returns:
         answer: str
         contexts: List[dict]
@@ -44,7 +44,7 @@ def retrieve_answer(query: str, topic: str, level: str):
         collection_name=QDRANT_COLLECTION,
         query=vector,
         limit=5,
-        query_filter=query_filter,
+        #query_filter=query_filter,
     )
 
     if not results.points:
@@ -70,7 +70,7 @@ def retrieve_answer(query: str, topic: str, level: str):
             "score": point.score
         })
 
-    # Generate answer using LLM and prompts from prompts.py
+    # Generate answer using OpenAI and prompts from prompts.py
     context_texts = [c["text"] for c in contexts]
     system_prompt = get_system_prompt(topic, level)
     user_prompt = get_user_prompt(query, "\n".join(context_texts), level)
@@ -80,7 +80,7 @@ def retrieve_answer(query: str, topic: str, level: str):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ],
-        max_tokens=512 if MAX_TOKENS > 512 else MAX_TOKENS
+        max_tokens=MAX_TOKENS if MAX_TOKENS <= 512 else 512
     )
     answer = completion.choices[0].message.content.strip()
     return answer, contexts, references
