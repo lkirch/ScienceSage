@@ -38,3 +38,4 @@ seaborn
 wordcloud
 nltk    
 spacy
+umap-learn
