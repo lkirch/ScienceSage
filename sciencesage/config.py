@@ -104,9 +104,43 @@ LEVELS = [
     "Advanced",
 ]
 
+EXAMPLE_QUERIES = {
+    "Space exploration": [
+        "Who was the first human to travel into outer space, and in which spacecraft did they fly?",
+        "What are the main rationales for space exploration?",
+        "How has international cooperation in space exploration evolved since the Space Race era, and what are the current examples of major cooperative programs?"
+    ],
+    "Category:Space missions": [
+        "What was the objective of the Voyager missions?",
+        "How do robotic space missions differ from crewed missions?",
+        "Which space missions have explored the outer planets?"
+    ],
+    "Category:Discovery and exploration of the Solar System": [
+        "What was the first artificial satellite launched into space?",
+        "What was the significance of Johannes Kepler's work with Mars and how did it advance our understanding of the Solar System?",
+        "How have technological developments in astronomy and physics contributed to the redefinition of the Solar System from a geocentric to a heliocentric model?"
+    ],
+    "Category:Exploration of Mars": [
+        "What are the names of the two NASA rovers currently operating on the surface of Mars?",
+        "What is the main reason for the high failure rate of missions sent to Mars?",
+        "What is NASA's three-phase official plan for human exploration and colonization of Mars?"
+    ],
+    "Category:Exploration of the Moon": [
+        "Who were the first astronauts to land on the Moon, and in which year did this happen?",
+        "What significant firsts were achieved by China's Chang'e program on the Moon?",
+        "What are NASA's Artemis program goals and the scientific and logistical objectives supporting the return to the Moon?"
+    ],
+    "Animals in space": [
+        "What was the first animal sent into space and in which year?",
+        "Which animals were the first to orbit the Moon, and on what mission?",
+        "What were some of the biological experiments and species used in space research from the 1970s to the 1990s?"
+    ]
+}
+
+
 # --- Retrieval settings ---
-TOP_K = 5
-SIMILARITY_THRESHOLD = 0.2
+TOP_K = 10
+SIMILARITY_THRESHOLD = 0.1
 
 # --- LLM Model ---
 CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4o-mini")
