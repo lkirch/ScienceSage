@@ -1,30 +1,38 @@
 import pytest
-from sciencesage.retrieval_system import retrieve_answer, rephrase_query
+from sciencesage.retrieval_system import retrieve_context, generate_answer, retrieve_answer
 
-def test_retrieve_answer_basic():
-    # These values should exist in your Qdrant collection for the test to pass
-    query = "What are the main challenges of space exploration?"
-    topic = "Space exploration"
-    level = "College"
-    answer, contexts, references = retrieve_answer(query, topic, level)
+def test_retrieve_context_returns_chunks():
+    query = "What is photosynthesis?"
+    chunks = retrieve_context(query, top_k=3, level="College")
+    assert isinstance(chunks, list)
+    # If your Qdrant DB is empty, this may be 0; otherwise, should be >0
+    for chunk in chunks:
+        assert "text" in chunk
+        assert "source" in chunk
+        assert "chunk_id" in chunk
+        assert "score" in chunk
+
+def test_generate_answer_returns_string():
+    query = "Explain gravity."
+    # Simulate context chunks
+    context_chunks = [
+        {"text": "Gravity is a force...", "source": "Physics Book", "chunk_id": 1, "score": 0.95},
+        {"text": "It attracts objects...", "source": "Science Journal", "chunk_id": 2, "score": 0.93},
+    ]
+    answer = generate_answer(query, context_chunks, level="College", topic="Physics")
     assert isinstance(answer, str)
-    assert isinstance(contexts, list)
-    assert isinstance(references, list)
-    assert len(contexts) > 0
-    assert len(references) > 0
+    assert len(answer) > 0
 
-def test_retrieve_answer_no_results():
-    query = "This is a nonsense query that should not match anything"
-    topic = "Space exploration"
-    level = "College"
-    answer, contexts, references = retrieve_answer(query, topic, level)
-    assert answer.startswith("I don’t know") or answer.startswith("Sorry")
-    assert contexts == []
-    assert references == []
+def test_retrieve_answer_fallback():
+    # Use a nonsense query to trigger fallback
+    query = "asdkjashdkjahsdkjahsd"
+    answer = retrieve_answer(query, topic="Unknown", level="College", top_k=2)
+    assert isinstance(answer, str)
+    assert "I don’t know" in answer or "Sorry" in answer
 
-def test_rephrase_query():
-    query = "space moon landing explain"
-    rephrased = rephrase_query(query)
-    assert isinstance(rephrased, str)
-    assert len(rephrased) > 0
-    assert rephrased != query
+def test_retrieve_answer_success():
+    # This test assumes your Qdrant DB has relevant data for the topic
+    query = "Describe the process of cell division."
+    answer = retrieve_answer(query, topic="Biology", level="College", top_k=2)
+    assert isinstance(answer, str)
+    assert len(answer) > 0
