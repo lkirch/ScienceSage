@@ -112,6 +112,10 @@ SIMILARITY_THRESHOLD = 0.2
 CHAT_MODEL = os.getenv("CHAT_MODEL", "gpt-4o-mini")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
+# --- Arize ---
+ARIZE_SPACE_ID = os.getenv("ARIZE_SPACE_ID")
+ARIZE_API_KEY = os.getenv("ARIZE_API_KEY")
+
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 logger.add("logs/sciencesage.log", rotation="10 MB", retention="10 days", level=LOG_LEVEL)
