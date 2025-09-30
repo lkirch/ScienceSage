@@ -65,17 +65,19 @@ def generate_questions_by_level(chunk: str) -> dict:
         qa_list = json.loads(json_str)
 
         result = {}
+        # Map lowercased level to canonical casing
+        level_map = {lvl.lower(): lvl for lvl in LEVELS}
         for qa in qa_list:
             logger.debug(f"Returned difficulty_level: {qa.get('difficulty_level')}")
             level = qa.get("difficulty_level", "").lower()
-            # Normalize level to match your LEVELS list
-            if level not in [lvl.lower() for lvl in LEVELS]:
+            if level not in level_map:
                 logger.warning(f"Skipping QA with invalid difficulty_level: {level}")
                 continue
-            result[level] = {
+            canonical_level = level_map[level]
+            result[canonical_level] = {
                 "query": qa.get("query"),
                 "expected_answer": qa.get("expected_answer"),
-                "difficulty_level": level
+                "difficulty_level": canonical_level
             }
         return result
 
@@ -114,13 +116,13 @@ def main():
             text = c["text"]
             qa_pairs_by_level = generate_questions_by_level(text)
             for level in LEVELS:
-                qa = qa_pairs_by_level.get(level.lower())
+                qa = qa_pairs_by_level.get(level)
                 if qa:
                     results.append({
                         "chunk_id": chunk_id,
                         "topic": topic,
                         "text": text,
-                        "level": qa.get("difficulty_level", level),
+                        "level": level,
                         "question": qa["query"],
                         "answer": qa["expected_answer"]
                     })
@@ -137,13 +139,13 @@ def main():
 
         qa_pairs_by_level = generate_questions_by_level(text)
         for level in LEVELS:
-            qa = qa_pairs_by_level.get(level.lower())
+            qa = qa_pairs_by_level.get(level)
             if qa:
                 results.append({
                     "chunk_id": chunk_id,
                     "topic": topic,
                     "text": text,
-                    "level": qa.get("difficulty_level", level),
+                    "level": level,
                     "question": qa["query"],
                     "answer": qa["expected_answer"]
                 })
