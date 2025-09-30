@@ -87,6 +87,14 @@ def generate_questions_by_level(chunk: str) -> dict:
         return {}
 
 
+def group_chunks_by_topic(chunks):
+    from collections import defaultdict
+    topic_map = defaultdict(list)
+    for c in chunks:
+        topic = c.get("topic", "other")
+        topic_map[topic].append(c)
+    return topic_map
+
 def main():
     chunks = load_chunks()
     logger.info(f"Loaded {len(chunks)} chunks from {CHUNKS_FILE}")
@@ -94,8 +102,33 @@ def main():
     model = SentenceTransformer(EMBEDDING_MODEL)
     logger.info(f"Loaded embedding model: {EMBEDDING_MODEL}")
 
-    sampled_chunks = random.sample(chunks, min(len(chunks), NUM_EXAMPLES))
+    # Guarantee at least one group of 3 Q&A for each topic
+    topic_map = group_chunks_by_topic(chunks)
     results = []
+
+    for topic, topic_chunks in topic_map.items():
+        # Sample one chunk per topic (or use all if <1)
+        sampled = random.sample(topic_chunks, 1) if len(topic_chunks) > 0 else []
+        for c in sampled:
+            chunk_id = c.get("uuid", "topic_" + topic)
+            text = c["text"]
+            qa_pairs_by_level = generate_questions_by_level(text)
+            for level in LEVELS:
+                qa = qa_pairs_by_level.get(level.lower())
+                if qa:
+                    results.append({
+                        "chunk_id": chunk_id,
+                        "topic": topic,
+                        "text": text,
+                        "level": qa.get("difficulty_level", level),
+                        "question": qa["query"],
+                        "answer": qa["expected_answer"]
+                    })
+
+    # Then sample the rest as before, but avoid duplicating the topic chunks already used
+    used_chunk_ids = {r["chunk_id"] for r in results}
+    remaining_chunks = [c for c in chunks if c.get("uuid", None) not in used_chunk_ids]
+    sampled_chunks = random.sample(remaining_chunks, min(len(remaining_chunks), NUM_EXAMPLES))
 
     for idx, c in enumerate(tqdm(sampled_chunks, desc="Generating ground truth")):
         chunk_id = c.get("uuid", str(idx))
@@ -104,7 +137,7 @@ def main():
 
         qa_pairs_by_level = generate_questions_by_level(text)
         for level in LEVELS:
-            qa = qa_pairs_by_level.get(level)
+            qa = qa_pairs_by_level.get(level.lower())
             if qa:
                 results.append({
                     "chunk_id": chunk_id,
