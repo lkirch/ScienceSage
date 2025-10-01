@@ -34,11 +34,15 @@ def simple_exact_match(pred, gold):
     return float(pred.strip().lower() == gold.strip().lower())
 
 def generate_llm_eval_for_entry(entry):
-    query = entry.get("query")
-    expected_answer = entry.get("expected_answer")
+    query = entry.get("question")
+    expected_answer = entry.get("answer")
     topic = entry.get("topic", None)
     level = entry.get("level", "College")
-    relevant_ids = entry.get("relevant_context_ids") or []
+    relevant_ids = [entry["chunk_id"]] if "chunk_id" in entry else []
+
+    # Ensure query is not None or empty
+    if not query or not isinstance(query, str):
+        raise ValueError(f"Invalid query in entry: {entry}")
 
     # Retrieve top-k context chunks
     context_chunks = retrieve_context(query, top_k=TOP_K, topic=topic)
