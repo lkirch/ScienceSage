@@ -6,7 +6,7 @@ SCRIPTS_DIR=scripts
 DATA_DIR=data
 ENV_FILE=.env
 
-.PHONY: all setup ingest preprocess embed create-ground-truth validate-ground-truth generate-eval-results rag-llm-eval eval-all run-app run-api test test-qdrant clean logs help install data run clean-logs
+.PHONY: all setup ingest preprocess embed create-ground-truth validate-ground-truth generate-eval-results rag-llm-eval summarize-metrics eval-all run-app run-api test test-qdrant clean logs help install data run clean-logs
 
 ## ------------------------
 ## Setup & Installation
@@ -54,14 +54,18 @@ validate-ground-truth:
 	python $(SCRIPTS_DIR)/validate_ground_truth_dataset.py
 
 generate-eval-results:
-	@echo ">>> Generating evaluation results..."
+	@echo ">>> Generating retrieval evaluation results..."
 	python $(SCRIPTS_DIR)/generate_eval_results.py
 
 rag-llm-eval:
 	@echo ">>> Running RAG LLM evaluation..."
 	python $(SCRIPTS_DIR)/rag_llm_evaluation.py
 
-eval-all: create-ground-truth validate-ground-truth generate-eval-results rag-llm-eval
+summarize-metrics:
+	@echo ">>> Summarizing evaluation metrics..."
+	python $(SCRIPTS_DIR)/summarize_metrics.py
+
+eval-all: create-ground-truth validate-ground-truth generate-eval-results rag-llm-eval summarize-metrics
 	@echo ">>> Full evaluation pipeline complete!"
 
 ## ------------------------
@@ -123,9 +127,10 @@ help:
 	@echo "  make data                 - Run full data pipeline (alias for ingest)"
 	@echo "  make create-ground-truth  - Create ground truth dataset"
 	@echo "  make validate-ground-truth - Validate ground truth dataset"
-	@echo "  make generate-eval-results - Generate evaluation results"
+	@echo "  make generate-eval-results - Generate retrieval evaluation results"
 	@echo "  make rag-llm-eval         - Run RAG LLM evaluation"
-	@echo "  make eval-all             - Run all evaluation steps (create-ground-truth, validate-ground-truth, generate-eval-results, rag-llm-eval)"
+	@echo "  make summarize-metrics    - Summarize evaluation metrics"
+	@echo "  make eval-all             - Run all evaluation steps (create-ground-truth, validate-ground-truth, generate-eval-results, rag-llm-eval, summarize-metrics)"
 	@echo "  make run-app              - Start the Streamlit application"
 	@echo "  make run-api              - Start the FastAPI RAG API"
 	@echo "  make run                  - Start the Streamlit application (alias)"

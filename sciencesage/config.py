@@ -13,6 +13,8 @@ GROUND_TRUTH_FILE = "data/ground_truth/ground_truth_dataset.jsonl"
 EVAL_RESULTS_FILE = "data/eval/eval_results.jsonl"
 LLM_EVAL_FILE = "data/eval/llm_eval.jsonl"
 METRICS_SUMMARY_FILE = "data/eval/metrics_summary.csv"
+LOGS_DIR = "logs"
+LOG_FILE = os.path.join(LOGS_DIR, "sciencesage.log")
 
 # --- Embeddings ---
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
@@ -137,7 +139,6 @@ EXAMPLE_QUERIES = {
     ]
 }
 
-
 # --- Retrieval settings ---
 TOP_K = 10
 SIMILARITY_THRESHOLD = 0.1
@@ -150,7 +151,19 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ARIZE_SPACE_ID = os.getenv("ARIZE_SPACE_ID")
 ARIZE_API_KEY = os.getenv("ARIZE_API_KEY")
 
+# --- Logging ---
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-
-logger.add("logs/sciencesage.log", rotation="10 MB", retention="10 days", level=LOG_LEVEL)
+os.makedirs(LOGS_DIR, exist_ok=True)
+logger.add(LOG_FILE, rotation="10 MB", retention="10 days", level=LOG_LEVEL)
 logger.info("Configuration loaded.")
+
+# --- Evaluation metric fields ---
+RETRIEVAL_METRIC_KEYS = [
+    "precision_at_k",
+    "recall_at_k",
+    "reciprocal_rank",
+    "ndcg_at_k"
+]
+LLM_METRIC_KEYS = [
+    "exact_match"
+]
