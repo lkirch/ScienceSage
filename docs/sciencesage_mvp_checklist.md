@@ -32,12 +32,12 @@
 - [ ] Smoke test: sample query returns answer.
 
 ## 3. Evaluation & Metrics
-- [ ] **Ground Truth Dataset**
-  - [ ] 20–30 Q&A pairs covering multiple topics & levels.
-  - [ ] Save as `data/ground_truth/ground_truth.jsonl`.
-- [ ] **Evaluation Script**
-  - [ ] Measure precision@k, recall@k.
-  - [ ] Optionally LLM-grade answers (0–5).
+- [X] **Ground Truth Dataset**
+  - [X] 20–30 Q&A pairs covering multiple topics & levels.
+  - [X] Save as `data/ground_truth/ground_truth.jsonl`.
+- [x] **Evaluation Script**
+  - [x] Measure precision@k, recall@k.
+  - [x] Optionally LLM-grade answers (0–5).
 - [ ] **Metrics Tracking**
   - [ ] Retrieval hit rate (%).
   - [ ] Average answer quality (manual/LLM-graded).
