@@ -3,7 +3,7 @@ from sciencesage.retrieval_system import retrieve_context, generate_answer, retr
 
 def test_retrieve_context_returns_chunks():
     query = "What is photosynthesis?"
-    chunks = retrieve_context(query, top_k=3, level="College")
+    chunks = retrieve_context(query, top_k=3)
     assert isinstance(chunks, list)
     # If your Qdrant DB is empty, this may be 0; otherwise, should be >0
     for chunk in chunks:
