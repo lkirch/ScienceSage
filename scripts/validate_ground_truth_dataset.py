@@ -5,7 +5,7 @@ from loguru import logger
 
 import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from sciencesage.config import GROUND_TRUTH_FILE, CHUNKS_FILE, LEVELS   
+from sciencesage.config import GROUND_TRUTH_FILE, LEVELS   
 
 REQUIRED_FIELDS = ["chunk_id", "topic", "text", "level", "question", "answer"]
 
@@ -30,7 +30,6 @@ def validate_line(obj, idx, seen_questions):
 def main():
     logger.add("logs/validate_golden_dataset.log", rotation="1 MB", retention="7 days")
     seen_questions = Counter()
-    valid_context_ids = load_valid_context_ids()
     total = 0
     ground_truth_path = Path(GROUND_TRUTH_FILE)
     if not ground_truth_path.exists():
