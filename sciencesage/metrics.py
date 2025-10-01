@@ -31,3 +31,7 @@ def ndcg_at_k(retrieved, relevant, k):
     if ideal_dcg == 0:
         return 0.0
     return dcg(retrieved, relevant, k) / ideal_dcg
+
+def contextual_recall_and_sufficiency(retrieved, relevant, k):
+    # Placeholder: may require human or LLM judgment
+    return recall_at_k(retrieved, relevant, k)
