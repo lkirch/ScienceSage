@@ -23,17 +23,17 @@ def load_jsonl(path):
         return [json.loads(line) for line in f if line.strip()]
 
 def save_jsonl(records, path):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w") as f:
         for rec in records:
             f.write(json.dumps(rec) + "\n")
 
 def generate_eval_for_entry(entry):
-    query = entry.get("query")
-    expected_answer = entry.get("expected_answer")
+    query = entry.get("question")
+    expected_answer = entry.get("answer")
     topic = entry.get("topic", None)
     level = entry.get("level", None)
-    relevant_ids = entry.get("relevant_context_ids") or []
+    relevant_ids = [entry["chunk_id"]] if "chunk_id" in entry else []
 
     # Retrieve top-k context chunks
     context_chunks = retrieve_context(query, top_k=TOP_K, topic=topic)
@@ -58,7 +58,10 @@ def generate_eval_for_entry(entry):
         "ndcg_at_k": ndcg,
         "topic": topic,
         "level": level,
-        "metadata": entry.get("metadata"),
+        "metadata": {
+            "source_text": entry.get("text"),
+            "chunk_id": entry.get("chunk_id"),
+        },
     }
 
 def main():
