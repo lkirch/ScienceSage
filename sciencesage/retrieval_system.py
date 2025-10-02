@@ -100,15 +100,28 @@ def retrieve_answer(
     topic: str,
     level: str = "College",
     top_k: int = TOP_K,
-) -> str:
+) -> dict:
     """
-    Full RAG pipeline: retrieve + generate
+    Full RAG pipeline: retrieve + generate.
+    Returns a dict with 'answer' and 'sources' (mapping chunk_id to source_url).
     """
     logger.info(f"Processing query: '{query}' | topic={topic} | level={level}")
     context_chunks = retrieve_context(query, top_k=top_k, topic=topic)
 
     if not context_chunks:
         logger.warning("No context retrieved — returning fallback response.")
-        return "I don’t know based on the available information."
+        return {
+            "answer": "I don’t know based on the available information.",
+            "sources": {}
+        }
 
-    return generate_answer(query, context_chunks, level, topic)
+    answer = generate_answer(query, context_chunks, level, topic)
+    # Build mapping of chunk_id to source_url
+    sources = {
+        f"chunk {chunk['chunk_id']}".strip(): chunk["source_url"]
+        for chunk in context_chunks
+    }
+    return {
+        "answer": answer,
+        "sources": sources
+    }
