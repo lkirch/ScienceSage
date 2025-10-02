@@ -26,13 +26,20 @@ def test_generate_answer_returns_string():
 def test_retrieve_answer_fallback():
     # Use a nonsense query to trigger fallback
     query = "asdkjashdkjahsdkjahsd"
-    answer = retrieve_answer(query, topic="Unknown", level="College", top_k=2)
-    assert isinstance(answer, str)
-    assert "I don’t know" in answer or "Sorry" in answer
+    result = retrieve_answer(query, topic="Unknown", level="College", top_k=2)
+    assert isinstance(result, dict)
+    assert "answer" in result
+    assert "sources" in result
+    assert isinstance(result["sources"], dict)
+    assert "I don’t know" in result["answer"] or "Sorry" in result["answer"]
 
 def test_retrieve_answer_success():
     # This test assumes your Qdrant DB has relevant data for the topic
     query = "Describe the process of cell division."
-    answer = retrieve_answer(query, topic="Biology", level="College", top_k=2)
-    assert isinstance(answer, str)
-    assert len(answer) > 0
+    result = retrieve_answer(query, topic="Biology", level="College", top_k=2)
+    assert isinstance(result, dict)
+    assert "answer" in result
+    assert "sources" in result
+    assert isinstance(result["answer"], str)
+    assert isinstance(result["sources"], dict)
+    assert len(result["answer"]) > 0
