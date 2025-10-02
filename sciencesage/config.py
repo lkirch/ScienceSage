@@ -8,7 +8,7 @@ from loguru import logger
 RAW_DATA_DIR = "data/raw"
 CHUNKS_FILE = "data/processed/chunks.jsonl"
 EMBEDDING_FILE = "data/embeddings/embeddings.parquet"
-FEEDBACK_FILE = "data/feedback/feedback.csv"
+FEEDBACK_FILE = "data/feedback/feedback.jsonl"
 GROUND_TRUTH_FILE = "data/ground_truth/ground_truth_dataset.jsonl"
 EVAL_RESULTS_FILE = "data/eval/eval_results.jsonl"
 LLM_EVAL_FILE = "data/eval/llm_eval.jsonl"
