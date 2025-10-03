@@ -6,7 +6,6 @@ from sciencesage.config import LEVELS, TOPICS, EXAMPLE_QUERIES
 from loguru import logger
 from dotenv import load_dotenv
 import re
-import urllib.parse
 
 load_dotenv()
 
@@ -64,53 +63,57 @@ if "answer" not in st.session_state:
 # Prompt arrow
 st.markdown("""
 <span style="color:#9DC183; font-size:1.5em;">&#11013;</span>
-<span style="font-size:1.1em;"> Please select a topic and an explanation level on the left.  You can use one of our examples or type in your own question: </span>
+<span style="font-size:1.1em;"> Please select both a topic and an explanation level on the left.  You can use one of our examples or type in your own question: </span>
 <span style="color:#9DC183; font-size:1.5em;">&#11015;</span>
 """, unsafe_allow_html=True)
 
 
 def format_answer_with_sources(answer: str, sources: dict) -> str:
-    # Replace [Source chunk N](url) or Source chunk N with markdown links if possible
-    def repl_chunk(match):
-        chunk_id = f"chunk {match.group(1)}"
-        url = sources.get(chunk_id)
-        if url and url != "#":
-            return f"[Source {chunk_id}]({url})"
-        else:
-            return f"Source {chunk_id}"
+    # Remove "External reference URLs" section
+    external_urls = set()
+    def extract_urls(match):
+        urls = re.findall(r"https?://[^\s\)\]]+", match.group(0))
+        external_urls.update(urls)
+        return ""
+    answer = re.sub(r"External reference URLs:\s*((?:https?://[^\s\)\]]+\s*)+)", extract_urls, answer, flags=re.IGNORECASE)
 
-    # Replace Source chunk N (with or without punctuation) with markdown link if possible
-    answer = re.sub(r"Source chunk (\d+)\.?", repl_chunk, answer)
+    # Remove any existing "References:" section (and everything after it)
+    answer = re.sub(r"\n*References:\n(.|\n)*", "", answer, flags=re.IGNORECASE)
 
-    # Collect all URLs and chunk IDs actually referenced in the answer
-    referenced_chunks = set(re.findall(r"Source (chunk \d+)", answer))
-    referenced_urls = set(re.findall(r"\[Source (chunk \d+)\]\((https?://[^\)]+)\)", answer))
-    # Also find any bare URLs in the "External reference URLs" section
-    external_urls = set(re.findall(r"https?://[^\s\)\]]+", answer))
+    # Find all URLs in sources, mapping chunk to url
+    chunk_url_map = {chunk: url for chunk, url in sources.items() if url and url != "#"}
+    source_urls = set(chunk_url_map.values())
 
-    # Build references: show URLs and chunk numbers actually cited
-    refs = []
-    # Add referenced URLs with chunk numbers
-    for chunk_id, url in referenced_urls:
-        refs.append(f"{url} ({chunk_id})")
-    # Add any Source chunk N that didn't have a URL
-    for chunk_id in referenced_chunks:
-        if not any(chunk_id == c for c, _ in referenced_urls):
-            url = sources.get(chunk_id)
-            if url and url != "#":
-                refs.append(f"{url} ({chunk_id})")
+    # Find any bare URLs in the answer
+    bare_urls = set(re.findall(r"https?://[^\s\)\]]+", answer))
+
+    # Combine all URLs and map them to their chunk references if available
+    url_to_chunks = {}
+    for chunk, url in chunk_url_map.items():
+        url_to_chunks.setdefault(url, set()).add(chunk)
+    for url in external_urls | bare_urls:
+        url_to_chunks.setdefault(url, set())
+
+    # Build references markdown, sorted for consistency
+    refs_md = ""
+    if url_to_chunks:
+        refs = []
+        for url in sorted(url_to_chunks):
+            chunks = url_to_chunks[url]
+            if chunks:
+                refs.append(f"- {url} {'(' + ', '.join(sorted(chunks)) + ')'}")
             else:
-                refs.append(f"Source {chunk_id}")
-    # Add any external URLs not already listed
-    for url in external_urls:
-        if not any(url in ref for ref in refs):
-            refs.append(url)
+                refs.append(f"- {url}")
+        refs_md = "\n".join(refs)
+        answer = answer.strip() + "\n\n**References:**\n" + refs_md
 
-    # Only append references if not already present in the answer
-    if refs and "references:" not in answer.lower():
-        refs_md = "\n".join(f"- {ref}" for ref in refs)
-        answer += "\n\n**References:**\n" + refs_md
     return answer
+
+# --- Debugging controls ---
+with st.sidebar.expander("🛠️ Debug Options", expanded=False):
+    show_debug = st.checkbox("Show debug info", value=False, key="show_debug")
+    if show_debug:
+        st.write("Session State:", dict(st.session_state))
 
 # --- Main retrieval function ---
 def run_retrieval(query: str, topic: str, level: str):
@@ -122,28 +125,37 @@ def run_retrieval(query: str, topic: str, level: str):
         result = retrieve_answer(query, topic, level)
         answer = result.get("answer", "")
         sources = result.get("sources", {})
+        context_chunks = result.get("context", [])
         formatted_answer = format_answer_with_sources(answer, sources)
         st.session_state.answer = formatted_answer
         st.session_state.last_query = query
         st.session_state.last_topic = topic
         st.session_state.last_level = level
+        st.session_state.last_context = context_chunks
+        st.session_state.last_raw_result = result  # For debug display
+
     except Exception as e:
         logger.error(f"Error retrieving answer: {e}")
         st.error("An error occurred while retrieving the answer.")
+        if st.session_state.get("show_debug"):
+            st.exception(e)
         return
 
-    # Display answer
-    st.markdown("""
-    <style>
-    .full-width-container > div {
-        flex: 1 1 0%;
-        min-width: 0;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    with st.container():
-        st.subheader("Answer")
-        st.markdown(st.session_state.answer, unsafe_allow_html=True)
+    st.subheader("Answer")
+    st.markdown(st.session_state.answer, unsafe_allow_html=True)
+
+    # --- Expandable context display (always visible) ---
+    with st.expander("Show retrieved context"):
+        if context_chunks:
+            for idx, chunk in enumerate(context_chunks, 1):
+                st.markdown(f"**Chunk {idx}:**")
+                st.markdown(f"> {chunk.get('text', '')}")
+                url = chunk.get('source_url')
+                if url:
+                    st.markdown(f"[Source Link]({url})")
+                st.markdown("---")
+        else:
+            st.markdown("_No context retrieved for this answer._")
 
 def update_example_query():
     level_idx = LEVELS.index(st.session_state.level) if st.session_state.level in LEVELS else 0
