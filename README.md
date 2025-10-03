@@ -2,7 +2,7 @@
 
 ## 🤔💭 Problem: Why ScienceSage?
 
-🚀 Space exploration is fascinating but often hard to understand — especially for younger learners or those new to the field. Reliable information is scattered across the web, and most resources aren’t tailored to different backgrounds.
+🚀 Space exploration is fascinating, but often hard to understand — especially for younger learners or those new to the field. Reliable information is scattered across the web, and most resources aren’t tailored to different backgrounds.
 
 **ScienceSage** bridges this gap by:
 - Delivering accurate, up-to-date answers sourced from Wikipedia.
@@ -30,9 +30,7 @@ This system helps users **explore complex scientific topics—focused on space e
 - **Feedback system** (👍 / 👎 per answer, stored for analysis).  
 - **Streamlit interface** with example queries and sidebar controls.  
 
-📊 **Data Source**
-
-- [Wikipedia](https://www.wikipedia.org/) (focused on space exploration topics)
+📊 **Data Source** : [Wikipedia](https://www.wikipedia.org/) (focused on space exploration topics)
 
 🔹 **Topics**
 - **Space Exploration**
@@ -211,6 +209,7 @@ python scripts/evaluate_rag.py
 ## 🛠️ Using the Makefile
 
 This project includes a `Makefile` to simplify common setup and run tasks.
+See [docs/using-the-makefile.md](docs/using-the-makefile.md) for more details.
 
 ### List available commands
 ```bash
@@ -229,7 +228,7 @@ make help
   ```
 - **Run the Streamlit app:**
   ```bash
-  make run
+  make run-app
   ```
 - **Clean up generated files:**
   ```bash
@@ -272,11 +271,13 @@ You can skip these by default, or set the required environment variables to enab
 
 ## 🖥️ Usage
 
-- Select a topic in the sidebar (Space Exploration).
-- Ask a question (e.g., "Explain the Mars Rover missions like I’m 12").
-- Choose answer complexity (Middle School / College / Advanced).
-- Get a generated answer with citations to Wikipedia sources.
-- Provide feedback via 👍 / 👎.
+- Select a topic in the sidebar (Space Exploration)
+- Choose answer complexity (Middle School / College / Advanced)
+- Use an example question or ask a question of your own
+- Get a generated answer with citations to Wikipedia sources
+- Click the Show retrieved context to view the context returned
+- Provide feedback via 👍 / 👎
+- Click the Debug Options expander to show debug info
 
 ---
 
