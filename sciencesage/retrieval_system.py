@@ -125,5 +125,5 @@ def retrieve_answer(
     return {
         "answer": answer,
         "sources": sources,
-        "context": context_chunks  # <-- Add this line
+        "context": context_chunks # for transparency/debugging
     }
