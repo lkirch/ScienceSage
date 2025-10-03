@@ -30,6 +30,10 @@ This system helps users **explore complex scientific topics—focused on space e
 - **Feedback system** (👍 / 👎 per answer, stored for analysis).  
 - **Streamlit interface** with example queries and sidebar controls.  
 
+📊 **Data Source**
+
+- [Wikipedia](https://www.wikipedia.org/) (focused on space exploration topics)
+
 🔹 **Topics**
 - **Space Exploration**
 - **Space missions**
@@ -45,10 +49,6 @@ This system helps users **explore complex scientific topics—focused on space e
 ---
 
 ## 🔜 Future Work
-
----
-
-#
 
 ---
 
@@ -118,12 +118,6 @@ ScienceSage/
 └── .gitignore
 
 ```
-
----
-
-## 📊 Data Sources
-
-- [Wikipedia](https://www.wikipedia.org/) (focused on space exploration topics)
 
 ---
 
