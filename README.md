@@ -3,7 +3,7 @@
 
 ## 🚀 Why ScienceSage?
 
-Space exploration is fascinating but often hard to understand—especially for younger learners or those new to the field. Reliable information is scattered across the web, and most resources aren’t tailored to different backgrounds.
+Space exploration is fascinating but often hard to understand — especially for younger learners or those new to the field. Reliable information is scattered across the web, and most resources aren’t tailored to different backgrounds.
 
 **ScienceSage** bridges this gap by:
 - Delivering accurate, up-to-date answers sourced from Wikipedia.
@@ -44,27 +44,31 @@ ScienceSage/
 │ ├── rag_api.py            # FastAPI backend for RAG
 │ ├── app.py                # Streamlit UI
 │ ├── config.py             # API keys & settings
-│ └── prompts.py            # Prompts
-│ ├── retrieval_system.py   # Query → retrieve → GPT pipeline
+│ ├── prompts.py            # Prompts
+│ ├── metrics.py            # For evaluating retrieval and answer quality
+│ ├── retrieval_system.py   # Core RAG logic: Query → retrieve → GPT pipeline
 │ ├── feedback_manager.py   # Save thumbs up/down
 │ └── analyze_feedback.py   # Summarize user feedback
 │
-├── data/                   # Data sources & outputs
-│ ├── raw/                  # Original files (html, pdf, etc.)
-│ ├── processed/            # Clean text files
-│ ├── chunks/               # JSONL with chunked by paragraph (JSONL)
-│ ├── embeddings/           # Embeddings for each chunk in a parquet file
-│ ├── golden/               # Golden dataset for evaluation (JSONL)
-│ ├── eval/                 # Evaluation metrics and outputs
-│ └── feedback/             # USer feedback for analysis
+├── data/                   # Data sources & outputs (Raw data → Processed chunks → Embeddings → Evaluation → Feedback)
+│ ├── raw/                  # Raw Wikipedia data & metadata (.html, .txt, .meta.json per articl)
+│ ├── processed/            # Cleaned, chunked text (chunks.jsonl)
+│ ├── embeddings/           # Vector embeddings for retrieval (embeddings.parquet)
+│ ├── ground_truth/         # Ground truth dataset for evaluation (ground_truth_dataset.jsonl)
+│ ├── eval/                 # Evaluation results and metrics (eval_results.jsonl, llm_eval.jsonl)
+│ └── feedback/             # User feedback for analysis (feedback.jsonl)
 |
 ├── images/                 # Images
 |
 ├── logs/                   # Logs
 |
 ├── notebooks/              # Jupyter exploration
-│ ├── eda.ipynb             # EDA
-│ └── sanity_check.ipynb    # Checks to see if things are working
+│ ├── eda.ipynb             # EDA of raw and processed Wikipedia data
+│ ├── ck_chunks.ipynb       # Inspect and validate the chunking process and chunk metadata
+│ ├── qdrant_eda.ipynb.     # Analyze Qdrant vector DB contents and embedding distributions
+│ ├── research_wikipedia_topics.ipynb # Research and select relevant Wikipedia articles for project topics
+│ ├── sanity_check.ipynb    # End-to-end pipeline sanity check with sample queries
+│ └── sciencesage_rag_llm_evaluation.ipynb # Evaluate retrieval and LLM answer quality and compute metrics
 │
 ├── scripts/                # Utilities
 │ ├── download_and_clean.py # Download Wikipedia → text
