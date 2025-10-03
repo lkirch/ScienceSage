@@ -103,7 +103,7 @@ def retrieve_answer(
 ) -> dict:
     """
     Full RAG pipeline: retrieve + generate.
-    Returns a dict with 'answer' and 'sources' (mapping chunk_id to source_url).
+    Returns a dict with 'answer', 'sources', and 'context' (list of context chunks).
     """
     logger.info(f"Processing query: '{query}' | topic={topic} | level={level}")
     context_chunks = retrieve_context(query, top_k=top_k, topic=topic)
@@ -112,7 +112,8 @@ def retrieve_answer(
         logger.warning("No context retrieved — returning fallback response.")
         return {
             "answer": "I don’t know based on the available information.",
-            "sources": {}
+            "sources": {},
+            "context": []
         }
 
     answer = generate_answer(query, context_chunks, level, topic)
@@ -123,5 +124,6 @@ def retrieve_answer(
     }
     return {
         "answer": answer,
-        "sources": sources
+        "sources": sources,
+        "context": context_chunks  # <-- Add this line
     }
