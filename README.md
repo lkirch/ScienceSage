@@ -1,10 +1,8 @@
 ![ScienceSage Logo](images/nano-banana-generated-logo.jpeg)
 
-## 🤔💭 Problem
+## 🤔💭 Problem: Why ScienceSage?
 
-## 🚀 Why ScienceSage?
-
-Space exploration is fascinating but often hard to understand — especially for younger learners or those new to the field. Reliable information is scattered across the web, and most resources aren’t tailored to different backgrounds.
+🚀 Space exploration is fascinating but often hard to understand — especially for younger learners or those new to the field. Reliable information is scattered across the web, and most resources aren’t tailored to different backgrounds.
 
 **ScienceSage** bridges this gap by:
 - Delivering accurate, up-to-date answers sourced from Wikipedia.
@@ -19,20 +17,24 @@ This system helps users **explore complex scientific topics—focused on space e
 - 🎓 **College** (intermediate, with more depth)
 - 🧪 **Advanced** (detailed, technical)
 
+---
+
 ## 💡 Approach
 
 **ScienceSage** is an end-to-end **Retrieval-Augmented Generation (RAG)** project built for the [LLM Zoomcamp Capstone](https://github.com/DataTalksClub/llm-zoomcamp), powered by **GPT-4**, **Qdrant**, and **Streamlit**, and developed in Codespaces (Python 3.12).
 
----
-
-## ✨ Features
+✨ Features
 - **End-to-end RAG pipeline** (OpenAI GPT + Qdrant vector DB).  
 - **Multi-level answers** (simple → advanced).  
 - **Wikipedia as the primary data source** (focused on space exploration).  
 - **Feedback system** (👍 / 👎 per answer, stored for analysis).  
 - **Streamlit interface** with example queries and sidebar controls.  
 
+---
+
 ## 📊 Results
+
+---
 
 ## 🔜 Future Work
 
