@@ -1,5 +1,6 @@
 ![ScienceSage Logo](images/nano-banana-generated-logo.jpeg)
 
+## 🤔💭 Problem
 
 ## 🚀 Why ScienceSage?
 
@@ -18,6 +19,8 @@ This system helps users **explore complex scientific topics—focused on space e
 - 🎓 **College** (intermediate, with more depth)
 - 🧪 **Advanced** (detailed, technical)
 
+## 💡 Approach
+
 **ScienceSage** is an end-to-end **Retrieval-Augmented Generation (RAG)** project built for the [LLM Zoomcamp Capstone](https://github.com/DataTalksClub/llm-zoomcamp), powered by **GPT-4**, **Qdrant**, and **Streamlit**, and developed in Codespaces (Python 3.12).
 
 ---
@@ -28,6 +31,10 @@ This system helps users **explore complex scientific topics—focused on space e
 - **Wikipedia as the primary data source** (focused on space exploration).  
 - **Feedback system** (👍 / 👎 per answer, stored for analysis).  
 - **Streamlit interface** with example queries and sidebar controls.  
+
+## 📊 Results
+
+## 🔜 Future Work
 
 ---
 
