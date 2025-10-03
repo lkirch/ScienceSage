@@ -2,6 +2,12 @@
 
 This project includes a Makefile to simplify common setup and run tasks.
 
+**Notes:**
+- You still need to start Qdrant before running any commands that interact with the vector database.
+- See the Makefile for current available targets and details.
+
+-- 
+
 List available commands
 ```bash
 make help
@@ -110,7 +116,3 @@ make clean-logs
 ```bash
 make clean
 ```
-
-**Notes:**
-- You still need to start Qdrant before running any commands that interact with the vector database.
-- See the Makefile for current available targets and details.
