@@ -1,8 +1,12 @@
 from loguru import logger
 from sciencesage.retrieval_system import retrieve_context
-from sciencesage.config import LEVELS, EXAMPLE_QUERIES, TOPICS, TOP_K
+from sciencesage.config import LEVELS, EXAMPLE_QUERIES, TOP_K
+import os
 
-logger.add("ck_example_queries.log", level="DEBUG")
+# Ensure logs directory exists
+os.makedirs("logs", exist_ok=True)
+
+logger.add("logs/ck_example_queries.log", level="DEBUG")
 
 def main():
     logger.info("Testing Qdrant retrieval for all example queries...")
