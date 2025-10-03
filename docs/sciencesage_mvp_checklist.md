@@ -4,7 +4,7 @@
 - [x] **Data Acquisition**
   - [x] Fetch and store Wikipedia data on space exploration, missions, planets, astronauts, space tech.
   - [x] Save raw data to `data/raw/`.
-- [ ] **Preprocessing**
+- [x] **Preprocessing**
   - [x] Clean and chunk documents (e.g., 1000 tokens with overlap).
   - [x] Save processed chunks to `data/processed/` and `chunks.jsonl`.
   - [x] Auto-tag chunks with topic (space_missions, planets, etc.).
@@ -22,11 +22,11 @@
 
 ## 2. Streamlit App (User Experience)
 - [x] Clean, working UI in `sciencesage/app.py`.
-- [ ] Components:
+- [x] Components:
   - [x] Input box for user question.
   - [x] Radio buttons for difficulty level.
   - [x] Drop down for topic filter.
-  - [ ] Display answer text, retrieved context (expandable), debug info (toggle).
+  - [x] Display answer text, retrieved context (expandable), debug info (toggle).
 - [x] Error handling (friendly message if Qdrant/LLM fails).
 - [x] Smoke test: sample query returns answer.
 
@@ -43,7 +43,7 @@
   - [ ] Save results to CSV/Markdown.
 
 ## 4. Testing & Logging
-- [ x **Unit Tests**
+- [x] **Unit Tests**
   - [x] Chunking function.
   - [x] Qdrant insert & retrieval.
   - [x] Retriever returns relevant context.
@@ -56,9 +56,9 @@
 
 ## 5. Project Presentation (Capstone Deliverable)
 - [ ] **README.md**
-  - [ ] Description & purpose.
-  - [ ] Run instructions.
-  - [ ] Example queries & screenshots.
+  - [x] Description & purpose.
+  - [x] Run instructions.
+  - [x] Example queries & screenshots.
 - [ ] **Architecture Diagram**
   - [x] Data flow diagram: Wikipedia → Preprocessing → Qdrant → Retrieval → GPT-4 → Streamlit.
 - [ ] **Demo Script**
@@ -70,4 +70,4 @@
 - [ ] Re-rank retrieved chunks.
 - [ ] Provide citations with hyperlinks.
 - [ ] Add caching (embeddings/LLM responses).
-- [ ] Feedback button for user responses.
+- [x] Feedback button for user responses.
