@@ -1,20 +1,19 @@
-from pathlib import Path
-from loguru import logger
 import os
 import json
+import time
+from pathlib import Path
+
 import requests
 import wikipediaapi
 from tqdm import tqdm
-import time
 
 from sciencesage.config import (
     RAW_DATA_DIR,
     WIKI_USER_AGENT,
     WIKI_URL,
     TOPICS,
+    logger
 )
-
-logger.add("logs/download_data.log", rotation="5 MB", retention="7 days")
 
 os.makedirs(RAW_DATA_DIR, exist_ok=True)
 

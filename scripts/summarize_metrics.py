@@ -1,15 +1,13 @@
 import os
-import sys
 import json
 import csv
 from statistics import mean, stdev
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from sciencesage.config import (
     EVAL_RESULTS_FILE,
     LLM_EVAL_FILE,
     METRICS_SUMMARY_FILE,
+    logger,
 )
 
 def load_jsonl(path):

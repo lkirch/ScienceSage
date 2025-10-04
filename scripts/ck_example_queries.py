@@ -1,14 +1,17 @@
-from loguru import logger
-from sciencesage.retrieval_system import retrieve_context, generate_answer
-from sciencesage.config import LEVELS, EXAMPLE_QUERIES, TOP_K, EXAMPLE_QUERY_SUMMARY_FILE
 import os
 import json
 
-# Ensure logs directory exists
-os.makedirs("logs", exist_ok=True)
-os.makedirs(os.path.dirname(EXAMPLE_QUERY_SUMMARY_FILE), exist_ok=True)
+from sciencesage.retrieval_system import retrieve_context, generate_answer
+from sciencesage.config import (
+    LEVELS,
+    EXAMPLE_QUERIES,
+    TOP_K,
+    EXAMPLE_QUERY_SUMMARY_FILE,
+    logger,
+)
 
-logger.add("logs/ck_example_queries.log", level="DEBUG")
+# Ensure logs directory exists
+os.makedirs(os.path.dirname(EXAMPLE_QUERY_SUMMARY_FILE), exist_ok=True)
 
 def simple_pass_fail(answer: str) -> str:
     # Placeholder: mark as "PASS" if answer is non-empty, else "FAIL"

@@ -5,7 +5,7 @@ from typing import List, Dict
 import argparse
 from tqdm import tqdm
 import pandas as pd
-from loguru import logger
+from sciencesage.config import logger
 
 from sciencesage.config import (
     EMBEDDING_MODEL,

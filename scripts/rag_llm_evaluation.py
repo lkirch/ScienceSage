@@ -1,14 +1,14 @@
 import os
 import sys
 import json
-from tqdm import tqdm
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from tqdm import tqdm
 
 from sciencesage.config import (
     GROUND_TRUTH_FILE,
     LLM_EVAL_FILE,
     TOP_K,
+    logger,
 )
 from sciencesage.retrieval_system import retrieve_context, generate_answer
 from sciencesage.metrics import (

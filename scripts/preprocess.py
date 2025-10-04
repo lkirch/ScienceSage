@@ -1,19 +1,19 @@
-from pathlib import Path
 import json
 import uuid
 import datetime
 import time
-from loguru import logger
+from pathlib import Path
+
 from tqdm import tqdm
 
 from sciencesage.config import (
     RAW_DATA_DIR,
     CHUNKS_FILE,
     CHUNK_FIELDS,
-    EXCLUDED_CATEGORY_PREFIXES
+    EXCLUDED_CATEGORY_PREFIXES,
+    logger,
 )
 
-logger.add("logs/preprocess.log", rotation="5 MB", retention="7 days")
 logger.info("Started preprocess.py script.")
 
 def chunk_text_by_paragraphs(text, min_length=100, max_length=1200):
