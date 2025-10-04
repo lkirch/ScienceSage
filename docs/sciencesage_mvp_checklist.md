@@ -28,7 +28,10 @@
   - [x] Drop down for topic filter.
   - [x] Display answer text, retrieved context (expandable), debug info (toggle).
 - [x] Error handling (friendly message if Qdrant/LLM fails).
-- [x] Smoke test: sample query returns answer.
+- [ ] Streamlit Smoke Tests
+  - [x] App loads.
+  - [ ] Sample queries don’t crash.
+  - [ ] Add results md or notebook checklist table to show that example queries all run ok.
 
 ## 3. Evaluation & Metrics
 - [X] **Ground Truth Dataset**
@@ -38,6 +41,7 @@
   - [x] Measure precision@k, recall@k.
   - [x] Optionally LLM-grade answers (0–5).
 - [ ] **Metrics Tracking**
+  - [ ] Results and metrics
   - [ ] Retrieval hit rate (%).
   - [ ] Average answer quality (manual/LLM-graded).
   - [ ] Save results to CSV/Markdown.
@@ -58,16 +62,25 @@
 - [ ] **README.md**
   - [x] Description & purpose.
   - [x] Run instructions.
-  - [x] Example queries & screenshots.
+  - [x] Example queries & screenshots
+  - [ ] About/Help section & screen shots
+  - [ ] Create sciencesage_ui.png <- missing or rename link in README
+  - [ ] Update results/metrics summary table to the README.
+  - [ ] Double-check that all required README sections are present and up to date.
 - [ ] **Architecture Diagram**
-  - [x] Data flow diagram: Wikipedia → Preprocessing → Qdrant → Retrieval → GPT-4 → Streamlit.
+  - [ ] Update architecture diagram
+  - [ ] Data flow diagram: Wikipedia → Preprocessing → Qdrant → Retrieval → GPT-4 → Streamlit.
 - [ ] **Demo Script**
   - [ ] 3–5 representative queries, one per difficulty level.
-- [ ] **Short Summary**
-  - [ ] Problem → Approach → Results → Future Work.
+- [x] **Short Summary**
+  - [x] Problem → Approach → Results → Future Work.
 
 ## 6. Nice-to-Have (Optional)
 - [ ] Re-rank retrieved chunks.
 - [ ] Provide citations with hyperlinks.
 - [ ] Add caching (embeddings/LLM responses).
 - [x] Feedback button for user responses.
+
+## 7. Known Issues to Fix Later
+- [ ] Notebooks still logging in notebooks, not in logs
+
