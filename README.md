@@ -45,6 +45,8 @@ Space exploration, missions, Solar System, Mars, Moon, animals in space
 **System Architecture:**  
 ![ScienceSage Architecture](images/architecture.png)
 
+For a step-by-step guide to the app’s features and interface, see the [UI Walkthrough](docs/sciencesage_ui_walkthrough.md).
+
 ---
 
 ## 📊 Results
