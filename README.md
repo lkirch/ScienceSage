@@ -45,6 +45,9 @@ Space exploration, missions, Solar System, Mars, Moon, animals in space
 **System Architecture:**  
 ![ScienceSage Architecture](images/architecture.png)
 
+**Streamlit App Sequence Diagram:**  
+![Streamlit Sequence Diagram](images/streamlit_sequence_diagram.png)
+
 For a step-by-step guide to the app’s features and interface, see the [UI Walkthrough](docs/sciencesage_ui_walkthrough.md).
 
 ---
@@ -150,7 +153,6 @@ streamlit run sciencesage/app.py
   pytest
   ```
   See [docs/testing.md](docs/testing.md) for more.
-tails on running and writing tests.
 
 ---
 
@@ -187,6 +189,16 @@ tails on running and writing tests.
 
 ---
 
+## ℹ️ About & Help
+
+**ScienceSage** is an AI-powered tool that answers your space exploration questions using up-to-date Wikipedia content. Choose your learning level, ask a question, and get clear, cited answers.
+
+- For a step-by-step guide to the app’s features, see the [UI Walkthrough](docs/sciencesage_ui_walkthrough.md).
+- Need help or found a bug? [Open an issue on GitHub](https://github.com/lkirch/ScienceSage/issues).
+- For more details on setup and usage, see the [project README](README.md) and [docs](docs/).
+
+---
+
 ## 🙌 Acknowledgements
 
 - [DataTalksClub LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp)
@@ -197,6 +209,7 @@ tails on running and writing tests.
 - [OpenAI](https://openai.com/)
 - [Claude](http://claude.ai) and [ChatGPT](http://chatgpt.com) for brainstorming, code debugging and improvements
 - [Google's Nano Banana](https://aistudio.google.com/prompts/new_chat?model=gemini-2.5-flash-image-preview) for designing the logo
+- [Eraser](https://www.eraser.io/ai/sequence-diagram-generator) for generating the Streamlit app sequence diagram
 
 ---
 
