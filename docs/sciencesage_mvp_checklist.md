@@ -31,7 +31,7 @@
 - [ ] Streamlit Smoke Tests
   - [x] App loads.
   - [ ] Sample queries don’t crash.
-  - [ ] Add results md or notebook checklist table to show that example queries all run ok.
+  - [x] Show that example queries all run ok.
 
 ## 3. Evaluation & Metrics
 - [X] **Ground Truth Dataset**
@@ -53,7 +53,7 @@
   - [x] Retriever returns relevant context.
 - [ ] **Streamlit Smoke Tests**
   - [x] App loads.
-  - [ ] Sample queries don’t crash.
+  - [x] Sample queries don’t crash.
 - [x] **Logging**
   - [x] Loguru setup: logs go to `logs/`.
   - [x] Log query, retrieved docs, LLM output.
@@ -76,10 +76,11 @@
   - [x] Problem → Approach → Results → Future Work.
 
 ## 6. Nice-to-Have (Optional)
-- [ ] Re-rank retrieved chunks.
-- [ ] Provide citations with hyperlinks.
-- [ ] Add caching (embeddings/LLM responses).
 - [x] Feedback button for user responses.
+- [x] Provide citations with hyperlinks.
+- [ ] Re-rank retrieved chunks.
+- [ ] Add caching (embeddings/LLM responses).
+- [ ] Configure Arize
 
 ## 7. Known Issues to Fix Later
 - [ ] Notebooks still logging in notebooks, not in logs
