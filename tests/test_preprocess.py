@@ -115,7 +115,7 @@ def test_make_standard_chunk_fields():
     assert chunk["chunk_index"] == 0
     assert chunk["char_start"] == 0
     assert chunk["char_end"] == len(text)
-    assert isinstance(chunk["uuid"], str)
+    assert isinstance(chunk["chunk_id"], str)
     assert chunk["topic"] == "mars"
     assert chunk["categories"] == ["Mars"]  # filtered
     assert isinstance(chunk["created_at"], str)
@@ -125,8 +125,8 @@ def test_make_standard_chunk_uuid_consistency():
     meta = {"title": "SameTitle", "categories": []}
     chunk1 = make_standard_chunk(text, meta, 0, 0, 9)
     chunk2 = make_standard_chunk(text, meta, 1, 0, 9)
-    # UUID should be the same for same title+text
-    assert chunk1["uuid"] == chunk2["uuid"]
+    # chunk_id should be the same for same title+text
+    assert chunk1["chunk_id"] == chunk2["chunk_id"]
 
 def test_make_standard_chunk_category_filtering():
     text = "Text"
