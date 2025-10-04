@@ -155,7 +155,15 @@ ARIZE_API_KEY = os.getenv("ARIZE_API_KEY")
 # --- Logging ---
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 os.makedirs(LOGS_DIR, exist_ok=True)
-logger.add(LOG_FILE, rotation="10 MB", retention="10 days", level=LOG_LEVEL)
+logger.add(
+    LOG_FILE,
+    rotation="10 MB",
+    retention="10 days",
+    level=LOG_LEVEL,
+    format="{time} | {level} | {name}:{function}:{line} | {message}",
+    enqueue=True,
+    backtrace=True,
+    diagnose=True 
 logger.info("Configuration loaded.")
 
 # --- Evaluation metric fields ---
