@@ -15,6 +15,7 @@ LLM_EVAL_FILE = "data/eval/llm_eval.jsonl"
 METRICS_SUMMARY_FILE = "data/eval/metrics_summary.csv"
 LOGS_DIR = "logs"
 LOG_FILE = os.path.join(LOGS_DIR, "sciencesage.log")
+EXAMPLE_QUERY_SUMMARY_FILE = "data/eval/example_query_summary.jsonl"
 
 # --- Embeddings ---
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
