@@ -80,7 +80,7 @@ ScienceSage/
 └── .gitignore
 ```
 
-See [docs/project-structure.md](docs/project-structure.md) for the full directory tree and file descriptions.
+See [docs/project_structure.md](docs/project_structure.md) for the full directory tree and file descriptions.
 
 ---
 
@@ -131,63 +131,15 @@ streamlit run sciencesage/app.py
 ## 🛠️ Using the Makefile
 
 This project includes a `Makefile` to simplify common setup and run tasks.
-See [docs/using-the-makefile.md](docs/using-the-makefile.md) for more details.
-
-### List available commands
-```bash
-make help
-```
-
-### Typical usage
-
-- **Set up the environment and install dependencies:**
-  ```bash
-  make install
-  ```
-- **Prepare the data (download, preprocess, embed):**
-  ```bash
-  make data
-  ```
-- **Run the Streamlit app:**
-  ```bash
-  make run-app
-  ```
-- **Clean up generated files:**
-  ```bash
-  make clean
-  ```
-
-> **Note:**  
-> You still need to [start Qdrant](#4-start-qdrant) before running any commands that interact with the vector database.
-
-See the `Makefile` for more available targets and details.
+See [docs/using_the_makefile.md](docs/using_the_makefile.md) for more details.
 
 ---
 
 ## 🧪 Running Tests
 
-Unit and integration tests are located in the `tests/` directory and use [pytest](https://docs.pytest.org/).
+How to run unit and integration tests, including requirements and tips.
 
-### Run all tests
-```bash
-pytest
-```
-
-### Run tests with verbose output
-```bash
-pytest -v
-```
-
-### Run a specific test file
-```bash
-pytest tests/test_pipeline.py
-```
-
-> **Tip:**  
-> Make sure your virtual environment is activated and all dependencies are installed before running tests.
-
-Some integration tests require a running Qdrant instance and a valid OpenAI API key.  
-You can skip these by default, or set the required environment variables to enable
+See [docs/testing.md](docs/testing.md) for details on running and writing tests.
 
 ---
 
@@ -228,40 +180,17 @@ pip install -r requirements.txt
 
 ## 🛠️ API Reference
 
-**POST /rag**
+Details on the RAG API endpoints, input/output formats, and usage examples.
 
-- **Input:**  
-  ```json
-  {
-    "query": "What is the Hubble Space Telescope?",
-    "top_k": 5
-  }
-  ```
-
-- **Output:**  
-  ```json
-  {
-    "answer": "...",
-    "context_chunks": [...],
-    "sources": ["[1] https://en.wikipedia.org/wiki/Hubble_Space_Telescope", ...]
-  }
-  ```
+Full API documentation: [docs/api-reference.md](docs/api-reference.md)
 
 ---
 
 ## 🏅 Ground Truth Dataset Format
 
-Each line in `data/ground_truth/ground_truth_dataset.jsonl` should be a JSON object like:
+Format and example for the ground truth dataset used in evaluation.
 
-```json
-{"chunk_id": "cd61606a-b53b-5385-b764-1b82a8d660ec", 
-  "topic": "moon", 
-  "text": "Commercial Lunar Payload Services (CLPS) is a NASA program to hire companies to send small robotic landers and rovers to the Moon. Most landing sites are near the lunar south pole where they will scout for lunar resources, test in situ resource utilization (ISRU) concepts, and perform lunar science to support the Artemis lunar program. CLPS is intended to buy end-to-end payload services between Earth and the lunar surface using fixed-price contracts. The program achieved the first landing on the Moon by a commercial company in history with the IM-1 mission in 2024. The program was extended to add support for large payloads starting after 2025.\nThe CLPS program is run by NASA's Science Mission Directorate along with the Human Exploration and Operations and Space Technology Mission directorates.", 
-  "level": "Middle School", 
-  "question": "What is the purpose of the Commercial Lunar Payload Services (CLPS) program?", 
-  "answer": "The purpose of the CLPS program is to hire companies to send small robotic landers and rovers to the Moon."
-}
-```
+See [docs/ground_truth_format.md](docs/ground_truth_format.md) for dataset details.
 
 ---
 
