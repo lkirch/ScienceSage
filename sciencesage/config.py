@@ -39,7 +39,7 @@ WIKI_USER_AGENT = "ScienceSageBot/1.0 (contact: lkonthego@gmail.com)"
 
 # --- Chunk fields ---
 CHUNK_FIELDS = [
-    "uuid",
+    "chunk_id",
     "text",
     "title",
     "source_url",

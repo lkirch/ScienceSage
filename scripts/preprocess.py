@@ -93,7 +93,7 @@ def make_standard_chunk(text, meta, chunk_index, char_start, char_end):
     chunk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, meta.get("title", "") + text))
     filtered_categories = filter_categories(meta.get("categories", []))
     chunk = {
-        "uuid": chunk_uuid,
+        "chunk_id": chunk_uuid,
         "text": text,
         "title": meta.get("title"),
         "source_url": meta.get("fullurl"),

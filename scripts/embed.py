@@ -89,11 +89,10 @@ def main():
     embeddings_records = []
     for i, chunk in enumerate(tqdm(chunks, desc="Embedding and uploading chunks")):
         vector = get_embedding(chunk["text"])
-        if i == 0:
-            print("Sample embedding:", vector)
         point_id = chunk.get("uuid") or str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk)))
         payload = {k: chunk.get(k) for k in CHUNK_FIELDS if k != "embedding"}
         payload["embedding"] = vector
+        payload["chunk_id"] = chunk.get("uuid")
         points.append(
             PointStruct(
                 id=point_id,
@@ -102,7 +101,7 @@ def main():
             )
         )
         record = payload.copy()
-        record["id"] = point_id
+        record["chunk_id"] = point_id
         embeddings_records.append(record)
         if len(points) >= QDRANT_BATCH_SIZE:
             qdrant.upsert(collection_name=QDRANT_COLLECTION, points=points)
