@@ -163,7 +163,8 @@ logger.add(
     format="{time} | {level} | {name}:{function}:{line} | {message}",
     enqueue=True,
     backtrace=True,
-    diagnose=True 
+    diagnose=True
+)
 logger.info("Configuration loaded.")
 
 # --- Evaluation metric fields ---
