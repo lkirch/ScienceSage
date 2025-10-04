@@ -46,7 +46,7 @@ Space exploration, missions, Solar System, Mars, Moon, animals in space
 ![ScienceSage Architecture](images/architecture.png)
 
 **Streamlit App Sequence Diagram:**  
-![Streamlit Sequence Diagram](images/streamlit_sequence_diagram.png)
+![Streamlit Sequence Diagram](images/eraser_streamlit_app_sequence_diagram.png)
 
 For a step-by-step guide to the app’s features and interface, see the [UI Walkthrough](docs/sciencesage_ui_walkthrough.md).
 
