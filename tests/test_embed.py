@@ -1,5 +1,4 @@
 import pytest
-from pathlib import Path
 
 from scripts.embed import (
     load_chunks,

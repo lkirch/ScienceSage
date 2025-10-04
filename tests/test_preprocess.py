@@ -1,6 +1,7 @@
-import pytest
 import uuid
 import datetime
+
+import pytest
 
 from scripts.preprocess import (
     chunk_text_by_paragraphs,

@@ -1,6 +1,8 @@
 import json
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
 
 @pytest.fixture
 def temp_feedback_file(tmp_path, monkeypatch):
@@ -9,9 +11,11 @@ def temp_feedback_file(tmp_path, monkeypatch):
     monkeypatch.setattr("sciencesage.feedback_manager.FEEDBACK_FILE", str(feedback_file))
     return feedback_file
 
+
 def test_save_feedback_creates_file_and_writes_row(temp_feedback_file, monkeypatch):
     monkeypatch.setattr("sciencesage.feedback_manager.logger", MagicMock())
-    from sciencesage.feedback_manager import save_feedback # Import here to ensure monkeypatching is effective
+    from sciencesage.feedback_manager import save_feedback  # Import here to ensure monkeypatching is effective
+
     save_feedback("q", "a", "math", "easy", "positive")
     assert temp_feedback_file.exists()
     with open(temp_feedback_file) as f:
@@ -25,9 +29,11 @@ def test_save_feedback_creates_file_and_writes_row(temp_feedback_file, monkeypat
     assert row["level"] == "easy"
     assert row["feedback"] == "positive"
 
+
 def test_save_feedback_appends_rows(temp_feedback_file, monkeypatch):
     monkeypatch.setattr("sciencesage.feedback_manager.logger", MagicMock())
-    from sciencesage.feedback_manager import save_feedback # Import here to ensure monkeypatching is effective
+    from sciencesage.feedback_manager import save_feedback  # Import here to ensure monkeypatching is effective
+
     save_feedback("q1", "a1", "science", "medium", "negative")
     save_feedback("q2", "a2", "history", "hard", "positive")
     with open(temp_feedback_file) as f:
@@ -38,6 +44,7 @@ def test_save_feedback_appends_rows(temp_feedback_file, monkeypatch):
     assert row1["query"] == "q1"
     assert row2["query"] == "q2"
 
+
 def test_save_feedback_handles_exception(monkeypatch, tmp_path):
     # Patch logger to a mock to check error logging
     mock_logger = MagicMock()
@@ -47,5 +54,6 @@ def test_save_feedback_handles_exception(monkeypatch, tmp_path):
     feedback_file.mkdir()
     monkeypatch.setattr("sciencesage.feedback_manager.FEEDBACK_FILE", str(feedback_file))
     from sciencesage.feedback_manager import save_feedback  # Import here after patching
+
     save_feedback("q", "a", "t", "l", "f")
     assert mock_logger.error.called

@@ -1,11 +1,8 @@
-import os
-import json
 import pytest
-from unittest.mock import patch, MagicMock
-from pathlib import Path
 from collections import Counter
+
 from scripts.validate_ground_truth_dataset import validate_line, REQUIRED_FIELDS
-from sciencesage.config import LEVELS 
+from sciencesage.config import LEVELS
 
 class DummyLogger:
     def __init__(self):

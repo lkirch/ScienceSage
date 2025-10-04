@@ -1,9 +1,11 @@
 import os
 import json
-import pytest
-from unittest.mock import patch, MagicMock
-from scripts import create_ground_truth_dataset as create_gt
 from pathlib import Path
+from unittest.mock import patch, MagicMock
+
+import pytest
+
+from scripts import create_ground_truth_dataset as create_gt
 
 @pytest.fixture
 def mock_chunks(tmp_path):

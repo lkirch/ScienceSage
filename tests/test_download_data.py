@@ -1,7 +1,7 @@
-import os
 import json
-import pytest
 from unittest.mock import patch, MagicMock
+
+import pytest
 
 from scripts.download_data import (
     save_file,
