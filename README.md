@@ -37,6 +37,16 @@ Space exploration, missions, Solar System, Mars, Moon, animals in space
 
 ---
 
+## 🖼️ Screenshots & Architecture
+
+**App UI Examples:**  
+![ScienceSage UI](images/sciencesage_ui.png)
+
+**System Architecture:**  
+![ScienceSage Architecture](images/architecture.png)
+
+---
+
 ## 📊 Results
 
 | Metric             | Value   |
