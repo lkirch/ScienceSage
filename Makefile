@@ -65,7 +65,11 @@ summarize-metrics:
 	@echo ">>> Summarizing evaluation metrics..."
 	python $(SCRIPTS_DIR)/summarize_metrics.py
 
-eval-all: create-ground-truth validate-ground-truth generate-eval-results rag-llm-eval summarize-metrics
+ck-example-queries:
+	@echo ">>> Running example queries check..."
+	python $(SCRIPTS_DIR)/ck_example_queries.py
+
+eval-all: create-ground-truth validate-ground-truth generate-eval-results rag-llm-eval summarize-metrics ck-example-queries
 	@echo ">>> Full evaluation pipeline complete!"
 
 ## ------------------------
@@ -130,7 +134,8 @@ help:
 	@echo "  make generate-eval-results - Generate retrieval evaluation results"
 	@echo "  make rag-llm-eval         - Run RAG LLM evaluation"
 	@echo "  make summarize-metrics    - Summarize evaluation metrics"
-	@echo "  make eval-all             - Run all evaluation steps (create-ground-truth, validate-ground-truth, generate-eval-results, rag-llm-eval, summarize-metrics)"
+	@echo "  make eval-all             - Run all evaluation steps (create-ground-truth, validate-ground-truth, generate-eval-results, rag-llm-eval, summarize-metrics, ck-example-queries)"
+	@echo "  make ck-example-queries   - Run example queries check"
 	@echo "  make run-app              - Start the Streamlit application"
 	@echo "  make run-api              - Start the FastAPI RAG API"
 	@echo "  make run                  - Start the Streamlit application (alias)"
