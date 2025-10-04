@@ -127,7 +127,7 @@ def main():
         # Sample one chunk per topic (or use all if <1)
         sampled = random.sample(topic_chunks, 1) if len(topic_chunks) > 0 else []
         for c in sampled:
-            chunk_id = c.get("uuid", "topic_" + topic)
+            chunk_id = c.get("chunk_id", "topic_" + topic)
             text = c["text"]
             qa_pairs_by_level = generate_questions_by_level(text)
             for level in LEVELS:
@@ -146,11 +146,11 @@ def main():
 
     # Then sample the rest as before, but avoid duplicating the topic chunks already used
     used_chunk_ids = {r["chunk_id"] for r in results}
-    remaining_chunks = [c for c in chunks if c.get("uuid", None) not in used_chunk_ids]
+    remaining_chunks = [c for c in chunks if c.get("chunk_id", None) not in used_chunk_ids]
     sampled_chunks = random.sample(remaining_chunks, min(len(remaining_chunks), NUM_EXAMPLES))
 
     for idx, c in enumerate(tqdm(sampled_chunks, desc="Generating ground truth")):
-        chunk_id = c.get("uuid", str(idx))
+        chunk_id = c.get("chunk_id", str(idx))
         topic = c.get("topic") or c.get("title") or TOPICS[idx % len(TOPICS)]
         text = c["text"]
 
