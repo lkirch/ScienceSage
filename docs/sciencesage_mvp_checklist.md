@@ -80,7 +80,7 @@
 - [x] Provide citations with hyperlinks.
 - [ ] Re-rank retrieved chunks.
 - [ ] Add caching (embeddings/LLM responses).
-- [ ] Configure Arize
+- [ ] Configure Arize in qdrant_eda.ipynb
 
 ## 7. Known Issues to Fix Later
 - [ ] Notebooks still logging in notebooks, not in logs
