@@ -123,77 +123,55 @@ streamlit run sciencesage/app.py
 
 ---
 
-## 🛠️ Using the Makefile
+## 🛠️ Project Tools
 
-This project includes a `Makefile` to simplify common setup and run tasks.
-See [docs/using_the_makefile.md](docs/using_the_makefile.md) for more details.
+- **Makefile:**  
+  Common setup and run tasks are available via `make`.  
+  See [docs/using_the_makefile.md](docs/using_the_makefile.md) for details.
 
----
+- **Requirements:**  
+  All dependencies are in `requirements.txt`.
 
-## 🧪 Running Tests
-
-How to run unit and integration tests, including requirements and tips.
-
-See [docs/testing.md](docs/testing.md) for details on running and writing tests.
+- **Testing:**  
+  Run all tests with:
+  ```bash
+  pytest
+  ```
+  See [docs/testing.md](docs/testing.md) for more.
+tails on running and writing tests.
 
 ---
 
 ## 🖥️ Usage
 
-- Select a topic in the sidebar (Space Exploration)
-- Choose answer complexity (Middle School / College / Advanced)
-- Use an example question or ask a question of your own
-- Get a generated answer with citations to Wikipedia sources
-- Click the Show retrieved context to view the context returned
+- Select a topic and answer complexity in the sidebar
+- Ask a question or use an example
+- Get an answer with Wikipedia citations
+- View retrieved context and debug info
 - Provide feedback via 👍 / 👎
-- Click the Debug Options expander to show debug info
+
+**Example queries:**
+- "What is the International Space Station?" (Middle School)
+- "How do Mars rovers navigate on the surface?" (College)
+- "Describe NASA's three-phase plan for Mars colonization." (Advanced)
 
 ---
 
-## 💡 Example Queries
+## 🛠️ API & Data
 
-Here are some example questions to try for space exploration:
+- **API Reference:**  
+  See [docs/api-reference.md](docs/api-reference.md) for endpoints and usage.
 
-
-🚀 Space Exploration
-
-- Middle School: "What is the International Space Station?"
-- College: "How do Mars rovers navigate on the surface?"
-- Advanced: "Describe NASA's three-phase official plan for human exploration and colonization of Mars."
-
----
-
-## ✅ Requirements
-
-All Python dependencies are listed in `requirements.txt`.  
-Install with:
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## 🛠️ API Reference
-
-Details on the RAG API endpoints, input/output formats, and usage examples. Full API documentation: [docs/api-reference.md](docs/api-reference.md)
-
----
-
-## 🏅 Ground Truth Dataset Format
-
-Format and example for the ground truth dataset used in evaluation. See [docs/ground_truth_format.md](docs/ground_truth_format.md) for dataset details.
+- **Ground Truth Dataset:**  
+  Format and examples: [docs/ground_truth_format.md](docs/ground_truth_format.md)
 
 ---
 
 ## 📝 Notes
 
-- The **Streamlit app** in `sciencesage/app.py` is the UI.  
-- Make sure to set up your `.env` file with `OPENAI_API_KEY`.
-- To open the Streamlit app in your browser from the dev container, use:
-  ```bash
-  $BROWSER http://localhost:8501
-  ```
-- All dependencies are managed in `requirements.txt`.
+- The main UI is in `sciencesage/app.py`
+- Set your `OPENAI_API_KEY` in `.env`
+- Use `$BROWSER http://localhost:8501` to open the app from the dev container
 
 ---
 
