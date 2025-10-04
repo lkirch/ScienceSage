@@ -1,15 +1,12 @@
 import os
-import sys
 import json
 from tqdm import tqdm
-from sciencesage.config import logger
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from sciencesage.config import (
     GROUND_TRUTH_FILE,
     EVAL_RESULTS_FILE,
     TOP_K,
+    logger,
 )
 from sciencesage.retrieval_system import retrieve_context
 from sciencesage.metrics import (
