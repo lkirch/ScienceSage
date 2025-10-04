@@ -145,3 +145,7 @@ help:
 	@echo "  make logs                 - Show last 50 lines of logs"
 	@echo "  make clean-logs           - Remove all log files"
 	@echo "  make help                 - Display this help message"
+	@echo ""
+    @echo "Tip: To measure execution time for any pipeline step, prefix with 'time', e.g.:"
+    @echo "       time make ingest"
+    @echo "       time make data"
