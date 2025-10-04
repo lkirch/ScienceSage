@@ -14,7 +14,7 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ## 2. Example Queries
 
-![Example Queries](../images/sciencesage_ui_examples.png)
+![Example Queries](../images/sciencesage_ui_try_example.png)
 
 *Use the sidebar to pick from example queries or enter your own. This helps you quickly get started and see how the system works.*
 
@@ -22,7 +22,7 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ## 3. Answer Display
 
-![Answer Display](../images/sciencesage_ui_answer.png)
+![Answer Display](../images/sciencesage_ui_moon_college_answer.png)
 
 *After submitting a question, ScienceSage provides a clear, level-appropriate answer. Each answer includes Wikipedia citations for transparency and further reading.*
 
@@ -30,7 +30,9 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ## 4. Retrieved Context & Debug Info
 
-![Context and Debug](../images/sciencesage_ui_context.png)
+![Context](../images/sciencesage_ui_context_space_middle.png)
+
+![Debug Info](../images/sciencesage_ui_debug.png)
 
 *For advanced users, you can expand the "Retrieved Context" section to see the source passages used to generate your answer. Debug information is also available for troubleshooting and transparency.*
 
@@ -38,7 +40,7 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ## 5. Feedback System
 
-![Feedback](../images/sciencesage_ui_feedback.png)
+![Feedback](../images/sciencesage_ui_feedback_moon_middle.png)
 
 *Rate the answer with a 👍 or 👎. Your feedback helps improve the system over time.*
 
