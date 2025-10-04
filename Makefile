@@ -149,3 +149,4 @@ help:
 	@echo "Tip: To measure execution time for any pipeline step, prefix with 'time', e.g.:"
 	@echo "       time make ingest"
 	@echo "       time make data"
+	@echo "       time make eval-all"
