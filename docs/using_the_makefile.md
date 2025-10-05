@@ -88,6 +88,11 @@ make rag-llm-eval
 make summarize-metrics
 ```
 
+- Check to see if example queries run:
+```bash
+make ck-example-queries
+```
+
 - Run all evaluation steps:
 ```bash
 make eval-all
