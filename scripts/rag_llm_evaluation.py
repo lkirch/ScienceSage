@@ -39,6 +39,7 @@ def generate_llm_eval_for_entry(entry):
     topic = entry.get("topic", None)
     level = entry.get("level", "College")
     ground_truth_chunks = [entry["chunk_id"]] if "chunk_id" in entry else []
+    ground_truth_texts = [entry["text"]] if "text" in entry else []
 
     # Ensure query is not None or empty
     if not query or not isinstance(query, str):
@@ -55,11 +56,11 @@ def generate_llm_eval_for_entry(entry):
     # Simple exact match metric (replace with F1, ROUGE, etc. as needed)
     exact_match = simple_exact_match(llm_answer, expected_answer)
 
-    # Retrieval metrics for transparency
-    p_at_k = precision_at_k(retrieved_chunks, ground_truth_chunks, TOP_K)
-    r_at_k = recall_at_k(retrieved_chunks, ground_truth_chunks, TOP_K)
-    rr = reciprocal_rank(retrieved_chunks, ground_truth_chunks)
-    ndcg = ndcg_at_k(retrieved_chunks, ground_truth_chunks, TOP_K)
+    # Retrieval metrics using chunk TEXTS
+    p_at_k = precision_at_k(retrieved_context, ground_truth_texts, TOP_K)
+    r_at_k = recall_at_k(retrieved_context, ground_truth_texts, TOP_K)
+    rr = reciprocal_rank(retrieved_context, ground_truth_texts)
+    ndcg = ndcg_at_k(retrieved_context, ground_truth_texts, TOP_K)
 
     return {
         "query": query,
@@ -69,6 +70,7 @@ def generate_llm_eval_for_entry(entry):
         "retrieved_chunks": retrieved_chunks,
         "retrieved_context": retrieved_context,
         "ground_truth_chunks": ground_truth_chunks,
+        "ground_truth_texts": ground_truth_texts,
         "precision_at_k": p_at_k,
         "recall_at_k": r_at_k,
         "reciprocal_rank": rr,
