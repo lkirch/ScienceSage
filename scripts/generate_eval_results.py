@@ -31,25 +31,26 @@ def generate_eval_for_entry(entry):
     expected_answer = entry.get("answer")
     topic = entry.get("topic", None)
     level = entry.get("level", None)
-    relevant_ids = [entry["chunk_id"]] if "chunk_id" in entry else []
+    # Always a list, even if only one chunk
+    ground_truth_chunks = [entry["chunk_id"]] if "chunk_id" in entry else []
 
     # Retrieve top-k context chunks
     context_chunks = retrieve_context(query, top_k=TOP_K, topic=topic)
-    context_ids = [chunk.get("chunk_id") for chunk in context_chunks]
+    retrieved_chunks = [chunk.get("chunk_id") for chunk in context_chunks]
     retrieved_context = [chunk.get("text") for chunk in context_chunks]
 
     # Compute retrieval metrics
-    p_at_k = precision_at_k(context_ids, relevant_ids, TOP_K)
-    r_at_k = recall_at_k(context_ids, relevant_ids, TOP_K)
-    rr = reciprocal_rank(context_ids, relevant_ids)
-    ndcg = ndcg_at_k(context_ids, relevant_ids, TOP_K)
+    p_at_k = precision_at_k(retrieved_chunks, ground_truth_chunks, TOP_K)
+    r_at_k = recall_at_k(retrieved_chunks, ground_truth_chunks, TOP_K)
+    rr = reciprocal_rank(retrieved_chunks, ground_truth_chunks)
+    ndcg = ndcg_at_k(retrieved_chunks, ground_truth_chunks, TOP_K)
 
     return {
         "query": query,
         "expected_answer": expected_answer,
-        "context_ids": context_ids,
+        "retrieved_chunks": retrieved_chunks,         # always a list
         "retrieved_context": retrieved_context,
-        "relevant_context_ids": relevant_ids,
+        "ground_truth_chunks": ground_truth_chunks,   # always a list
         "precision_at_k": p_at_k,
         "recall_at_k": r_at_k,
         "reciprocal_rank": rr,

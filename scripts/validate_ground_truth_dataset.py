@@ -4,7 +4,7 @@ from pathlib import Path
 
 from sciencesage.config import GROUND_TRUTH_FILE, LEVELS, logger   
 
-REQUIRED_FIELDS = ["chunk_id", "topic", "text", "level", "question", "answer"]
+REQUIRED_FIELDS = ["chunk_id", "topic", "text", "level", "question", "answer", "ground_truth_chunks"]
 
 def validate_line(obj, idx, seen_questions):
     errors = []

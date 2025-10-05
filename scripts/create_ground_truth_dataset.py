@@ -141,6 +141,7 @@ def main():
                             "level": level,
                             "question": qa["query"],
                             "answer": qa["expected_answer"],
+                            "ground_truth_chunks": [chunk_id],
                         }
                     )
 
@@ -166,6 +167,7 @@ def main():
                         "level": level,
                         "question": qa["query"],
                         "answer": qa["expected_answer"],
+                        "ground_truth_chunks": [chunk_id],  # <-- add this line
                     }
                 )
 

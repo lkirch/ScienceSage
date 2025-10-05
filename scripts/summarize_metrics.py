@@ -7,6 +7,7 @@ from sciencesage.config import (
     EVAL_RESULTS_FILE,
     LLM_EVAL_FILE,
     METRICS_SUMMARY_FILE,
+    TOP_K,
     logger,
 )
 
@@ -39,7 +40,7 @@ def main():
     llm_records = load_jsonl(llm_eval_path) if os.path.exists(llm_eval_path) else []
 
     # Define metric keys to summarize
-    retrieval_metric_keys = ["precision_at_k", "recall_at_k", "reciprocal_rank", "ndcg_at_k"]
+    retrieval_metric_keys = [f"precision@{TOP_K}", f"recall@{TOP_K}", "MRR", "nDCG"]
     llm_metric_keys = ["exact_match"]
 
     # Summarize
