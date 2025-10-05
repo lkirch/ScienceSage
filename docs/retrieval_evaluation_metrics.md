@@ -1,6 +1,6 @@
 📊 Retrieval Evaluation Metrics Summary
 
-<<div align="center">
+<div align="center">
   <img src="../images/retrieval_evaluation_metrics.png" alt="Retrieval Evaluation Metrics" width="400"/>
 </div>
 
@@ -18,9 +18,15 @@
 | Semantic Similarity (MiniLM)   | Mean cosine similarity between retrieved and relevant embeddings.   | Mean cosine similarity between retrieved and relevant chunk embeddings     |  0 – 1  | Higher = more semantically aligned     |
 | Fuzzy Match Recall             | Recall using fuzzy string matching for minor text differences.      | (# fuzzy matches in top K) / (Total # relevant)                            |  0 – 1  | Higher = robust to text variations     |
 
-[Average Metric Values with Standard Deviation Error Bars for Retrieval and LLM](../images/avg_metrics_w_stddev_error_bars.png)
 
-[Side-by-side comparison of mean metric values for retrieval and LLM](../images/retrieval_vs_llm_mean_metrics.png)
+<div align="center">
+  <img src="../images/avg_metrics_w_stddev_error_bars.png" alt="Average Metric Values with Standard Deviation Error Bars for Retrieval and LLM" width="600"/>
+</div>
+
+<div align="center">
+  <img src="retrieval_vs_llm_mean_metrics.png" alt="Side-by-side comparison of mean metric values for Retrieval and LLMError Bars for Retrieval and LLM" width="600"/>
+</div>
+
 
 ## Observations
 
