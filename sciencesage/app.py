@@ -148,7 +148,8 @@ def run_retrieval(query: str, topic: str, level: str):
     with st.expander("Show retrieved context"):
         if context_chunks:
             for idx, chunk in enumerate(context_chunks, 1):
-                st.markdown(f"**Chunk {idx}:**")
+                chunk_id = chunk.get('chunk_id', idx)
+                st.markdown(f"**Chunk {idx} (chunk_id: {chunk_id}):**")
                 st.markdown(f"> {chunk.get('text', '')}")
                 url = chunk.get('source_url')
                 if url:
