@@ -28,7 +28,7 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ---
 
-## 4. Retrieved Context & Debug Info
+## 4. Retrieved Context
 
 ![Context](../images/sciencesage_ui_context_space_middle.jpg)
 
