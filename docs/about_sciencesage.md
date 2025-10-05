@@ -25,16 +25,9 @@ ScienceSage answers space science questions using Wikipedia and AI, providing so
 - If you see an error, reload the page.
 - Need help or found a bug? [Open an issue on GitHub](https://github.com/lkirch/ScienceSage/issues).
 
-## Privacy
+**Privacy**
 - Questions are logged for improvement.
 
 **Limitations**
 - Only a small number of Wikiepedia articles were used in the application, so it is possible that materials to answer your question were not included.
 - Answers are based on Wikipedia and may not be fully up-to-date, subject to change as Wikipedia pages change, or may be inaccurate.
-
-
-
-
-
-
-**Note:** Answers are generated from Wikipedia and may not cover the latest discoveries.
