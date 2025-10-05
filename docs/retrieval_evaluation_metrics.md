@@ -1,6 +1,6 @@
 📊 Retrieval Evaluation Metrics Summary
 
-![Retrieval Evaluation Metrics](images/retrieval_evaluation_metrics.png)
+![Retrieval Evaluation Metrics](../images/retrieval_evaluation_metrics.png)
 
 *Figure: Visual summary of retrieval evaluation metrics used in ScienceSage. This diagram illustrates how each metric assesses different aspects of retrieval quality, such as accuracy, ranking, and contextual sufficiency.*
 
