@@ -195,6 +195,27 @@ if st.sidebar.button("Try Example"):
     st.session_state.query = EXAMPLE_QUERIES[st.session_state.topic][level_idx]
     st.session_state.answer = ""
 
+# --- About/Help expander under Try Example ---
+with st.sidebar.expander("ℹ️ About / Help", expanded=False):
+    st.markdown("""
+    **How to Use ScienceSage**
+
+    1. Choose a topic and explanation level on the left.
+    2. Enter your space science question in the box on the right or select an example question.
+    4. Submit to get an answer with sources.
+
+    **Explanation Levels**
+    - **Middle School**: Simple, easy-to-understand answers.
+    - **College**: More detail, for curious learners.
+    - **Advanced**: In-depth, technical explanations.
+
+    **Tips**
+    - Use the thumbs up 👍 / thumbs down 👎 to rate answers.
+    - Expand “Show retrieved context” to see where information came from.
+
+    [Full documentation](https://github.com/lkirch/ScienceSage/blob/main/docs/about_sciencesage.md)
+    """)
+
 # --- Get current topic and level from session state ---
 topic = st.session_state.topic
 level = st.session_state.level
