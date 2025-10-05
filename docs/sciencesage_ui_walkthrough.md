@@ -8,6 +8,10 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ![Home Screen](../images/sciencesage_ui_home.png)
 
+<p align="center">
+  <img src="../images/sciencesage_ui_home.png" alt="Home Screen" style="border:2px solid #D4E7C5; border-radius:8px; padding:4px;" width="600"/>
+</p>
+
 *The home screen welcomes you to ScienceSage. Here, you can select a topic, choose your answer complexity (Middle School, College, Advanced), and enter your question.*
 
 ---
