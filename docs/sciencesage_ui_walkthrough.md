@@ -32,8 +32,6 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ![Context](../images/sciencesage_ui_context_space_middle.jpg)
 
-![Debug Info](../images/sciencesage_ui_debug.png)
-
 *For advanced users, you can expand the "Retrieved Context" section to see the source passages used to generate your answer.*
 
 ---
