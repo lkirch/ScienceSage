@@ -8,10 +8,6 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ![Home Screen](../images/sciencesage_ui_home.png)
 
-<p align="center">
-  <img src="../images/sciencesage_ui_home.png" alt="Home Screen" style="border:2px solid #D4E7C5; border-radius:8px; padding:4px;" width="600"/>
-</p>
-
 *The home screen welcomes you to ScienceSage. Here, you can select a topic, choose your answer complexity (Middle School, College, Advanced), and enter your question.*
 
 ---
@@ -60,13 +56,15 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ![Sidebar](../images/sciencesage_ui_sidebar.png)
 
+![Sidebar Topic Controls](../images/sciencesage_ui_topic_controls.png)
+
 *The sidebar lets you switch topics, adjust answer complexity, and access example queries at any time.*
 
 ---
 
 ## 8. About & Help
 
-![About and Help](../images/sciencesage_ui_about.png)
+![About and Help](../images/sciencesage_ui_about_help.png)
 
 *Find more information about ScienceSage, its data sources, and how to use the app in the About/Help section.*
 
