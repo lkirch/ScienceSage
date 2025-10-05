@@ -1,4 +1,4 @@
-📊 Retrieval Evaluation Metrics Summary
+## 📊 Retrieval Evaluation Metrics Summary
 
 <div align="center">
   <img src="../images/retrieval_evaluation_metrics.png" alt="Retrieval Evaluation Metrics" width="400"/>
