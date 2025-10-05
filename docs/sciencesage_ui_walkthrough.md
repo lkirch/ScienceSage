@@ -30,15 +30,23 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ## 4. Retrieved Context & Debug Info
 
-![Context](../images/sciencesage_ui_context_space_middle.png)
+![Context](../images/sciencesage_ui_context_space_middle.jpg)
 
 ![Debug Info](../images/sciencesage_ui_debug.png)
 
-*For advanced users, you can expand the "Retrieved Context" section to see the source passages used to generate your answer. Debug information is also available for troubleshooting and transparency.*
+*For advanced users, you can expand the "Retrieved Context" section to see the source passages used to generate your answer.*
 
 ---
 
-## 5. Feedback System
+## 5. Debug Info
+
+![Debug Info](../images/sciencesage_ui_debug.png)
+
+* Debug information is also available for troubleshooting and transparency.*
+
+---
+
+## 6. Feedback System
 
 ![Feedback](../images/sciencesage_ui_feedback_moon_middle.png)
 
@@ -46,7 +54,7 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ---
 
-## 6. Sidebar Controls
+## 7. Sidebar Controls
 
 ![Sidebar](../images/sciencesage_ui_sidebar.png)
 
@@ -54,7 +62,7 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ---
 
-## 7. About & Help
+## 8. About & Help
 
 ![About and Help](../images/sciencesage_ui_about.png)
 
