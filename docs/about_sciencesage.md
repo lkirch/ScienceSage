@@ -1,5 +1,9 @@
 ## ℹ️ About ScienceSage
 
+<p align="center">
+  <img src="../images/nano-banana-generated-logo.jpeg" alt="ScienceSage Logo" width="120"/>
+</p>
+
 **What ScienceSage Does**
 
 ScienceSage is an interactive question-answering tool designed to make space science accessible to everyone. By combining the latest information from Wikipedia with advanced AI, ScienceSage provides clear, level-appropriate answers to your questions about space exploration, astronomy, and related topics. Each answer is backed by sources, so you can explore further and trust the information you receive. Whether you’re a student, educator, or lifelong learner, ScienceSage helps you discover the wonders of the universe—one question at a time.
