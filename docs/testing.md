@@ -48,5 +48,4 @@ This will execute the full test suite in the recommended order.
 | streamlit_smoke_test.py                | Smoke test for Streamlit UI startup                      | sciencesage/app.py                          | App launch, UI rendering                           | Streamlit server must be running    |
 
 **Manual UI Testing:**  
-A manual UI testing checklist is also available.  
-See [sciencesage_ui_manual_testing_checklist.md](sciencesage_ui_manual_testing_checklist.md) for details.
+A manual UI testing checklist is also available.  See [sciencesage_ui_manual_testing_checklist.md](sciencesage_ui_manual_testing_checklist.md) for details.
