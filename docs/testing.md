@@ -46,3 +46,7 @@ This will execute the full test suite in the recommended order.
 | test_feedback_manager.py               | Tests feedback saving and retrieval                      | sciencesage/feedback_manager.py             | save_feedback, load_feedback, error handling       | None                                |
 | test_summarize_metrics.py              | Tests metrics summarization and CSV output               | scripts/summarize_metrics.py                | summarize_metrics, CSV writing                     | None                                |
 | streamlit_smoke_test.py                | Smoke test for Streamlit UI startup                      | sciencesage/app.py                          | App launch, UI rendering                           | Streamlit server must be running    |
+
+**Manual UI Testing:**  
+A manual UI testing checklist is also available.  
+See [sciencesage_ui_manual_testing_checklist.md](sciencesage_ui_manual_testing_checklist.md) for details.
