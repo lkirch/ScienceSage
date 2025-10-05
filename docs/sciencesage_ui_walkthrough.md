@@ -1,4 +1,4 @@
-# ScienceSage UI Walkthrough
+# 🚀 ScienceSage UI Walkthrough
 
 Welcome to the ScienceSage user interface! This walkthrough will guide you through the main features and screens of the app, with annotated screenshots for each step.
 
@@ -40,7 +40,7 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ![Debug Info](../images/sciencesage_ui_debug.png)
 
-* Debug information is also available for troubleshooting and transparency.*
+*Debug information is also available for troubleshooting and transparency.*
 
 ---
 
@@ -56,7 +56,9 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ![Sidebar](../images/sciencesage_ui_sidebar.png)
 
-![Sidebar Topic Controls](../images/sciencesage_ui_topic_controls.png)
+<p align="center">
+  <img src="../images/sciencesage_ui_topic_controls.png" alt="Sidebar Topic Controls" width="350"/>
+</p>
 
 *The sidebar lets you switch topics, adjust answer complexity, and access example queries at any time.*
 
