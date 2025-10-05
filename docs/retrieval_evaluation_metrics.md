@@ -24,7 +24,7 @@
 </div>
 
 <div align="center">
-  <img src="retrieval_vs_llm_mean_metrics.png" alt="Side-by-side comparison of mean metric values for Retrieval and LLMError Bars for Retrieval and LLM" width="600"/>
+  <img src="../images/retrieval_vs_llm_mean_metrics.png" alt="Side-by-side comparison of mean metric values for Retrieval and LLMError Bars for Retrieval and LLM" width="600"/>
 </div>
 
 
