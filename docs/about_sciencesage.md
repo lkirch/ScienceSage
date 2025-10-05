@@ -1,7 +1,7 @@
 ## ℹ️ About ScienceSage
 
 <p align="center">
-  <img src="../images/nano-banana-generated-logo.jpeg" alt="ScienceSage Logo" width="120"/>
+  <img src="../images/nano-banana-generated-logo.jpeg" alt="ScienceSage Logo" width="400"/>
 </p>
 
 **What ScienceSage Does**
