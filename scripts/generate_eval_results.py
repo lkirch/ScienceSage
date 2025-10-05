@@ -33,24 +33,30 @@ def generate_eval_for_entry(entry):
     level = entry.get("level", None)
     # Always a list, even if only one chunk
     ground_truth_chunks = [entry["chunk_id"]] if "chunk_id" in entry else []
+    ground_truth_texts = [entry["text"]] if "text" in entry else []
 
     # Retrieve top-k context chunks
     context_chunks = retrieve_context(query, top_k=TOP_K, topic=topic)
     retrieved_chunks = [chunk.get("chunk_id") for chunk in context_chunks]
     retrieved_context = [chunk.get("text") for chunk in context_chunks]
 
-    # Compute retrieval metrics
-    p_at_k = precision_at_k(retrieved_chunks, ground_truth_chunks, TOP_K)
-    r_at_k = recall_at_k(retrieved_chunks, ground_truth_chunks, TOP_K)
-    rr = reciprocal_rank(retrieved_chunks, ground_truth_chunks)
-    ndcg = ndcg_at_k(retrieved_chunks, ground_truth_chunks, TOP_K)
+    logger.debug(f"GT text: {ground_truth_texts}")
+    logger.debug(f"Retrieved texts: {retrieved_context}")
+    logger.debug(f"Overlap: {set(map(str.strip, ground_truth_texts)) & set(map(str.strip, retrieved_context))}")
+
+    # Compute retrieval metrics using chunk TEXTS
+    p_at_k = precision_at_k(retrieved_context, ground_truth_texts, TOP_K)
+    r_at_k = recall_at_k(retrieved_context, ground_truth_texts, TOP_K)
+    rr = reciprocal_rank(retrieved_context, ground_truth_texts)
+    ndcg = ndcg_at_k(retrieved_context, ground_truth_texts, TOP_K)
 
     return {
         "query": query,
         "expected_answer": expected_answer,
         "retrieved_chunks": retrieved_chunks,         # always a list
-        "retrieved_context": retrieved_context,
+        "retrieved_context": retrieved_context,       # list of texts
         "ground_truth_chunks": ground_truth_chunks,   # always a list
+        "ground_truth_texts": ground_truth_texts,     # list of texts
         "precision_at_k": p_at_k,
         "recall_at_k": r_at_k,
         "reciprocal_rank": rr,
