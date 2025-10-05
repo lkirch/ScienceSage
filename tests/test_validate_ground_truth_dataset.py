@@ -23,7 +23,8 @@ def valid_obj():
         "text": "Some text",
         "level":  LEVELS[0], 
         "question": "What is space?",
-        "answer": "The universe beyond Earth."
+        "answer": "The universe beyond Earth.",
+        "ground_truth_chunks": ["1"],
     }
 
 def test_validate_line_all_valid(patch_logger):

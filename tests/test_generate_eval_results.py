@@ -39,6 +39,7 @@ def test_generate_llm_eval_for_entry(monkeypatch):
         "question": "What is the answer?",
         "answer": "Sample Answer",
         "chunk_id": "chunk123",
+        "text": "Sample context text.",
         "topic": "Test Topic",
         "level": "College"
     }
@@ -46,7 +47,10 @@ def test_generate_llm_eval_for_entry(monkeypatch):
     assert result["query"] == entry["question"]
     assert result["retrieved_answer"] == "Sample Answer"
     assert result["exact_match"] == 1.0
-    assert result["context_ids"] == ["chunk123"]
+    assert result["retrieved_chunks"] == ["chunk123"]
+    assert result["retrieved_context"] == ["Sample context text."]
+    assert result["ground_truth_chunks"] == ["chunk123"]
+    assert result["ground_truth_texts"] == ["Sample context text."]
     assert result["precision_at_k"] >= 0.0
     assert result["recall_at_k"] >= 0.0
     assert result["reciprocal_rank"] >= 0.0
