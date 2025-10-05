@@ -39,8 +39,13 @@ def main():
     eval_records = load_jsonl(eval_results_path) if os.path.exists(eval_results_path) else []
     llm_records = load_jsonl(llm_eval_path) if os.path.exists(llm_eval_path) else []
 
-    # Define metric keys to summarize
-    retrieval_metric_keys = [f"precision@{TOP_K}", f"recall@{TOP_K}", "MRR", "nDCG"]
+    # Define metric keys to match JSON files exactly
+    retrieval_metric_keys = [
+        "precision_at_k",
+        "recall_at_k",
+        "reciprocal_rank",
+        "ndcg_at_k"
+    ]
     llm_metric_keys = ["exact_match"]
 
     # Summarize
