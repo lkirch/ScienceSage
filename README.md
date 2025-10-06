@@ -40,6 +40,9 @@ Space exploration, missions, Solar System, Mars, Moon, animals in space
 ## 🖼️ Screenshots & Architecture
 
 **App UI Examples:**  
+
+![ScienceSage UI Home](images/sciencesage_ui_home.png)
+
 For a step-by-step guide to the app’s features and interface, see the [UI Walkthrough](docs/sciencesage_ui_walkthrough.md).
 
 **System Architecture:**  
@@ -66,9 +69,13 @@ For a step-by-step guide to the app’s features and interface, see the [UI Walk
 
 - Support additional science domains and topics
 - Add "Rephrase Question" and "Regenerate Answer" features
-- Improve feedback analytics and user interaction
 - Enable multimedia, images, and multi-language support
 - Add async streaming answers, caching, and conversation history
+- Add more data and see if accuracy can be improved
+- Improve feedback analytics and user interaction
+- Test more edge cases 
+- Add fallback logic, error handling, rate limit handling
+- Work on performance optimization, memory usage, vector store tuning, latency limits
 
 ---
 
