@@ -40,15 +40,14 @@ Space exploration, missions, Solar System, Mars, Moon, animals in space
 ## 🖼️ Screenshots & Architecture
 
 **App UI Examples:**  
-![ScienceSage UI](images/sciencesage_ui.png)
+For a step-by-step guide to the app’s features and interface, see the [UI Walkthrough](docs/sciencesage_ui_walkthrough.md).
 
 **System Architecture:**  
-![ScienceSage Architecture](images/architecture.png)
+![ScienceSage Architecture](images/sciencesage_architecture.png)
+
 
 **Streamlit App Sequence Diagram:**  
-![Streamlit Sequence Diagram](images/eraser_streamlit_app_sequence_diagram.png)
-
-For a step-by-step guide to the app’s features and interface, see the [UI Walkthrough](docs/sciencesage_ui_walkthrough.md).
+See the [Streamlit App Sequence Diagram](images/eraser_streamlit_app_sequence_diagram.png).
 
 ---
 
