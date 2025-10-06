@@ -11,6 +11,16 @@ This document describes the data sources, dataset construction, processing pipel
 
 ---
 
+## 🗺️ Data Flow Diagram
+
+For a visual overview of the ScienceSage data flow through scripts and files, see:
+
+![ScienceSage Data Flow](../images/sciencesage_data_flow.png)
+
+This diagram illustrates how raw Wikipedia data is processed, chunked, embedded, evaluated, and used for answer generation and feedback collection in the ScienceSage pipeline.
+
+---
+
 ## 🖼️ Data Columns Overview
 
 <div align="center">
