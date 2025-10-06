@@ -61,10 +61,11 @@ For a step-by-step guide to the app’s features and interface, see the [UI Walk
 
 ## 🏗️ System Architecture
 
-ScienceSage uses a modular Retrieval-Augmented Generation (RAG) pipeline: user queries are embedded, relevant Wikipedia chunks are retrieved from a vector database (Qdrant), and GPT-4 generates answers at different complexity levels. Feedback and context are managed in real time.
+<div align="center">
+  <img src="../images/sciencesage_architecture.png" alt="ScienceSage Architecture" width="350"/>
+</div>
 
-**Simple Architecture Overview:**  
-![ScienceSage Architecture (Simple)](images/sciencesage_architecture.png)
+ScienceSage uses a modular Retrieval-Augmented Generation (RAG) pipeline: user queries are embedded, relevant Wikipedia chunks are retrieved from a vector database (Qdrant), and GPT-4 generates answers at different complexity levels. Feedback and context are managed in real time.
 
 **Detailed Architecture Diagram:**  
 <div align="center">
