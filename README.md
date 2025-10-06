@@ -45,9 +45,7 @@ For a step-by-step guide to the app’s features and interface, see the [UI Walk
 **System Architecture:**  
 ![ScienceSage Architecture](images/sciencesage_architecture.png)
 
-
-**Streamlit App Sequence Diagram:**  
-See the [Streamlit App Sequence Diagram](images/eraser_streamlit_app_sequence_diagram.png).
+[Streamlit App Sequence Diagram](images/eraser_streamlit_app_sequence_diagram.png)
 
 ---
 
@@ -55,11 +53,12 @@ See the [Streamlit App Sequence Diagram](images/eraser_streamlit_app_sequence_di
 
 | Metric             | Value   |
 |--------------------|---------|
-| Retrieval Recall   | 0.82    |
-| Answer Accuracy    | 0.76    |
+| Retrieval Recall   | 0.8798  |
+| Answer Accuracy    | 0.088   |
 | User Feedback 👍   | 92%     |
 
-*Detailed metrics and evaluation will be added after full pipeline testing.*
+*For detailed and visualized results, see [docs/retrieval_evaluation_metrics.md](docs/retrieval_evaluation_metrics.md).*
+.
 
 ---
 
