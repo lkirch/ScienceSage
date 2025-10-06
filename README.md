@@ -49,6 +49,9 @@ For a step-by-step guide to the app’s features and interface, see the [UI Walk
 
 ScienceSage uses a modular Retrieval-Augmented Generation (RAG) pipeline: user queries are embedded, relevant Wikipedia chunks are retrieved from a vector database (Qdrant), and GPT-4 generates answers at different complexity levels. Feedback and context are managed in real time.
 
+**Mermaid Architecture Diagram:**  
+![ScienceSage Mermaid Architecture](images/mermaid-architecture.png)
+
 **System Architecture:**  
 ![ScienceSage Architecture](images/sciencesage_architecture.png)
 
