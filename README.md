@@ -37,7 +37,7 @@ Space exploration, missions, Solar System, Mars, Moon, animals in space
 
 ---
 
-## 🖼️ Screenshots & Architecture
+## 🖼️ Screenshots
 
 **App UI Examples:**  
 
@@ -45,10 +45,16 @@ Space exploration, missions, Solar System, Mars, Moon, animals in space
 
 For a step-by-step guide to the app’s features and interface, see the [UI Walkthrough](docs/sciencesage_ui_walkthrough.md).
 
+## 🏗️ System Architecture
+
+ScienceSage uses a modular Retrieval-Augmented Generation (RAG) pipeline: user queries are embedded, relevant Wikipedia chunks are retrieved from a vector database (Qdrant), and GPT-4 generates answers at different complexity levels. Feedback and context are managed in real time.
+
 **System Architecture:**  
 ![ScienceSage Architecture](images/sciencesage_architecture.png)
 
 [Streamlit App Sequence Diagram](images/eraser_streamlit_app_sequence_diagram.png)
+
+For a detailed breakdown, see [docs/sciencesage_system_architecture.md](docs/sciencesage_system_architecture.md).
 
 ---
 
