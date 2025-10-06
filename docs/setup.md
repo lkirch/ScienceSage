@@ -53,6 +53,8 @@ Or if you prefer to use the **Makefile** to prepare and run evaluation:
    make eval-all
    ```
 
+If data is already present, you can skip the data pipeline.
+
 ### 6. Run the Streamlit app
 ```bash
 streamlit run sciencesage/app.py
