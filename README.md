@@ -99,7 +99,7 @@ These diagrams illustrate how raw Wikipedia data is processed, chunked, embedded
 | Answer Accuracy    | 0.088   |
 | User Feedback 👍   | 92%     |
 
-### About the Metrics
+### About the Metrics & Observations
 
 - **Recall@K** measures how many relevant Wikipedia chunks are retrieved for each question. High recall (≈0.88) means the system usually finds most of the needed information.
 - **Precision@K** shows how many of the top results are actually relevant. Lower precision (≈0.09) is common in open-domain retrieval and means many retrieved chunks aren’t directly useful.
