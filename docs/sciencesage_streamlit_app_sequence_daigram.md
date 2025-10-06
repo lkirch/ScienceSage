@@ -2,7 +2,7 @@
 
 The diagram below illustrates the end-to-end flow of a user query in ScienceSage:
 
-[View the full sequence diagram](images/eraser_streamlit_app_sequence_diagram.png)
+[View the full sequence diagram](../images/eraser_streamlit_app_sequence_diagram.png)
 
 1. The user enters a question in the Streamlit UI.
 2. The query is sent to the backend, which retrieves relevant documents using the retrieval system (Qdrant).
