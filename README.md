@@ -77,6 +77,20 @@ For a detailed breakdown, see [docs/sciencesage_system_architecture.md](docs/sci
 
 ---
 
+## 🗺️ Data Flow Diagram
+
+For a visual overview of the ScienceSage data flow through scripts and files, see:
+
+![ScienceSage Data Flow](../images/sciencesage_data_flow.png)
+
+You can also view the detailed Mermaid version:
+
+![ScienceSage Mermaid Data Flow](../images/mermaid_data_flow.png)
+
+These diagrams illustrate how raw Wikipedia data is processed, chunked, embedded, evaluated, and used for answer generation and feedback collection in the ScienceSage pipeline.
+
+---
+
 ## 📊 Results
 
 | Metric             | Value   |
