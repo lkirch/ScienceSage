@@ -30,10 +30,24 @@
 - **Feedback system** (👍 / 👎 per answer, stored for analysis).  
 - **Streamlit interface** with example queries and sidebar controls.  
 
-📊 **Data Source** : [Wikipedia](https://www.wikipedia.org/) (focused on space exploration topics)
-
 🔹 **Topics covered:**  
 Space exploration, missions, Solar System, Mars, Moon, animals in space
+
+---
+
+## 📊 Data & Dataset
+
+ScienceSage uses a custom dataset built from [Wikipedia](https://www.wikipedia.org/) articles focused on space exploration topics. The dataset includes curated articles about missions, celestial bodies, technologies, and key events.
+
+**Processing Steps:**
+- **Curation:** Relevant Wikipedia pages are selected based on space-related keywords and categories.
+- **Chunking:** Articles are split into manageable text chunks to optimize retrieval and context assembly.
+- **Embedding:** Each chunk is embedded using OpenAI’s embedding model and stored in a Qdrant vector database for fast similarity search.
+- **Ground Truth Creation:** For evaluation, a set of question–answer pairs is manually created, with ground truth Wikipedia chunks mapped to each question.
+
+This pipeline ensures that answers are grounded in reliable, up-to-date information and that retrieval quality can be quantitatively evaluated.
+
+*See [docs/ground_truth_format.md](docs/ground_truth_format.md) for dataset format and examples.*
 
 ---
 
@@ -49,14 +63,13 @@ For a step-by-step guide to the app’s features and interface, see the [UI Walk
 
 ScienceSage uses a modular Retrieval-Augmented Generation (RAG) pipeline: user queries are embedded, relevant Wikipedia chunks are retrieved from a vector database (Qdrant), and GPT-4 generates answers at different complexity levels. Feedback and context are managed in real time.
 
-**Mermaid Architecture Diagram:**  
+**Simple Architecture Overview:**  
+![ScienceSage Architecture (Simple)](images/sciencesage_architecture.png)
+
+**Detailed Architecture Diagram:**  
 <div align="center">
   <img src="images/mermaid-architecture.png" alt="ScienceSage Mermaid Architecture" width="400"/>
 </div>
-
-
-**System Architecture:**  
-![ScienceSage Architecture](images/sciencesage_architecture.png)
 
 [Streamlit App Sequence Diagram](images/eraser_streamlit_app_sequence_diagram.png)
 
