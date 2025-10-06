@@ -6,7 +6,7 @@
   - [x] Save raw data to `data/raw/`.
 - [x] **Preprocessing**
   - [x] Clean and chunk documents (e.g., 1000 tokens with overlap).
-  - [x] Save processed chunks to `data/processed/` and `chunks.jsonl`.
+  - [x] Save processed chunks to `data/processed/chunks.jsonl`.
   - [x] Auto-tag chunks with topic (space_missions, planets, etc.).
 - [x] **Vector Store Setup**
   - [x] Embed chunks (sentence-transformers).
@@ -28,9 +28,9 @@
   - [x] Drop down for topic filter.
   - [x] Display answer text, retrieved context (expandable), debug info (toggle).
 - [x] Error handling (friendly message if Qdrant/LLM fails).
-- [ ] Streamlit Smoke Tests
+- [x] Streamlit Smoke Tests
   - [x] App loads.
-  - [ ] Sample queries don’t crash.
+  - [x] Sample queries don’t crash.
   - [x] Show that example queries all run ok.
 
 ## 3. Evaluation & Metrics
@@ -40,11 +40,11 @@
 - [x] **Evaluation Script**
   - [x] Measure precision@k, recall@k.
   - [x] Optionally LLM-grade answers (0–5).
-- [ ] **Metrics Tracking**
-  - [ ] Results and metrics
-  - [ ] Retrieval hit rate (%).
-  - [ ] Average answer quality (manual/LLM-graded).
-  - [ ] Save results to CSV/Markdown.
+- [x] **Metrics Tracking**
+  - [x] Results and metrics
+  - [x] Retrieval hit rate (%).
+  - [x] Average answer quality (manual/LLM-graded).
+  - [x] Save results to CSV/Markdown.
 
 ## 4. Testing & Logging
 - [x] **Unit Tests**
@@ -59,29 +59,27 @@
   - [x] Log query, retrieved docs, LLM output.
 
 ## 5. Project Presentation (Capstone Deliverable)
-- [ ] **README.md**
+- [x] **README.md**
   - [x] Description & purpose.
   - [x] Run instructions.
   - [x] Example queries & screenshots
-  - [ ] About/Help section & screen shots
-  - [ ] Create sciencesage_ui.png <- missing or rename link in README
-  - [ ] Update results/metrics summary table to the README.
-  - [ ] Double-check that all required README sections are present and up to date.
-- [ ] **Architecture Diagram**
-  - [ ] Update architecture diagram
-  - [ ] Data flow diagram: Wikipedia → Preprocessing → Qdrant → Retrieval → GPT-4 → Streamlit.
+  - [x] About/Help section & screen shots
+  - [x] Update results/metrics summary table to the README.
+- [x] **Architecture Diagram** Wikipedia → Preprocessing → Qdrant → Retrieval → GPT-4 → Streamlit.
 - [ ] **Demo Script**
-  - [ ] 3–5 representative queries, one per difficulty level.
+  - [x] 3–5 representative queries, one per difficulty level.
 - [x] **Short Summary**
   - [x] Problem → Approach → Results → Future Work.
 
 ## 6. Nice-to-Have (Optional)
 - [x] Feedback button for user responses.
 - [x] Provide citations with hyperlinks.
+- [ ] Data flow diagram
 - [ ] Re-rank retrieved chunks.
 - [ ] Add caching (embeddings/LLM responses).
 - [ ] Configure Arize in qdrant_eda.ipynb
 
 ## 7. Known Issues to Fix Later
+- [ ] Try to get the thumbs up/down icons on the same line as Feedback on this answer:
 - [ ] Notebooks still logging in notebooks, not in logs
 
