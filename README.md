@@ -61,10 +61,11 @@ For a step-by-step guide to the app’s features and interface, see the [UI Walk
 
 ## 🏗️ System Architecture
 
-ScienceSage uses a modular Retrieval-Augmented Generation (RAG) pipeline: user queries are embedded, relevant Wikipedia chunks are retrieved from a vector database (Qdrant), and GPT-4 generates answers at different complexity levels. Feedback and context are managed in real time.
+<div align="center">
+  <img src="../images/sciencesage_architecture.png" alt="ScienceSage Architecture" width="350"/>
+</div>
 
-**Simple Architecture Overview:**  
-![ScienceSage Architecture (Simple)](images/sciencesage_architecture.png)
+ScienceSage uses a modular Retrieval-Augmented Generation (RAG) pipeline: user queries are embedded, relevant Wikipedia chunks are retrieved from a vector database (Qdrant), and GPT-4 generates answers at different complexity levels. Feedback and context are managed in real time.
 
 **Detailed Architecture Diagram:**  
 <div align="center">
@@ -81,13 +82,13 @@ For a detailed breakdown, see [docs/sciencesage_system_architecture.md](docs/sci
 
 For a visual overview of the ScienceSage data flow through scripts and files, see:
 
-![ScienceSage Data Flow](../images/sciencesage_data_flow.png)
+<div align="center">
+  <img src="images/mermaid_data_flow.png" alt="ScienceSage Data Flow" width="400"/>
+</div>
 
-You can also view the detailed Mermaid version:
+This diagram illustrates how raw Wikipedia data is processed, chunked, embedded, evaluated, and used for answer generation and feedback collection in the ScienceSage pipeline.
 
-![ScienceSage Mermaid Data Flow](../images/mermaid_data_flow.png)
-
-These diagrams illustrate how raw Wikipedia data is processed, chunked, embedded, evaluated, and used for answer generation and feedback collection in the ScienceSage pipeline.
+You can get more details about the data flow in [docs/sciencesage_data.md](docs/sciencesage_data.md)
 
 ---
 
@@ -147,7 +148,9 @@ See [docs/project_structure.md](docs/project_structure.md) for the full director
 
 ## ⚡ Quickstart Setup (Recommended: Docker)
 
-![ScienceSage Setup Diagram](images/sciencesage_setup_diagram.png)
+<div align="center">
+  <img src="images/sciencesage_setup_diagram.png" alt="ScienceSage Setup Diagram" width="600"/>
+</div>
 
 1. **Clone the repository and enter the directory:**
 ```bash

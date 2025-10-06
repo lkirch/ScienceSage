@@ -15,7 +15,9 @@ This document describes the data sources, dataset construction, processing pipel
 
 For a visual overview of the ScienceSage data flow through scripts and files, see:
 
-![ScienceSage Data Flow](../images/sciencesage_data_flow.png)
+<div align="center">
+  <img src="../images/mermaid_data_flow.png" alt="ScienceSage Data Flow" width="500"/>
+</div>
 
 This diagram illustrates how raw Wikipedia data is processed, chunked, embedded, evaluated, and used for answer generation and feedback collection in the ScienceSage pipeline.
 
@@ -74,14 +76,6 @@ This diagram illustrates how raw Wikipedia data is processed, chunked, embedded,
 ---
 
 ## 🗺️ Data Flow Through Scripts
-
-For a visual overview of the ScienceSage data flow through scripts and files, see:
-
-<div align="center">
-  <img src="../images/mermaid_data_flow.png" alt="ScienceSage Mermaid Data Flow" width="500"/>
-</div>
-
-This diagram illustrates how raw Wikipedia data is processed, chunked, embedded, evaluated, and used for answer generation and feedback collection in the ScienceSage pipeline.
 
 **Script/Data Flow Steps:**
 
