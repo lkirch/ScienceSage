@@ -77,7 +77,9 @@ This diagram illustrates how raw Wikipedia data is processed, chunked, embedded,
 
 For a visual overview of the ScienceSage data flow through scripts and files, see:
 
-![ScienceSage Mermaid Data Flow](../images/mermaid_data_flow.png)
+<div align="center">
+  <img src="../images/mermaid_data_flow.png" alt="ScienceSage Mermaid Data Flow" width="500"/>
+</div>
 
 This diagram illustrates how raw Wikipedia data is processed, chunked, embedded, evaluated, and used for answer generation and feedback collection in the ScienceSage pipeline.
 
