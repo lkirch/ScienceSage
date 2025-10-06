@@ -83,7 +83,7 @@ For a detailed breakdown, see [docs/sciencesage_system_architecture.md](docs/sci
 For a visual overview of the ScienceSage data flow through scripts and files, see:
 
 <div align="center">
-  <img src="../images/mermaid_data_flow.png" alt="ScienceSage Data Flow" width="400"/>
+  <img src="images/mermaid_data_flow.png" alt="ScienceSage Data Flow" width="400"/>
 </div>
 
 This diagram illustrates how raw Wikipedia data is processed, chunked, embedded, evaluated, and used for answer generation and feedback collection in the ScienceSage pipeline.
@@ -148,7 +148,9 @@ See [docs/project_structure.md](docs/project_structure.md) for the full director
 
 ## ⚡ Quickstart Setup (Recommended: Docker)
 
-![ScienceSage Setup Diagram](images/sciencesage_setup_diagram.png)
+<div align="center">
+  <img src="images/sciencesage_setup_diagram.png" alt="ScienceSage Setup Diagram" width="400"/>
+</div>
 
 1. **Clone the repository and enter the directory:**
 ```bash
