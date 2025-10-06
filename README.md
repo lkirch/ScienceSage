@@ -149,7 +149,7 @@ See [docs/project_structure.md](docs/project_structure.md) for the full director
 ## ⚡ Quickstart Setup (Recommended: Docker)
 
 <div align="center">
-  <img src="images/sciencesage_setup_diagram.png" alt="ScienceSage Setup Diagram" width="400"/>
+  <img src="images/sciencesage_setup_diagram.png" alt="ScienceSage Setup Diagram" width="600"/>
 </div>
 
 1. **Clone the repository and enter the directory:**
