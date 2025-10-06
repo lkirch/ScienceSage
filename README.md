@@ -92,18 +92,58 @@ See [docs/project_structure.md](docs/project_structure.md) for the full director
 
 ---
 
-## ⚡ Quickstart Setup
+## ⚡ Quickstart Setup (Recommended: Docker)
 
-1. **Clone the repo and enter the directory:**
+![ScienceSage Setup Diagram](images/sciencesage_setup_diagram.png)
+
+1. **Clone the repository and enter the directory:**
 ```bash
 git clone https://github.com/lkirch/ScienceSage.git
 cd ScienceSage
 ```
 
-2. **Create and activate a virtual environment:**
+2. **Copy and edit environment variables:**
+   ```bash
+   cp .env.example .env
+   # Edit .env to add your OpenAI API key
+   ```
+
+3. **Build the Docker image:**
+   ```
+   docker build -t sciencesage .
+   ```
+
+4. **Run the app in Docker:**
+   ```bash
+   docker run --env-file .env -p 8501:8501 sciencesage
+   ```
+
+5. **Open the app in your browser:**
+   ```bash
+   $BROWSER http://localhost:8501
+   ```
+
+> **Note:**  
+> When using Docker, all setup, data preparation, and dependencies are handled automatically.  
+> You do **not** need to run the Streamlit app manually or install Python dependencies yourself.
+
+---
+
+## 🛠️ Manual Setup (for advanced users)
+
+If you prefer to run ScienceSage without Docker:
+
+1. **Clone the repository and enter the directory:**
+   ```bash
+   git clone https://github.com/lkirch/ScienceSage.git
+   cd ScienceSage
+   ```
+
+2. **Create and activate a Python 3.12 virtual environment:**
    ```bash
    python3.12 -m venv .venv
    source .venv/bin/activate
+   pip install --upgrade pip
    pip install -r requirements.txt
    ```
 
@@ -113,26 +153,49 @@ cd ScienceSage
    # Edit .env to add your OpenAI API key
    ```
 
-4. **Start Qdrant (vector database):**
+4. **Start Qdrant locally (if not already running):**
    ```bash
    docker run -p 6333:6333 -p 6334:6334 qdrant/qdrant
    ```
 
-5. **Prepare the data:**
+5. **Prepare the data and run evaluation:**
    ```bash
-   python scripts/download_and_clean.py
-   python scripts/preprocess.py
-   python scripts/embed.py
+   make install
+   make data
+   make eval-all
+   ```
+   > Or run the scripts individually as described in [docs/setup.md](docs/setup.md).
+
+6. **Run the Streamlit app:**
+   ```bash
+   streamlit run sciencesage/app.py
    ```
 
-### 6. Run the Streamlit app
-```bash
-streamlit run sciencesage/app.py
-```
+7. **Open the app in your browser:**
+   ```bash
+   $BROWSER http://localhost:8501
+   ```
 
-- The app will open in your browser (or use $BROWSER http://localhost:8501).
+---
 
 > For detailed setup and advanced options, see [docs/setup.md](docs/setup.md).
+
+---
+
+## Qdrant Setup
+
+By default, ScienceSage runs a local Qdrant vector database inside the Docker container.
+
+- No `qdrant_config.yaml` is required for default operation.
+- If you want to use a remote Qdrant instance (e.g., Qdrant Cloud), set the following in your `.env` file:
+
+```
+QDRANT_HOST=your-qdrant-host
+QDRANT_PORT=your-qdrant-port
+QDRANT_URL=http://your-qdrant-host:your-qdrant-port
+```
+
+The app will automatically use these settings.
 
 ---
 
