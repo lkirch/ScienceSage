@@ -211,6 +211,7 @@ with st.sidebar.expander("ℹ️ About / Help", expanded=False):
     - **Advanced**: In-depth, technical explanations.
 
     **Tips**
+    - If you changed the topic and explanation level, you need to click Try Example to update the question.
     - Use the thumbs up 👍 / thumbs down 👎 to rate answers.
     - Expand “Show retrieved context” to see where information came from.
 
