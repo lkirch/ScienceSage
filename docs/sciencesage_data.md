@@ -75,20 +75,11 @@ This diagram illustrates how raw Wikipedia data is processed, chunked, embedded,
 
 ## 🗺️ Data Flow Through Scripts
 
-```mermaid
-flowchart TD
-    A[Wikipedia Articles<br>(raw .html/.txt/.meta.json)] -->|download_data.py| B[data/raw/]
-    B -->|preprocess.py| C[data/processed/chunks.jsonl]
-    C -->|embed.py| D[data/embeddings/embeddings.parquet]
-    D -->|embed.py| E[Qdrant Vector DB]
-    C -->|create_ground_truth_dataset.py| F[data/ground_truth/ground_truth_dataset.jsonl]
-    F -->|generate_eval_results.py| G[data/eval/eval_results.jsonl]
-    G -->|rag_llm_evaluation.py| H[data/eval/llm_eval.jsonl]
-    H -->|summarize_metrics.py| I[data/eval/metrics_summary.csv]
-    E -->|retrieval_system.py| J[Streamlit App<br>Answer Generation]
-    J -->|User Feedback| K[data/feedback/feedback.jsonl]
-    K -->|analyze_feedback.py| L[data/feedback/feedback_summary.csv]
-```
+For a visual overview of the ScienceSage data flow through scripts and files, see:
+
+![ScienceSage Mermaid Data Flow](../images/mermaid_data_flow.png)
+
+This diagram illustrates how raw Wikipedia data is processed, chunked, embedded, evaluated, and used for answer generation and feedback collection in the ScienceSage pipeline.
 
 **Script/Data Flow Steps:**
 
