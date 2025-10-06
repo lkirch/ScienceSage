@@ -103,6 +103,10 @@ test-qdrant:
 ## Utilities
 ## ------------------------
 
+analyze-feedback:
+	@echo ">>> Analyzing user feedback..."
+	python sciencesage/analyze_feedback.py
+
 clean:
 	@echo ">>> Cleaning data outputs..."
 	rm -rf $(DATA_DIR)/processed/* $(DATA_DIR)/chunks/* $(DATA_DIR)/ground_truth/* $(DATA_DIR)/eval/* $(DATA_DIR)/embeddings/*
@@ -141,6 +145,7 @@ help:
 	@echo "  make run                  - Start the Streamlit application (alias)"
 	@echo "  make test                 - Run all tests using pytest"
 	@echo "  make test-qdrant          - Run Qdrant sanity check script"
+	@echo "  make analyze-feedback     - Summarize and export user feedback"
 	@echo "  make clean                - Remove processed files and chunks"
 	@echo "  make logs                 - Show last 50 lines of logs"
 	@echo "  make clean-logs           - Remove all log files"
