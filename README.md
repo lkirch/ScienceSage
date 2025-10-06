@@ -279,3 +279,9 @@ The app will automatically use these settings.
 Pull requests and issues are welcome! Please open an issue or PR if you have suggestions or improvements.
 
 ---
+
+## 📝 License
+MIT — see [LICENSE](LICENSE) for details.
+
+## 👩‍💻 Author
+Lisa Kirch — [GitHub](https://github.com/lkirch)
