@@ -60,6 +60,13 @@ For a step-by-step guide to the app’s features and interface, see the [UI Walk
 | Answer Accuracy    | 0.088   |
 | User Feedback 👍   | 92%     |
 
+### About the Metrics
+
+- **Recall@K** measures how many relevant Wikipedia chunks are retrieved for each question. High recall (≈0.88) means the system usually finds most of the needed information.
+- **Precision@K** shows how many of the top results are actually relevant. Lower precision (≈0.09) is common in open-domain retrieval and means many retrieved chunks aren’t directly useful.
+- **MRR** (Mean Reciprocal Rank) and **nDCG@K** reflect how early and well-ranked the relevant chunks are in the results (moderate values here).
+- **Takeaway:** ScienceSage reliably finds most relevant info (high recall), but there’s room to improve ranking and filtering (precision and order).
+
 *For detailed and visualized results, see [docs/retrieval_evaluation_metrics.md](docs/retrieval_evaluation_metrics.md).*
 .
 
