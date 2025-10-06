@@ -6,10 +6,18 @@ SCRIPTS_DIR=scripts
 DATA_DIR=data
 ENV_FILE=.env
 
-# Main targets
-.PHONY: all ingest run-app test test-qdrant clean logs help download preprocess embed
+.PHONY: all setup ingest preprocess embed create-ground-truth validate-ground-truth generate-eval-results rag-llm-eval summarize-metrics eval-all run-app run-api test test-qdrant clean logs help install data run clean-logs
 
-all: ingest run-app
+## ------------------------
+## Setup & Installation
+## ------------------------
+
+install:
+	@echo ">>> Installing dependencies..."
+	pip install --upgrade pip && pip install -r requirements.txt
+
+setup: install
+	@echo ">>> Setup complete!"
 
 ## ------------------------
 ## Data Ingestion Pipeline
@@ -30,13 +38,54 @@ embed:
 ingest: download preprocess embed
 	@echo ">>> Ingestion pipeline complete!"
 
+data: ingest
+	@echo ">>> Data pipeline complete!"
+
+## ------------------------
+## Ground Truth Dataset & Evaluation
+## ------------------------
+
+create-ground-truth:
+	@echo ">>> Creating ground truth dataset..."
+	python $(SCRIPTS_DIR)/create_ground_truth_dataset.py
+
+validate-ground-truth:
+	@echo ">>> Validating ground truth dataset..."
+	python $(SCRIPTS_DIR)/validate_ground_truth_dataset.py
+
+generate-eval-results:
+	@echo ">>> Generating retrieval evaluation results..."
+	python $(SCRIPTS_DIR)/generate_eval_results.py
+
+rag-llm-eval:
+	@echo ">>> Running RAG LLM evaluation..."
+	python $(SCRIPTS_DIR)/rag_llm_evaluation.py
+
+summarize-metrics:
+	@echo ">>> Summarizing evaluation metrics..."
+	python $(SCRIPTS_DIR)/summarize_metrics.py
+
+ck-example-queries:
+	@echo ">>> Running example queries check..."
+	python $(SCRIPTS_DIR)/ck_example_queries.py
+
+eval-all: create-ground-truth validate-ground-truth generate-eval-results rag-llm-eval summarize-metrics ck-example-queries
+	@echo ">>> Full evaluation pipeline complete!"
+
 ## ------------------------
 ## Application
 ## ------------------------
 
 run-app:
 	@echo ">>> Starting Streamlit app..."
-	streamlit run $(APP_DIR)/main.py --server.port=8501
+	streamlit run $(APP_DIR)/app.py --server.port=8501
+
+run-api:
+	@echo ">>> Starting FastAPI RAG API..."
+	uvicorn sciencesage.rag_api:app --host 0.0.0.0 --port 8000
+
+run: run-app
+	@echo ">>> App started!"
 
 ## ------------------------
 ## Testing
@@ -48,15 +97,23 @@ test:
 
 test-qdrant:
 	@echo ">>> Testing Qdrant connection..."
-	python $(SCRIPTS_DIR)/test_qdrant.py
+	python tests/test_qdrant.py
 
 ## ------------------------
 ## Utilities
 ## ------------------------
 
+analyze-feedback:
+	@echo ">>> Analyzing user feedback..."
+	python sciencesage/analyze_feedback.py
+
 clean:
 	@echo ">>> Cleaning data outputs..."
-	rm -rf $(DATA_DIR)/processed/* $(DATA_DIR)/chunks/*
+	rm -rf $(DATA_DIR)/processed/* $(DATA_DIR)/chunks/* $(DATA_DIR)/ground_truth/* $(DATA_DIR)/eval/* $(DATA_DIR)/embeddings/*
+
+clean-logs:
+	@echo ">>> Removing all log files..."
+	rm -rf logs/*.log
 
 logs:
 	@echo ">>> Showing latest logs..."
@@ -69,13 +126,32 @@ logs:
 help:
 	@echo ""
 	@echo "ScienceSage Makefile Commands:"
-	@echo "  make download       - Download raw data"
-	@echo "  make preprocess     - Chunk processed text into JSONL for embeddings"
-	@echo "  make embed          - Embed chunks into Qdrant"
-	@echo "  make ingest         - Run full pipeline: download → preprocess → embed"
-	@echo "  make run-app        - Start the Streamlit application"
-	@echo "  make test           - Run all tests using pytest"
-	@echo "  make test-qdrant    - Run Qdrant sanity check script"
-	@echo "  make clean          - Remove processed files and chunks"
-	@echo "  make logs           - Show last 50 lines of logs"
-	@echo "  make help           - Display this help message"
+	@echo "  make setup                - Install dependencies"
+	@echo "  make install              - Install dependencies (alias)"
+	@echo "  make download             - Download raw data"
+	@echo "  make preprocess           - Chunk processed text into JSONL for embeddings"
+	@echo "  make embed                - Embed chunks into Qdrant"
+	@echo "  make ingest               - Run full pipeline: download → preprocess → embed"
+	@echo "  make data                 - Run full data pipeline (alias for ingest)"
+	@echo "  make create-ground-truth  - Create ground truth dataset"
+	@echo "  make validate-ground-truth - Validate ground truth dataset"
+	@echo "  make generate-eval-results - Generate retrieval evaluation results"
+	@echo "  make rag-llm-eval         - Run RAG LLM evaluation"
+	@echo "  make summarize-metrics    - Summarize evaluation metrics"
+	@echo "  make eval-all             - Run all evaluation steps (create-ground-truth, validate-ground-truth, generate-eval-results, rag-llm-eval, summarize-metrics, ck-example-queries)"
+	@echo "  make ck-example-queries   - Run example queries check"
+	@echo "  make run-app              - Start the Streamlit application"
+	@echo "  make run-api              - Start the FastAPI RAG API"
+	@echo "  make run                  - Start the Streamlit application (alias)"
+	@echo "  make test                 - Run all tests using pytest"
+	@echo "  make test-qdrant          - Run Qdrant sanity check script"
+	@echo "  make analyze-feedback     - Summarize and export user feedback"
+	@echo "  make clean                - Remove processed files and chunks"
+	@echo "  make logs                 - Show last 50 lines of logs"
+	@echo "  make clean-logs           - Remove all log files"
+	@echo "  make help                 - Display this help message"
+	@echo ""
+	@echo "Tip: To measure execution time for any pipeline step, prefix with 'time', e.g.:"
+	@echo "       time make ingest"
+	@echo "       time make data"
+	@echo "       time make eval-all"

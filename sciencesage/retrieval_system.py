@@ -1,240 +1,129 @@
-from sciencesage.config import (
-    OPENAI_API_KEY, QDRANT_URL, QDRANT_COLLECTION,
-    TOPICS, EMBED_MODEL, CHAT_MODEL
-)
+from typing import List, Optional
+from loguru import logger
 from openai import OpenAI
 from qdrant_client import QdrantClient
-from typing import Union, List, Tuple
-from qdrant_client.models import Filter, FieldCondition, MatchAny
-from sciencesage.prompts import get_system_prompt, get_user_prompt
-import hashlib
-from loguru import logger
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
+from qdrant_client.models import Filter, FieldCondition, MatchValue
+from sentence_transformers import SentenceTransformer
 
-# -------------------------
-# Clients
-# -------------------------
-client = OpenAI(api_key=OPENAI_API_KEY)
+from sciencesage.config import (
+    CHAT_MODEL,
+    TOP_K,
+    EMBEDDING_MODEL,
+    QDRANT_URL,
+    QDRANT_COLLECTION,
+    LEVELS,
+    SIMILARITY_THRESHOLD,
+)
+from sciencesage.prompts import get_system_prompt, get_user_prompt
+
+
+# -------- Initialization --------
+logger.info("Initializing Retrieval System...")
+client = OpenAI()
+embedder = SentenceTransformer(EMBEDDING_MODEL)
 qdrant = QdrantClient(url=QDRANT_URL)
 
-# -------------------------
-# Precompute Topic Embeddings
-# -------------------------
-def embed_once(text: str):
-    try:
-        response = client.embeddings.create(model=EMBED_MODEL, input=text)
-        return response.data[0].embedding
-    except Exception as e:
-        logger.error(f"Failed to embed text: {text}, error: {e}")
-        raise
 
-logger.info("Precomputing topic embeddings...")
-TOPIC_EMBEDDINGS = {topic: embed_once(topic) for topic in TOPICS}
-
-# -------------------------
-# Embedding Function
-# -------------------------
-def embed_text(text: str):
-    """Embed text with OpenAI."""
-    try:
-        response = client.embeddings.create(model=EMBED_MODEL, input=text)
-        return response.data[0].embedding
-    except Exception as e:
-        logger.error(f"Embedding failed: {e}")
-        raise
-
-# -------------------------
-# Topic-Aware Re-Ranking
-# -------------------------
-def rerank_results(results, query_vector):
-    """Re-rank Qdrant results using topic similarity as secondary score."""
-    reranked = []
-    query_vec_np = np.array(query_vector).reshape(1, -1)
-
-    for r in results.points:
-        payload = r.payload
-        chunk_topics = payload.get("topics", [])
-        max_topic_score = 0
-
-        for t in chunk_topics:
-            topic_vec = TOPIC_EMBEDDINGS.get(t)
-            if topic_vec is not None:
-                score = cosine_similarity(query_vec_np, np.array(topic_vec).reshape(1, -1))[0][0]
-                max_topic_score = max(max_topic_score, score)
-
-        combined_score = 0.8 * r.score + 0.2 * max_topic_score
-        reranked.append((combined_score, r))
-
-    reranked.sort(key=lambda x: x[0], reverse=True)
-    for score, r in reranked:
-        logger.debug(f"Re-ranked: id={r.id}, vec_score={r.score:.3f}, combined={score:.3f}")
-
-    return reranked
-
-# -------------------------
-# Deduplicate and merge URLs
-# -------------------------
-def deduplicate_and_merge(results_with_scores):
+# -------- Retrieval Function --------
+def retrieve_context(
+    query: str,
+    top_k: int = TOP_K,
+    topic: Optional[str] = None,
+) -> List[dict]:
     """
-    Deduplicate by text content and merge reference URLs for same snippet.
-    Returns list of dicts with 'text', 'source', 'chunk', 'score', 'urls'.
+    Retrieve top_k most relevant chunks from Qdrant for a given query.
+
+    Returns list of dicts with keys: text, source_url, chunk_id, score
     """
-    seen = {}
-    for score, r in results_with_scores:
-        payload = r.payload
-        text = payload.get("text", "").strip()
-        if not text:
-            continue
-        key = hashlib.md5(text.encode("utf-8")).hexdigest()
-        source = payload.get("source", "unknown")
-        chunk = payload.get("chunk_index", "?")
-        urls = payload.get("reference_urls", [])
+    query_embedding = embedder.encode(query).tolist()
 
-        if key not in seen:
-            seen[key] = {
-                "text": text,
-                "source": source,
-                "chunk": chunk,
-                "score": score,
-                "urls": urls.copy()
-            }
-        else:
-            if score > seen[key]["score"]:
-                seen[key]["score"] = score
-            seen[key]["urls"] = list(set(seen[key]["urls"] + urls))
-    return list(seen.values())
+    # Build metadata filter (only topic, not level)
+    qdrant_filter = None
+    #if topic:
+    #    qdrant_filter = Filter(
+    #        must=[FieldCondition(key="topic", match=MatchValue(value=topic))]
+    #    )
 
-# -------------------------
-# Main Retrieval Function
-# -------------------------
-def retrieve_answer(query: str, topic: Union[str, List[str]], level: str) -> Tuple[str, List[dict], List[dict]]:
-    """
-    Retrieve top context from Qdrant and generate answer with confidence scores.
-    Returns:
-        answer: str
-        contexts: List[dict] -> {'text','source','chunk','score'}
-        references: List[dict] -> {'url','snippet','score'}
-    """
-    logger.info(f"Retrieving answer for query='{query[:50]}...', topic='{topic}', level='{level}'")
-
-    vector = embed_text(query)
-
-    query_filter = None
-    if topic:
-        selected_topics = topic if isinstance(topic, list) else [topic]
-        query_filter = Filter(must=[FieldCondition(key="topics", match=MatchAny(any=selected_topics))])
-
-    results = qdrant.query_points(
+    search_result = qdrant.query_points(
         collection_name=QDRANT_COLLECTION,
-        query=vector,
-        limit=10,
-        query_filter=query_filter,
+        query=query_embedding,
+        limit=top_k,
+        query_filter=qdrant_filter,
+        with_payload=True,
+        score_threshold=SIMILARITY_THRESHOLD,
     )
 
-    if not results.points:
-        logger.warning("No results returned from Qdrant.")
-        return "I don’t know based on the available information.", [], []
-
-    reranked = rerank_results(results, vector)
-    deduped = deduplicate_and_merge(reranked)
-    top_results = deduped[:5]
-
-    contexts = []
-    references = []
-    for r in top_results:
-        contexts.append({
-            "text": r["text"],
-            "source": r["source"],
-            "chunk": r["chunk"],
-            "score": r["score"]
+    chunks = []
+    for i, hit in enumerate(search_result.points):
+        chunks.append({
+            "text": hit.payload["text"],
+            "source_url": hit.payload.get("source_url", "unknown"),
+            "chunk_id": hit.payload.get("chunk_id", i),
+            "score": hit.score,
         })
-        for url in r["urls"]:
-            references.append({
-                "url": url,
-                "snippet": r["text"][:150] + "...",
-                "score": r["score"]
-            })
 
-    def get_source_label(payload):
-        # Prefer title, fallback to domain, fallback to source
-        title = payload.get("title")
-        urls = payload.get("urls") or []
-        domain = get_domain(urls[0]) if urls else None
-        if title:
-            return title
-        elif domain:
-            return domain
-        else:
-            return payload.get("source", "unknown")
+    logger.debug(f"Retrieved {len(chunks)} chunks (top_k={top_k}, topic={topic})")
+    return chunks
 
-    context_text = "\n\n".join([
-        (
-            f"[Source: <a href='{r['urls'][0]}' target='_blank'>{get_source_label(r)}</a> | chunk {c['chunk']}] {c['text']}"
-            if r.get("urls") else
-            f"[Source: {get_source_label(r)} | chunk {c['chunk']}] {c['text']}"
-        )
-        for c, r in zip(contexts, top_results)
-    ])
-    if not context_text:
-        context_text = "No additional context found in the database."
-        logger.warning("No relevant context found above threshold.")
 
-    system_prompt = get_system_prompt(topic, level)
-    user_prompt = get_user_prompt(query, context_text)
-
-    try:
-        completion = client.chat.completions.create(
-            model=CHAT_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ]
-        )
-        answer = completion.choices[0].message.content
-        logger.info("Answer generated successfully.")
-    except Exception as e:
-        logger.error(f"OpenAI completion failed: {e}")
-        answer = "I don’t know based on the available information."
-
-    return answer, contexts, references
-
-# -------------------------
-# Rephrase Query Function
-# -------------------------
-def rephrase_query(query: str) -> str:
+# -------- Generation Function --------
+def generate_answer(query: str, context_chunks: List[dict], level: str, topic: str) -> str:
     """
-    Use the LLM to rewrite the user query in a clearer or alternative way
-    to improve retrieval results.
+    Generate an answer from the chat model given a query and retrieved context.
     """
-    system_prompt = (
-        "You are a helpful assistant that rewrites science questions "
-        "for better search and retrieval. Keep the meaning intact but make it concise."
+    # Format context with citations
+    context_text = "\n\n".join(
+        f"[{i+1}] {chunk['text']} (Source: {chunk['source_url']}, Chunk: {chunk['chunk_id']})"
+        for i, chunk in enumerate(context_chunks)
     )
-    user_prompt = f"Original question: {query}\n\nPlease rewrite it for better search:"
 
-    try:
-        completion = client.chat.completions.create(
-            model=CHAT_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ]
-        )
-        new_query = completion.choices[0].message.content.strip()
-        if not new_query:
-            logger.warning("Rephrase returned empty, using original query.")
-            return query
-        logger.info(f"Query rephrased: {new_query}")
-        return new_query
-    except Exception as e:
-        logger.error(f"Rephrase query failed: {e}")
-        return query
+    system_prompt = get_system_prompt(topic=topic, level=level)
+    user_prompt = get_user_prompt(query=query, context_text=context_text, level=level)
 
-def get_domain(url):
-    from urllib.parse import urlparse
-    try:
-        netloc = urlparse(url).netloc
-        return netloc.replace("www.", "") if netloc else url
-    except Exception:
-        return url
+    response = client.chat.completions.create(
+        model=CHAT_MODEL,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        temperature=0.2,
+    )
+
+    answer = response.choices[0].message.content.strip()
+    logger.debug(f"Generated answer length: {len(answer)} characters")
+    return answer
+
+
+# -------- High-Level RAG Function --------
+def retrieve_answer(
+    query: str,
+    topic: str,
+    level: str = "College",
+    top_k: int = TOP_K,
+) -> dict:
+    """
+    Full RAG pipeline: retrieve + generate.
+    Returns a dict with 'answer', 'sources', and 'context' (list of context chunks).
+    """
+    logger.info(f"Processing query: '{query}' | topic={topic} | level={level}")
+    context_chunks = retrieve_context(query, top_k=top_k, topic=topic)
+
+    if not context_chunks:
+        logger.warning("No context retrieved — returning fallback response.")
+        return {
+            "answer": "I don’t know based on the available information.",
+            "sources": {},
+            "context": []
+        }
+
+    answer = generate_answer(query, context_chunks, level, topic)
+    # Build mapping of chunk_id to source_url
+    sources = {
+        f"chunk {chunk['chunk_id']}".strip(): chunk["source_url"]
+        for chunk in context_chunks
+    }
+    return {
+        "answer": answer,
+        "sources": sources,
+        "context": context_chunks # for transparency/debugging
+    }

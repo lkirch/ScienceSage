@@ -13,6 +13,7 @@ uvicorn
 # AI/Embeddings
 openai
 tiktoken
+sentence-transformers
 
 # Database/Vector Search
 qdrant-client
@@ -22,11 +23,21 @@ loguru
 tqdm
 pandas
 beautifulsoup4
+arize
 
 # Dev & Testing
 pytest
 notebook
 ipykernel
+ipywidgets
 
 # Machine Learning
 scikit-learn
+
+# EDA
+matplotlib
+seaborn
+wordcloud
+nltk    
+spacy
+umap-learn

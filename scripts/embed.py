@@ -1,99 +1,77 @@
-import os
-from pathlib import Path
 import json
-from typing import List, Dict
 import uuid
-from dotenv import load_dotenv
-from openai import OpenAI
-from qdrant_client import QdrantClient
-from qdrant_client.models import PointStruct, VectorParams, Distance
-from loguru import logger
+from pathlib import Path
+from typing import List, Dict
 import argparse
+from tqdm import tqdm
+import pandas as pd
+from sciencesage.config import logger
 
 from sciencesage.config import (
-    CHUNKS_FILE, 
-    QDRANT_HOST, 
-    QDRANT_PORT, 
-    QDRANT_COLLECTION, 
-    EMBED_MODEL,
-    QDRANT_BATCH_SIZE, 
+    EMBEDDING_MODEL,
+    EMBEDDING_DIM,
+    CHUNKS_FILE,
+    CHUNK_FIELDS,
+    QDRANT_HOST,
+    QDRANT_PORT,
+    QDRANT_COLLECTION,
+    QDRANT_BATCH_SIZE,
+    EMBEDDING_FILE,
+    DISTANCE_METRIC
 )
+from sentence_transformers import SentenceTransformer
+from qdrant_client import QdrantClient
+from qdrant_client.models import PointStruct, VectorParams, Distance
 
 # -------------------------
-# Logging
+# Distance metric mapping
 # -------------------------
-logger.add("logs/embed.log", rotation="5 MB", retention="7 days")
-logger.info("Started embed.py script.")
+distance_map = {
+    "Cosine": Distance.COSINE,
+    "Euclidean": Distance.EUCLID,
+    "Dot": Distance.DOT
+}
+chosen_distance = distance_map.get(DISTANCE_METRIC, Distance.COSINE)
 
 # -------------------------
-# Load environment variables
+# Model and Qdrant setup
 # -------------------------
-load_dotenv()  # Load variables from .env if present
-
-# -------------------------
-# Clients
-# -------------------------
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+logger.info(f"Loading embedding model: {EMBEDDING_MODEL}")
+model = SentenceTransformer(EMBEDDING_MODEL)
+logger.info(f"Connecting to Qdrant at {QDRANT_HOST}:{QDRANT_PORT}")
 qdrant = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
 
 # -------------------------
 # Helpers
 # -------------------------
 def load_chunks(path: Path) -> List[Dict]:
-    """Load chunks from jsonl file."""
-    logger.info(f"Loading chunks from {path}...")
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            chunks = [json.loads(line) for line in f]
-        logger.info(f"Loaded {len(chunks)} chunks.")
-        return chunks
-    except Exception as e:
-        logger.error(f"Failed to load chunks: {e}")
-        return []
+    logger.info(f"Loading chunks from {path} ...")
+    with open(path, "r", encoding="utf-8") as f:
+        return [json.loads(line) for line in f]
 
 def get_embedding(text: str) -> List[float]:
-    """Fetch embedding from OpenAI."""
-    logger.debug(f"Getting embedding for text (first 50 chars): {text[:50]}...")
-    try:
-        response = openai_client.embeddings.create(
-            model=EMBED_MODEL,
-            input=text
-        )
-        logger.debug("Embedding fetched successfully.")
-        return response.data[0].embedding
-    except Exception as e:
-        logger.error(f"Failed to get embedding: {e}")
-        raise
+    return model.encode(text).tolist()
 
 def ensure_collection(vector_size: int):
-    """Create collection in Qdrant if not exists."""
-    try:
-        collections = qdrant.get_collections().collections
-        existing = [c.name for c in collections]
-
-        if QDRANT_COLLECTION not in existing:
-            qdrant.create_collection(
-                collection_name=QDRANT_COLLECTION,
-                vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
-            )
-            logger.info(f"Created Qdrant collection '{QDRANT_COLLECTION}'")
-        else:
-            logger.info(f"Using existing Qdrant collection '{QDRANT_COLLECTION}'")
-    except Exception as e:
-        logger.error(f"Failed to ensure Qdrant collection: {e}")
-        raise
+    collections = qdrant.get_collections().collections
+    existing = [c.name for c in collections]
+    if QDRANT_COLLECTION not in existing:
+        logger.info(f"Creating collection '{QDRANT_COLLECTION}' ...")
+        qdrant.create_collection(
+            collection_name=QDRANT_COLLECTION,
+            vectors_config=VectorParams(size=vector_size, distance=chosen_distance)
+        )
+    else:
+        logger.info(f"Collection '{QDRANT_COLLECTION}' already exists.")
 
 def drop_collection():
-    """Delete the Qdrant collection if it exists."""
-    try:
-        collections = qdrant.get_collections().collections
-        existing = [c.name for c in collections]
-        if QDRANT_COLLECTION in existing:
-            qdrant.delete_collection(collection_name=QDRANT_COLLECTION)
-            logger.info(f"Dropped existing Qdrant collection '{QDRANT_COLLECTION}'")
-    except Exception as e:
-        logger.error(f"Failed to drop Qdrant collection: {e}")
-        raise
+    collections = qdrant.get_collections().collections
+    existing = [c.name for c in collections]
+    if QDRANT_COLLECTION in existing:
+        logger.info(f"Dropping collection '{QDRANT_COLLECTION}' ...")
+        qdrant.delete_collection(collection_name=QDRANT_COLLECTION)
+    else:
+        logger.info(f"Collection '{QDRANT_COLLECTION}' does not exist, skipping drop.")
 
 # -------------------------
 # Main
@@ -111,97 +89,56 @@ def main():
         drop_collection()
 
     chunks = load_chunks(Path(CHUNKS_FILE))
-
     if not chunks:
         logger.error("No chunks found. Run preprocess.py first.")
         return
 
-    # Quick embedding to check vector size
-    try:
-        sample_vector = get_embedding("test")
-        vector_size = len(sample_vector)
-        logger.debug(f"Sample embedding vector size: {vector_size}")
-    except Exception as e:
-        logger.error(f"Failed to get sample embedding: {e}")
-        return
+    ensure_collection(EMBEDDING_DIM)
 
-    try:
-        ensure_collection(vector_size)
-    except Exception as e:
-        logger.error(f"Failed to ensure collection: {e}")
-        return
-
-    # Batch upload chunks
     points = []
-    failed_chunks = []
-    for idx, chunk in enumerate(chunks):
-        try:
-            vector = get_embedding(chunk["text"])
-            point_id = chunk.get("uuid", str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk["id"]))))
-            topics = chunk.get("topics")
-            if isinstance(topics, str):
-                topics = [topics]
-            elif topics is None:
-                topics = []
-            payload = {
-                "id": chunk.get("id"),
-                "uuid": chunk.get("uuid"),
-                "doc_id": chunk.get("doc_id"),
-                "page": chunk.get("page"),
-                "char_start": chunk.get("char_start"),
-                "char_end": chunk.get("char_end"),
-                "topics": topics,
-                "topic": chunk.get("topic"),
-                "title": chunk.get("title"),
-                "url": chunk.get("url"),
-                "images": chunk.get("images"),
-                "tables": chunk.get("tables"),
-                "authors": chunk.get("authors"),
-                "matched_keywords": chunk.get("matched_keywords"),
-                "source": chunk.get("source"),
-                "chunk_index": chunk.get("chunk_index"),
-                "text": chunk.get("text"),
-                "reference_urls": chunk.get("reference_urls", []),
-                "loadtime": chunk.get("loadtime"),
-                "raw_type": chunk.get("raw_type"),
-                "abstract": chunk.get("abstract"),
-            }
-            payload = {k: v for k, v in payload.items() if v is not None}
-            points.append(
-                PointStruct(
-                    id=point_id,
-                    vector=vector,
-                    payload=payload
-                )
+    embeddings_records = []
+    for i, chunk in enumerate(tqdm(chunks, desc="Embedding and uploading chunks")):
+        vector = get_embedding(chunk["text"])
+        point_id = chunk.get("uuid") or str(uuid.uuid5(uuid.NAMESPACE_DNS, str(chunk)))
+        payload = {k: chunk.get(k) for k in CHUNK_FIELDS if k != "embedding"}
+        payload["embedding"] = vector
+        payload["chunk_id"] = point_id
+        points.append(
+            PointStruct(
+                id=point_id,
+                vector=vector,
+                payload=payload
             )
-            # Upload in batches
-            if len(points) >= QDRANT_BATCH_SIZE:
-                try:
-                    qdrant.upsert(collection_name=QDRANT_COLLECTION, points=points)
-                    logger.info(f"Uploaded {len(points)} chunks to QDRANT collection '{QDRANT_COLLECTION}'")
-                    points = []
-                except Exception as e:
-                    logger.error(f"Failed to upload batch to Qdrant: {e}")
-                    failed_chunks.extend([p.payload.get("id", "unknown") for p in points])
-                    points = []
-        except Exception as e:
-            chunk_id = chunk.get("id", "unknown")
-            logger.error(f"Failed to process chunk id {chunk_id}: {e}")
-            failed_chunks.append(chunk_id)
-
-    # Upload any remaining points
-    if points:
-        try:
+        )
+        record = payload.copy()
+        record["chunk_id"] = point_id
+        embeddings_records.append(record)
+        if len(points) >= QDRANT_BATCH_SIZE:
+            # --- Sanity check before upload ---
+            for p in points:
+                if p.payload.get("chunk_id") is None:
+                    logger.warning(f"Point with id {p.id} has chunk_id=None in payload!")
+            logger.info(f"Uploading batch of {len(points)} points to Qdrant ...")
             qdrant.upsert(collection_name=QDRANT_COLLECTION, points=points)
-            logger.info(f"Uploaded {len(points)} chunks to QDRANT collection '{QDRANT_COLLECTION}'")
-        except Exception as e:
-            logger.error(f"Failed to upload final batch to Qdrant: {e}")
-            failed_chunks.extend([p.payload.get("id", "unknown") for p in points])
+            points = []
 
-    if failed_chunks:
-        logger.warning(f"Failed to embed/upload {len(failed_chunks)} chunks. IDs: {failed_chunks}")
-    else:
-        logger.info("All chunks embedded and uploaded successfully.")
+    if points:
+        # --- Sanity check before final upload ---
+        for p in points:
+            if p.payload.get("chunk_id") is None:
+                logger.warning(f"Point with id {p.id} has chunk_id=None in payload!")
+        logger.info(f"Uploading final batch of {len(points)} points to Qdrant ...")
+        qdrant.upsert(collection_name=QDRANT_COLLECTION, points=points)
+
+    # Save embeddings to parquet
+    df = pd.DataFrame(embeddings_records)
+    df.to_parquet(EMBEDDING_FILE, index=False)
+    logger.info(f"Saved embeddings to parquet: {EMBEDDING_FILE}")
+
+    # --- Parquet sanity check: show first few records ---
+    logger.info("Parquet file sample (first 5 rows):")
+    df_check = pd.read_parquet(EMBEDDING_FILE)
+    logger.info(f"\n{df_check.head()}")
 
 if __name__ == "__main__":
     main()
