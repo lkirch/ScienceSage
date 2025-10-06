@@ -82,9 +82,11 @@ For a detailed breakdown, see [docs/sciencesage_system_architecture.md](docs/sci
 
 For a visual overview of the ScienceSage data flow through scripts and files, see:
 
-![ScienceSage Data Flow](images/mermaid_data_flow.png)
+<div align="center">
+  <img src="../images/mermaid_data_flow.png" alt="ScienceSage Data Flow" width="400"/>
+</div>
 
-This diagram illustrats how raw Wikipedia data is processed, chunked, embedded, evaluated, and used for answer generation and feedback collection in the ScienceSage pipeline.
+This diagram illustrates how raw Wikipedia data is processed, chunked, embedded, evaluated, and used for answer generation and feedback collection in the ScienceSage pipeline.
 
 You can get more details about the data flow in [docs/sciencesage_data.md](docs/sciencesage_data.md)
 
