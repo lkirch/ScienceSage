@@ -23,6 +23,7 @@ ScienceSage is an interactive question-answering tool designed to make space sci
 - Answers include references, and users can expand to see the retrieved context.
 
 **Tips**
+- If you changed the topic and explanation level, you need to click Try Example to update the question.
 - Use the “Thumbs Up/Down” buttons help improve answer quality.
 - Expand “Show Sources” to see where information came from.
 
