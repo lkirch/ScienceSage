@@ -30,22 +30,64 @@
 - **Feedback system** (👍 / 👎 per answer, stored for analysis).  
 - **Streamlit interface** with example queries and sidebar controls.  
 
-📊 **Data Source** : [Wikipedia](https://www.wikipedia.org/) (focused on space exploration topics)
-
 🔹 **Topics covered:**  
 Space exploration, missions, Solar System, Mars, Moon, animals in space
 
 ---
 
-## 🖼️ Screenshots & Architecture
+## 📊 Data & Dataset
+
+ScienceSage uses a custom dataset built from [Wikipedia](https://www.wikipedia.org/) articles focused on space exploration topics. The dataset includes curated articles about missions, celestial bodies, technologies, and key events.
+
+**Processing Steps:**
+- **Curation:** Relevant Wikipedia pages are selected based on space-related keywords and categories.
+- **Chunking:** Articles are split into manageable text chunks to optimize retrieval and context assembly.
+- **Embedding:** Each chunk is embedded using OpenAI’s embedding model and stored in a Qdrant vector database for fast similarity search.
+- **Ground Truth Creation:** For evaluation, a set of question–answer pairs is manually created, with ground truth Wikipedia chunks mapped to each question.
+
+This pipeline ensures that answers are grounded in reliable, up-to-date information and that retrieval quality can be quantitatively evaluated.
+
+*See [docs/ground_truth_format.md](docs/ground_truth_format.md) for dataset format and examples.*
+
+---
+
+## 🖼️ Screenshots
 
 **App UI Examples:**  
+
+![ScienceSage UI Home](images/sciencesage_ui_home.png)
+
 For a step-by-step guide to the app’s features and interface, see the [UI Walkthrough](docs/sciencesage_ui_walkthrough.md).
 
-**System Architecture:**  
-![ScienceSage Architecture](images/sciencesage_architecture.png)
+## 🏗️ System Architecture
+
+ScienceSage uses a modular Retrieval-Augmented Generation (RAG) pipeline: user queries are embedded, relevant Wikipedia chunks are retrieved from a vector database (Qdrant), and GPT-4 generates answers at different complexity levels. Feedback and context are managed in real time.
+
+**Simple Architecture Overview:**  
+![ScienceSage Architecture (Simple)](images/sciencesage_architecture.png)
+
+**Detailed Architecture Diagram:**  
+<div align="center">
+  <img src="images/mermaid-architecture.png" alt="ScienceSage Mermaid Architecture" width="400"/>
+</div>
 
 [Streamlit App Sequence Diagram](images/eraser_streamlit_app_sequence_diagram.png)
+
+For a detailed breakdown, see [docs/sciencesage_system_architecture.md](docs/sciencesage_system_architecture.md).
+
+---
+
+## 🗺️ Data Flow Diagram
+
+For a visual overview of the ScienceSage data flow through scripts and files, see:
+
+![ScienceSage Data Flow](../images/sciencesage_data_flow.png)
+
+You can also view the detailed Mermaid version:
+
+![ScienceSage Mermaid Data Flow](../images/mermaid_data_flow.png)
+
+These diagrams illustrate how raw Wikipedia data is processed, chunked, embedded, evaluated, and used for answer generation and feedback collection in the ScienceSage pipeline.
 
 ---
 
@@ -57,6 +99,13 @@ For a step-by-step guide to the app’s features and interface, see the [UI Walk
 | Answer Accuracy    | 0.088   |
 | User Feedback 👍   | 92%     |
 
+### About the Metrics & Observations
+
+- **Recall@K** measures how many relevant Wikipedia chunks are retrieved for each question. High recall (≈0.88) means the system usually finds most of the needed information.
+- **Precision@K** shows how many of the top results are actually relevant. Lower precision (≈0.09) is common in open-domain retrieval and means many retrieved chunks aren’t directly useful.
+- **MRR** (Mean Reciprocal Rank) and **nDCG@K** reflect how early and well-ranked the relevant chunks are in the results (moderate values here).
+- **Takeaway:** ScienceSage reliably finds most relevant info (high recall), but there’s room to improve ranking and filtering (precision and order).
+
 *For detailed and visualized results, see [docs/retrieval_evaluation_metrics.md](docs/retrieval_evaluation_metrics.md).*
 .
 
@@ -66,9 +115,13 @@ For a step-by-step guide to the app’s features and interface, see the [UI Walk
 
 - Support additional science domains and topics
 - Add "Rephrase Question" and "Regenerate Answer" features
-- Improve feedback analytics and user interaction
 - Enable multimedia, images, and multi-language support
 - Add async streaming answers, caching, and conversation history
+- Add more data and see if accuracy can be improved
+- Improve feedback analytics and user interaction
+- Test more edge cases 
+- Add fallback logic, error handling, rate limit handling
+- Work on performance optimization, memory usage, vector store tuning, latency limits
 
 ---
 
@@ -92,18 +145,58 @@ See [docs/project_structure.md](docs/project_structure.md) for the full director
 
 ---
 
-## ⚡ Quickstart Setup
+## ⚡ Quickstart Setup (Recommended: Docker)
 
-1. **Clone the repo and enter the directory:**
+![ScienceSage Setup Diagram](images/sciencesage_setup_diagram.png)
+
+1. **Clone the repository and enter the directory:**
 ```bash
 git clone https://github.com/lkirch/ScienceSage.git
 cd ScienceSage
 ```
 
-2. **Create and activate a virtual environment:**
+2. **Copy and edit environment variables:**
+   ```bash
+   cp .env.example .env
+   # Edit .env to add your OpenAI API key
+   ```
+
+3. **Build the Docker image:**
+   ```
+   docker build -t sciencesage .
+   ```
+
+4. **Run the app in Docker:**
+   ```bash
+   docker run --env-file .env -p 8501:8501 sciencesage
+   ```
+
+5. **Open the app in your browser:**
+   ```bash
+   $BROWSER http://localhost:8501
+   ```
+
+> **Note:**  
+> When using Docker, all setup, data preparation, and dependencies are handled automatically.  
+> You do **not** need to run the Streamlit app manually or install Python dependencies yourself.
+
+---
+
+## 🛠️ Manual Setup (for advanced users)
+
+If you prefer to run ScienceSage without Docker:
+
+1. **Clone the repository and enter the directory:**
+   ```bash
+   git clone https://github.com/lkirch/ScienceSage.git
+   cd ScienceSage
+   ```
+
+2. **Create and activate a Python 3.12 virtual environment:**
    ```bash
    python3.12 -m venv .venv
    source .venv/bin/activate
+   pip install --upgrade pip
    pip install -r requirements.txt
    ```
 
@@ -113,26 +206,49 @@ cd ScienceSage
    # Edit .env to add your OpenAI API key
    ```
 
-4. **Start Qdrant (vector database):**
+4. **Start Qdrant locally (if not already running):**
    ```bash
    docker run -p 6333:6333 -p 6334:6334 qdrant/qdrant
    ```
 
-5. **Prepare the data:**
+5. **Prepare the data and run evaluation:**
    ```bash
-   python scripts/download_and_clean.py
-   python scripts/preprocess.py
-   python scripts/embed.py
+   make install
+   make data
+   make eval-all
+   ```
+   > Or run the scripts individually as described in [docs/setup.md](docs/setup.md).
+
+6. **Run the Streamlit app:**
+   ```bash
+   streamlit run sciencesage/app.py
    ```
 
-### 6. Run the Streamlit app
-```bash
-streamlit run sciencesage/app.py
-```
+7. **Open the app in your browser:**
+   ```bash
+   $BROWSER http://localhost:8501
+   ```
 
-- The app will open in your browser (or use $BROWSER http://localhost:8501).
+---
 
 > For detailed setup and advanced options, see [docs/setup.md](docs/setup.md).
+
+---
+
+## Qdrant Setup
+
+By default, ScienceSage runs a local Qdrant vector database inside the Docker container.
+
+- No `qdrant_config.yaml` is required for default operation.
+- If you want to use a remote Qdrant instance (e.g., Qdrant Cloud), set the following in your `.env` file:
+
+```
+QDRANT_HOST=your-qdrant-host
+QDRANT_PORT=your-qdrant-port
+QDRANT_URL=http://your-qdrant-host:your-qdrant-port
+```
+
+The app will automatically use these settings.
 
 ---
 
@@ -216,3 +332,9 @@ streamlit run sciencesage/app.py
 Pull requests and issues are welcome! Please open an issue or PR if you have suggestions or improvements.
 
 ---
+
+## 📝 License
+MIT — see [LICENSE](LICENSE) for details.
+
+## 👩‍💻 Author
+Lisa Kirch — [GitHub](https://github.com/lkirch)

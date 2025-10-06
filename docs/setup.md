@@ -10,18 +10,19 @@ cd ScienceSage
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
 ### 3. Configure the environment variables
-Copy `.env.example` → `.env` and fill in:
+Copy `.env.example` → `.env` and fill in your OpenAI key:
 ```ini
 OPENAI_API_KEY=sk-xxxx
 QDRANT_HOST=localhost
 QDRANT_PORT=6333
 ```
 
-### 4. Start Qdrant
+### 4. Start Qdrant locally
 
 You need a running Qdrant vector database for embedding and retrieval.  
 You can start Qdrant using Docker:
@@ -36,49 +37,84 @@ docker run -p 6333:6333 -p 6334:6334 qdrant/qdrant
 Alternatively, see [Qdrant documentation](https://qdrant.tech/documentation/quick-start/) for other install options.
 
 ### 5. Prepare the data
+
+You can either run the scripts individually (steps 5a–5c) or use the Makefile commands (recommended for convenience).
+
 ```bash
 python scripts/download_and_clean.py        # fetch Wikipedia (space exploration)
 python scripts/preprocess.py                # clean & chunk into JSONL
 python scripts/embed.py                     # embed & store in Qdrant
 ```
 
+Or if you prefer to use the **Makefile** to prepare and run evaluation:
+   ```bash
+   make install
+   make data
+   make eval-all
+   ```
+
+If data is already present, you can skip the data pipeline.
+
 ### 6. Run the Streamlit app
 ```bash
 streamlit run sciencesage/app.py
 ```
 
-### 7. Run the FastAPI RAG API
+Or if you prefer to use the **Makefile** to prepare and run evaluation:
+   ```bash
+   make run-app
+   ```
+
+### 7. Open the app in your browser:
+   ```bash
+   $BROWSER http://localhost:8501
+   ```
+---
+
+### FastAPI RAG API
 
 This backend serves retrieval-augmented answers via HTTP.
 
+**To run the FastAPI API:**
 ```bash
-uvicorn scripts.rag_api:app --reload
+uvicorn sciencesage.rag_api:app --reload
+```
+- The API will be available at [http://localhost:8000](http://localhost:8000).
+- Interactive docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+**Example request:**
+```bash
+curl -X POST "http://localhost:8000/rag" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is the Hubble Space Telescope?"}'
 ```
 
-The API will be available at http://localhost:8000.  You can test it with:
+---
 
+### 🧪 Testing
+
+To run the test suite:
 ```bash
-curl -X POST "http://localhost:8000/rag" -H "Content-Type: application/json" -d '{"query": "What is the Hubble Space Telescope?"}'
+make test
+# or
+pytest
 ```
 
-### 8. Run the Streamlit Frontend
+---
 
-This web app lets you interact with the RAG system visually.
+### 📓 Jupyter Notebooks
 
+To launch Jupyter Notebook for exploration and visualization:
 ```bash
-streamlit run scripts/streamlit_app.py
+jupyter notebook
+# or
+make notebook
 ```
+Notebooks are located in the `notebooks/` directory.
 
-- The app will open in your browser (or use $BROWSER http://localhost:8501).
-- Make sure the FastAPI RAG API is running before using the Streamlit app.
+---
 
-### 9. Evaluate Retrieval and Answer Quality
-
-You can evaluate your RAG pipeline using a golden dataset:
-
-```bash
-python scripts/evaluate_rag.py
-```
-
-- Results are saved to data/eval/eval_results.jsonl.
-- The script reports retrieval recall and answer match metrics.
+**Notes:**  
+- Make sure Qdrant is running and your `.env` is configured before starting the API.
+- The FastAPI app is located at `sciencesage/rag_api.py`.
+- The Streamlit app does not require the FastAPI API to be running, but the API is available for programmatic access.
