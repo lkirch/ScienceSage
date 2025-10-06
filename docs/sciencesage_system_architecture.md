@@ -6,7 +6,9 @@ ScienceSage is built as a modular Retrieval-Augmented Generation (RAG) system, d
 
 ## 📐 Architecture Diagram
 
-![ScienceSage Mermaid Architecture](../images/mermaid-architecture.png)
+<div align="center">
+  <img src="../images/mermaid-architecture.png" alt="ScienceSage Mermaid Architecture" width="500"/>
+</div>
 
 ---
 
