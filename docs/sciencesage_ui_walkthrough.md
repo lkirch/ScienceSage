@@ -14,9 +14,9 @@ Welcome to the ScienceSage user interface! This walkthrough will guide you throu
 
 ## 2. Example Queries
 
-![Example Queries](../images/sciencesage_ui_try_example.png)
+![Example Queries](../images/sciencesage_ui_try_example_query.png)
 
-*Use the sidebar to pick from example queries or enter your own. This helps you quickly get started and see how the system works.*
+*Use the sidebar to pick from example queries or enter your own. This helps you quickly get started and see how the system works.  Use the config.py to change the sample queries.  See [docs/sciencesage_ui_try_example_queries.md](docs/sciencesage_ui_try_example_queries.md) for the current example queries.  The example queries are located in the config.py.*
 
 ---
 
