@@ -21,7 +21,7 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 COPY sciencesage/ sciencesage/
 COPY scripts/ scripts/
 COPY Makefile .
-COPY data/ data/
+RUN mkdir -p data
 COPY notebooks/ notebooks/
 COPY docs/ docs/
 COPY images/ images/
