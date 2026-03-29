@@ -1,0 +1,7 @@
+feedback_id,chunk_id,question,level,user_id,feedback_text
+1,mars_1,Which planet is called the Red Planet?,Middle School,user_001,Accurate and clear answer for a basic question.
+2,mars_1,What was the main scientific goal of NASA's Perseverance rover on Mars?,College,user_002,Good explanation of the rover's purpose.
+3,moon_1,Who was the first person to walk on the Moon?,Middle School,user_003,Correct answer, well stated.
+4,moon_1,Discuss the significance of the Apollo 11 mission in the context of the Cold War.,Advanced,user_004,Insightful and relevant to the historical context.
+5,animals_1,Who was the first animal to orbit Earth?,Middle School,user_005,Simple and correct.
+6,animals_1,Analyze the ethical considerations of early animal space missions.,Advanced,user_006,Addresses the ethical issues well.
